@@ -100,6 +100,22 @@
         .blink { animation: blinker 1.5s linear infinite; }
         @keyframes blinker { 50% { opacity: 0; } }
 
+        /* Stili per il Menu Vim */
+        .menu-row {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+        }
+        .menu-row:hover { background: rgba(255, 255, 255, 0.05); }
+        .menu-row.active { background: var(--secondary-color); }
+        .menu-cursor { width: 25px; display: inline-block; color: var(--primary-color); font-weight: bold;}
+        .menu-label { width: 130px; display: inline-block; opacity: 0.8; }
+        .menu-value { color: var(--primary-color); }
+        .menu-value-dim { opacity: 0.4; }
+
         /* Effetto CRT opzionale */
         .crt-overlay::before {
             content: " ";
@@ -118,44 +134,22 @@
 
     <div class="ui-container">
         <!-- Menu Principale -->
-        <div id="menu" class="retro-card">
+        <div id="menu" class="retro-card" style="width: 90%; max-width: 600px;">
             <h1 class="text-6xl font-bold mb-2 tracking-tighter">VIM-Y BIRD</h1>
-            <p class="mb-6 opacity-70">Senza gravità: muoviti liberamente!</p>
+            <p class="mb-4 opacity-70">Sopravvivi al buffer infinito</p>
             
-            <div class="grid grid-cols-2 gap-4 text-left mb-6 text-sm md:text-base">
-                <div class="info-box">
-                    <p class="info-title">Comandi</p>
-                    <p>⌨️ <span class="key-badge">k</span> : Muovi Su</p>
-                    <p>⌨️ <span class="key-badge">j</span> : Muovi Giù</p>
-                </div>
-                <div class="info-box">
-                    <p class="info-title">Mobile</p>
-                    <p>📱 Swipe Su: Scatto Su</p>
-                    <p>📱 Swipe Giu: Scatto Giù</p>
-                </div>
+            <div class="mb-6 text-sm text-left opacity-80 info-box">
+                <p class="info-title">Comandi di Navigazione</p>
+                <p><span class="key-badge">k</span> / <span class="key-badge">j</span> : Su / Giù</p>
+                <p><span class="key-badge">h</span> / <span class="key-badge">l</span> : Cambia Opzione</p>
+                <p><span class="key-badge">Enter</span> : Seleziona / Avvia</p>
+                <p class="mt-2 text-xs italic opacity-70">(Touch: tocca le righe per cambiare configurazione)</p>
             </div>
 
-            <!-- Selezione Tema -->
-            <div class="mb-6">
-                <p class="font-bold mb-2 text-sm uppercase tracking-widest opacity-80">Tema</p>
-                <div class="flex justify-center space-x-4 text-sm font-bold">
-                    <button id="btn-theme-matrix" class="custom-btn active" onclick="game.setTheme('matrix')">Matrix</button>
-                    <button id="btn-theme-tokyo" class="custom-btn" onclick="game.setTheme('tokyo')">Tokyo</button>
-                    <button id="btn-theme-material" class="custom-btn" onclick="game.setTheme('material')">Material</button>
-                </div>
+            <!-- Menu Vim Generato Dinamicamente -->
+            <div id="vim-menu" class="text-left font-bold text-base md:text-lg flex flex-col gap-1 mb-2">
+                <!-- Contenuto popolato dal JS -->
             </div>
-
-            <!-- Selezione Difficoltà -->
-            <div class="mb-6">
-                <p class="font-bold mb-2 text-sm uppercase tracking-widest opacity-80">Difficoltà</p>
-                <div class="flex justify-center space-x-4 text-sm font-bold">
-                    <button id="btn-easy" class="custom-btn">1. N00b</button>
-                    <button id="btn-normal" class="custom-btn active">2. Hacker</button>
-                    <button id="btn-hard" class="custom-btn">3. Guru</button>
-                </div>
-            </div>
-
-            <p class="blink text-xl uppercase font-bold tracking-widest mt-4">Premi 'k' o 'j' per iniziare</p>
         </div>
         
         <!-- Schermata Fine Partita -->
@@ -223,16 +217,23 @@
         };
 
         const DIFFICULTIES = {
-            easy: { SPEED: 2.5, SPAWN_RATE: 110, GAP: 280 },
-            normal: { SPEED: 4.5, SPAWN_RATE: 80, GAP: 200 },
-            hard: { SPEED: 6.5, SPAWN_RATE: 55, GAP: 150 }
+            easy: { SPEED: 2.5, SPAWN_RATE: 110, GAP: 280, GRAVITY: 0.20 },
+            normal: { SPEED: 4.5, SPAWN_RATE: 80, GAP: 200, GRAVITY: 0.28 },
+            hard: { SPEED: 6.5, SPAWN_RATE: 55, GAP: 150, GRAVITY: 0.35 }
         };
 
         const SETTINGS = {
+            MODE: 'zero-g', // 'zero-g' o 'gravity'
+            OBSTACLE_TYPE: 'pipes', // 'pipes' o 'meteors'
             PHYSICS: {
+                // Zero-G parametri
                 MAX_VELOCITY: 15,
                 ACCEL: 1.5,
-                FRICTION: 0.88 // Senza gravità, usiamo l'attrito per fermare dolcemente
+                FRICTION: 0.88,
+                // Gravità parametri (Modalità Classica)
+                GRAVITY: DIFFICULTIES.normal.GRAVITY,
+                JUMP: -6.5,
+                DIVE: 5
             },
             WORLD: {
                 PIPE_SPEED: DIFFICULTIES.normal.SPEED,
@@ -240,11 +241,22 @@
                 PIPE_GAP: DIFFICULTIES.normal.GAP,
                 PIPE_WIDTH: 80
             },
-            THEME: { ...THEMES.matrix } // Inizializzato con i colori Matrix
+            THEME: { ...THEMES.matrix },
+            MENU: {
+                activeIndex: 0,
+                items: [
+                    { id: 'mode', label: 'Fisica', options: ['zero-g', 'gravity'], idx: 0 },
+                    { id: 'obstacle', label: 'Ostacoli', options: ['pipes', 'meteors'], idx: 0 },
+                    { id: 'theme', label: 'Tema', options: ['matrix', 'tokyo', 'material'], idx: 0 },
+                    { id: 'difficulty', label: 'Difficoltà', options: ['easy', 'normal', 'hard'], idx: 1 },
+                    { id: 'start', label: '>>> RUN_GAME.sh <<<', isAction: true }
+                ]
+            }
         };
 
         /**
          * GESTORE INPUT: Traccia se i tasti sono tenuti premuti per il movimento fluido
+         * e invia eventi discreti per il Menu e la modalità Gravità.
          */
         class Controller {
             constructor(callbacks) {
@@ -256,16 +268,17 @@
 
             _bindEvents() {
                 window.addEventListener('keydown', e => {
-                    if (e.key === 'k') this.keys.up = true;
-                    if (e.key === 'j') this.keys.down = true;
-                    
-                    if (e.key === '1') this.cb.onDiff('easy');
-                    if (e.key === '2') this.cb.onDiff('normal');
-                    if (e.key === '3') this.cb.onDiff('hard');
-                    if (e.key === 'm') this.cb.onMenu();
-                    
-                    // Avvia il gioco se premiamo i controlli di movimento
-                    if (e.key === 'k' || e.key === 'j') this.cb.onAny(); 
+                    // Notifica la pressione del tasto per il menu
+                    this.cb.onKey(e.key);
+
+                    if (e.key === 'k') {
+                        if (!this.keys.up) this.cb.onAction('jump');
+                        this.keys.up = true;
+                    }
+                    if (e.key === 'j') {
+                        if (!this.keys.down) this.cb.onAction('dive');
+                        this.keys.down = true;
+                    }
                 });
 
                 window.addEventListener('keyup', e => {
@@ -274,18 +287,18 @@
                 });
 
                 window.addEventListener('touchstart', e => {
-                    if (e.target.tagName === 'BUTTON') return;
+                    if (e.target.tagName === 'BUTTON' || e.target.closest('.menu-row')) return;
                     this.startY = e.touches[0].clientY;
-                    this.cb.onAny();
                 }, { passive: false });
 
                 window.addEventListener('touchend', e => {
-                    if (e.target.tagName === 'BUTTON') return;
+                    if (e.target.tagName === 'BUTTON' || e.target.closest('.menu-row')) return;
                     const endY = e.changedTouches[0].clientY;
                     const delta = this.startY - endY;
                     
-                    if (delta > 30) this.cb.onSwipe('up');
-                    else if (delta < -30) this.cb.onSwipe('down');
+                    if (delta > 30) this.cb.onAction('swipe-up');
+                    else if (delta < -30) this.cb.onAction('swipe-down');
+                    else this.cb.onAction('jump'); // Un tap agisce come salto
                 }, { passive: false });
             }
         }
@@ -301,22 +314,31 @@
                 this.size = 28;
             }
 
-            update(h, inputKeys, swipeEvent) {
-                // Accelerazione basata sulla pressione dei tasti
-                if (inputKeys.up) this.v -= SETTINGS.PHYSICS.ACCEL;
-                if (inputKeys.down) this.v += SETTINGS.PHYSICS.ACCEL;
+            update(h, inputKeys, actionEvent) {
+                if (SETTINGS.MODE === 'gravity') {
+                    // Modalità GRAVITA': Eventi discreti e caduta costante
+                    if (actionEvent === 'jump' || actionEvent === 'swipe-up') this.v = SETTINGS.PHYSICS.JUMP;
+                    if (actionEvent === 'dive' || actionEvent === 'swipe-down') this.v += SETTINGS.PHYSICS.DIVE;
 
-                // Gestione impulsi da Swipe (Mobile)
-                if (swipeEvent === 'up') this.v -= 12;
-                if (swipeEvent === 'down') this.v += 12;
+                    this.v += SETTINGS.PHYSICS.GRAVITY;
+                    
+                    if (this.v > SETTINGS.PHYSICS.MAX_VELOCITY) this.v = SETTINGS.PHYSICS.MAX_VELOCITY;
+                    this.y += this.v;
+                } else {
+                    // Modalità ZERO-G: Accelerazione continua con attrito
+                    if (inputKeys.up) this.v -= SETTINGS.PHYSICS.ACCEL;
+                    if (inputKeys.down) this.v += SETTINGS.PHYSICS.ACCEL;
 
-                // Limita velocità massima
-                if (this.v > SETTINGS.PHYSICS.MAX_VELOCITY) this.v = SETTINGS.PHYSICS.MAX_VELOCITY;
-                if (this.v < -SETTINGS.PHYSICS.MAX_VELOCITY) this.v = -SETTINGS.PHYSICS.MAX_VELOCITY;
+                    if (actionEvent === 'swipe-up') this.v -= 12;
+                    if (actionEvent === 'swipe-down') this.v += 12;
+                    if (actionEvent === 'jump') this.v -= 5; // Un tap dà una piccola spinta
 
-                // Applica Attrito e muovi
-                this.v *= SETTINGS.PHYSICS.FRICTION;
-                this.y += this.v;
+                    if (this.v > SETTINGS.PHYSICS.MAX_VELOCITY) this.v = SETTINGS.PHYSICS.MAX_VELOCITY;
+                    if (this.v < -SETTINGS.PHYSICS.MAX_VELOCITY) this.v = -SETTINGS.PHYSICS.MAX_VELOCITY;
+
+                    this.v *= SETTINGS.PHYSICS.FRICTION;
+                    this.y += this.v;
+                }
 
                 // Toccare i bordi è SEGFAULT (Game Over)
                 if (this.y + this.size > h || this.y < 0) return true; 
@@ -339,9 +361,9 @@
         }
 
         /**
-         * ENTITÀ: OSTACOLO
+         * ENTITÀ: OSTACOLO (TUBI)
          */
-        class Obstacle {
+        class Pipe {
             constructor(w, h) {
                 this.x = w;
                 this.w = SETTINGS.WORLD.PIPE_WIDTH;
@@ -385,6 +407,52 @@
         }
 
         /**
+         * ENTITÀ: METEORITE
+         */
+        class Meteor {
+            constructor(w, h) {
+                this.x = w;
+                this.y = Math.random() * (h - 60) + 30; // Altezza casuale
+                this.size = 30 + Math.random() * 25; // Dimensione variabile (30 - 55)
+                this.speed = SETTINGS.WORLD.PIPE_SPEED * (1.2 + Math.random() * 0.6); // Più veloci e velocità variabile
+                this.passed = false;
+                this.w = this.size; // usato per capire se è uscito dallo schermo
+            }
+
+            update() { this.x -= this.speed; }
+
+            draw(ctx, h) {
+                ctx.fillStyle = SETTINGS.THEME['--secondary-color'];
+                ctx.strokeStyle = SETTINGS.THEME['--primary-color'];
+                ctx.lineWidth = 2;
+
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size / 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = SETTINGS.THEME['--text-color'];
+                ctx.font = `bold ${this.size * 0.6}px ${SETTINGS.THEME['--font-family']}`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                if (SETTINGS.THEME['--text-color'] !== '#212121') { 
+                    ctx.fillText('*', this.x, this.y + 4);
+                }
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'alphabetic';
+            }
+
+            collides(p, h) {
+                // Approssimazione di collisione circolare tra il cursore ">" e il meteorite
+                const pCenter = { x: p.x + p.size * 0.4, y: p.y + p.size * 0.6 }; 
+                const dx = pCenter.x - this.x;
+                const dy = pCenter.y - this.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                return dist < (this.size / 2 + p.size * 0.3);
+            }
+        }
+
+        /**
          * CORE ENGINE
          */
         let game;
@@ -396,43 +464,126 @@
                 this.score = 0;
                 this.obstacles = [];
                 this.ticks = 0;
-                this.currentSwipe = null;
+                this.currentAction = null;
 
                 this.player = new Player(this.canvas.height);
                 this.input = new Controller({
-                    onAny: () => this.handleInteraction(),
-                    onDiff: (level) => this.setDifficulty(level),
-                    onMenu: () => this.goToMenu(),
-                    onSwipe: (dir) => this.currentSwipe = dir
+                    onKey: (k) => this.handleKey(k),
+                    onAction: (act) => this.currentAction = act
                 });
 
                 this._setupUI();
+                this.renderMenu();
                 window.addEventListener('resize', () => this.onResize());
                 this.onResize();
                 this.run();
             }
 
             _setupUI() {
-                document.getElementById('btn-easy').addEventListener('click', () => this.setDifficulty('easy'));
-                document.getElementById('btn-normal').addEventListener('click', () => this.setDifficulty('normal'));
-                document.getElementById('btn-hard').addEventListener('click', () => this.setDifficulty('hard'));
+                // Collega solo il pulsante di Game Over
                 document.getElementById('btn-menu').addEventListener('click', () => this.goToMenu());
+            }
+
+            handleKey(key) {
+                if (this.state === 'MENU') {
+                    this.handleMenuNavigation(key);
+                } else if (this.state === 'GAMEOVER') {
+                    if (key === 'm') this.goToMenu();
+                    if (key === 'k' || key === 'Enter') this.start();
+                }
+            }
+
+            handleMenuNavigation(key) {
+                const menu = SETTINGS.MENU;
+                const item = menu.items[menu.activeIndex];
+
+                if (key === 'j' || key === 'ArrowDown') {
+                    menu.activeIndex = (menu.activeIndex + 1) % menu.items.length;
+                } else if (key === 'k' || key === 'ArrowUp') {
+                    menu.activeIndex = (menu.activeIndex - 1 + menu.items.length) % menu.items.length;
+                } else if (key === 'h' || key === 'ArrowLeft') {
+                    if (!item.isAction) {
+                        item.idx = (item.idx - 1 + item.options.length) % item.options.length;
+                        this.applyMenuSetting(item);
+                    }
+                } else if (key === 'l' || key === 'ArrowRight') {
+                    if (!item.isAction) {
+                        item.idx = (item.idx + 1) % item.options.length;
+                        this.applyMenuSetting(item);
+                    }
+                } else if (key === 'Enter' || key === ' ') {
+                    if (item.isAction) this.start();
+                    else {
+                        item.idx = (item.idx + 1) % item.options.length;
+                        this.applyMenuSetting(item);
+                    }
+                }
+                this.renderMenu();
+            }
+
+            handleMenuClick(index) {
+                if (this.state !== 'MENU') return;
+                const menu = SETTINGS.MENU;
+                
+                if (menu.activeIndex === index) {
+                    // Clic su riga già attiva: cicla le opzioni o avvia
+                    const item = menu.items[index];
+                    if (item.isAction) this.start();
+                    else {
+                        item.idx = (item.idx + 1) % item.options.length;
+                        this.applyMenuSetting(item);
+                    }
+                } else {
+                    // Seleziona nuova riga
+                    menu.activeIndex = index;
+                }
+                this.renderMenu();
+            }
+
+            applyMenuSetting(item) {
+                const val = item.options[item.idx];
+                if (item.id === 'mode') SETTINGS.MODE = val;
+                else if (item.id === 'obstacle') SETTINGS.OBSTACLE_TYPE = val;
+                else if (item.id === 'theme') this.setTheme(val);
+                else if (item.id === 'difficulty') this.setDifficulty(val);
+            }
+
+            renderMenu() {
+                const container = document.getElementById('vim-menu');
+                if(!container) return;
+                container.innerHTML = '';
+                
+                SETTINGS.MENU.items.forEach((item, index) => {
+                    const isActive = index === SETTINGS.MENU.activeIndex;
+                    const row = document.createElement('div');
+                    row.className = `menu-row ${isActive ? 'active' : ''}`;
+                    row.onclick = () => this.handleMenuClick(index);
+
+                    const cursor = `<span class="menu-cursor">${isActive ? '>' : '&nbsp;'}</span>`;
+                    
+                    if (item.isAction) {
+                        row.innerHTML = `${cursor}<span class="menu-value font-bold">${item.label}</span>`;
+                    } else {
+                        // Evidenzia l'opzione correntemente selezionata con le parentesi
+                        const optsHtml = item.options.map((opt, i) => {
+                            return i === item.idx 
+                                ? `<span class="menu-value">[${opt.toUpperCase()}]</span>` 
+                                : `<span class="menu-value-dim">${opt}</span>`;
+                        }).join(' &nbsp; ');
+                        
+                        row.innerHTML = `${cursor}<span class="menu-label">${item.label}:</span> ${optsHtml}`;
+                    }
+                    container.appendChild(row);
+                });
             }
 
             setTheme(themeName) {
                 const theme = THEMES[themeName];
                 SETTINGS.THEME = { ...theme };
                 
-                // Aggiorna variabili CSS globali
                 for (let key in theme) {
                     document.documentElement.style.setProperty(key, theme[key]);
                 }
-
-                // Aggiorna UI Bottoni
-                ['matrix', 'tokyo', 'material'].forEach(t => {
-                    document.getElementById(`btn-theme-${t}`).classList.remove('active');
-                });
-                document.getElementById(`btn-theme-${themeName}`).classList.add('active');
             }
 
             goToMenu() {
@@ -452,11 +603,9 @@
                 SETTINGS.WORLD.PIPE_SPEED = diff.SPEED;
                 SETTINGS.WORLD.PIPE_SPAWN_RATE = diff.SPAWN_RATE;
                 SETTINGS.WORLD.PIPE_GAP = diff.GAP;
+                SETTINGS.PHYSICS.GRAVITY = diff.GRAVITY;
 
-                ['easy', 'normal', 'hard'].forEach(l => {
-                    document.getElementById(`btn-${l}`).classList.remove('active');
-                });
-                document.getElementById(`btn-${level}`).classList.add('active');
+                // RIMOSSO IL CODICE CHE CERCAVA I VECCHI PULSANTI
             }
 
             onResize() {
@@ -474,7 +623,7 @@
                 this.obstacles = [];
                 this.player = new Player(this.canvas.height);
                 this.ticks = 0;
-                this.currentSwipe = null;
+                this.currentAction = null;
                 
                 document.getElementById('menu').classList.add('hidden');
                 document.getElementById('game-over').classList.add('hidden');
@@ -495,14 +644,26 @@
             update() {
                 if (this.state !== 'PLAYING') return;
 
-                // Passiamo le key attuali e gli eventi swipe consumabili
-                if (this.player.update(this.canvas.height, this.input.keys, this.currentSwipe)) {
-                    this.die(); // Muore se tocca bordi
+                // Passiamo i tasti per Zero-G e l'azione singola (salto/scatto)
+                if (this.player.update(this.canvas.height, this.input.keys, this.currentAction)) {
+                    this.die();
                 }
-                this.currentSwipe = null; // Resetta lo swipe dopo averlo usato
+                this.currentAction = null; // Resetta l'azione dopo il frame
 
-                if (this.ticks % SETTINGS.WORLD.PIPE_SPAWN_RATE === 0) {
-                    this.obstacles.push(new Obstacle(this.canvas.width, this.canvas.height));
+                if (SETTINGS.OBSTACLE_TYPE === 'pipes') {
+                    if (this.ticks % SETTINGS.WORLD.PIPE_SPAWN_RATE === 0) {
+                        this.obstacles.push(new Pipe(this.canvas.width, this.canvas.height));
+                    }
+                } else {
+                    // Spawn Meteoriti: più frequenti, viaggiano casualmente
+                    const meteorSpawnRate = Math.max(20, Math.floor(SETTINGS.WORLD.PIPE_SPAWN_RATE / 2.5));
+                    if (this.ticks % meteorSpawnRate === 0) {
+                        const count = Math.random() > 0.7 ? 2 : 1; // 30% di probabilità di spawnare 2 meteoriti assieme
+                        for(let m=0; m<count; m++) {
+                            // Sfasa leggermente l'asse X se ne spawnano multipli per non sovrapporli perfettamente
+                            this.obstacles.push(new Meteor(this.canvas.width + (m * Math.random() * 80), this.canvas.height));
+                        }
+                    }
                 }
 
                 for (let i = this.obstacles.length - 1; i >= 0; i--) {
