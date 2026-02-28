@@ -622,6 +622,7 @@
                     // Simulazione dati per il match
                     let mockPlatforms = [
                         { word: "public" },
+                        { word: "if" },
                         { word: "return" },
                         { word: "Console.WriteLine();" },
                         { word: "class" }
@@ -630,7 +631,9 @@
                     let performSearch = (buffer, currentIndex) => {
                         let searchWord = buffer.substring(1).toLowerCase();
                         for (let i = currentIndex + 1; i < mockPlatforms.length; i++) {
-                            if (mockPlatforms[i].word.toLowerCase().startsWith(searchWord)) {
+                            const platWord = mockPlatforms[i].word.toLowerCase();
+                            // Match esatto (per parole corte) o match di 3 lettere (per parole lunghe)
+                            if (platWord === searchWord || (searchWord.length >= 3 && platWord.startsWith(searchWord))) {
                                 return i;
                             }
                         }
@@ -638,8 +641,10 @@
                     };
 
                     this.assert(performSearch("/pub", -1) === 0, "Match corretto keyword: '/pub' -> 'public'");
-                    this.assert(performSearch("/ret", 0) === 1, "Match corretto saltando piattaforma: '/ret' -> 'return'");
-                    this.assert(performSearch("/con", 1) === 2, "Match corretto snippet e case-insensitive: '/con' -> 'Console.WriteLine();'");
+                    this.assert(performSearch("/i", 0) === -1, "Nessun salto anticipato per parole corte: '/i' non salta a 'if'");
+                    this.assert(performSearch("/if", 0) === 1, "Match esatto per parole corte funzionante: '/if' -> 'if'");
+                    this.assert(performSearch("/ret", 1) === 2, "Match corretto saltando piattaforma: '/ret' -> 'return'");
+                    this.assert(performSearch("/con", 2) === 3, "Match corretto snippet e case-insensitive: '/con' -> 'Console.WriteLine();'");
                     this.assert(performSearch("/xyz", 1) === -1, "Mancato match gestito correttamente: '/xyz' non trovato");
 
                     let jumpTime = 60; // 1 secondo
@@ -1226,14 +1231,16 @@
                     if (this.jumpBuffer === "" && key !== "/") return; 
                     this.jumpBuffer += key;
                     
-                    if (this.jumpBuffer.length >= 4) { // "/" + 3 caratteri
+                    if (this.jumpBuffer.length > 1) { // Ha digitato '/' e almeno una lettera
                         const searchWord = this.jumpBuffer.substring(1).toLowerCase();
                         let startIdx = this.jumpPlayerIdx + 1;
                         let endIdx = Math.min(startIdx + 8, this.jumpPlatforms.length); 
                         let matchedIdx = -1;
                         
                         for (let i = startIdx; i < endIdx; i++) {
-                            if (this.jumpPlatforms[i].word.toLowerCase().startsWith(searchWord)) {
+                            const platWord = this.jumpPlatforms[i].word.toLowerCase();
+                            // Se è una parola corta fa il match esatto, altrimenti aspetta le 3 lettere
+                            if (platWord === searchWord || (searchWord.length >= 3 && platWord.startsWith(searchWord))) {
                                 matchedIdx = i;
                                 break;
                             }
