@@ -219,7 +219,7 @@
                 <!-- Output Test JS -->
             </div>
             <div class="text-center mt-6">
-                <p class="blink text-lg">Premi 'm' per tornare al menu</p>
+                <p class="blink text-lg">Premi ':m' per tornare al menu</p>
             </div>
         </div>
         
@@ -230,7 +230,7 @@
             <p id="final-best" class="text-xl mb-6 opacity-80">Best: 0</p>
             <div class="flex flex-col gap-4 items-center">
                 <p class="blink text-lg">Premi 'k' per riavviare</p>
-                <button id="btn-config" class="custom-btn text-sm uppercase tracking-widest mt-2">Torna al Menu (m)</button>
+                <button id="btn-config" class="custom-btn text-sm uppercase tracking-widest mt-2">Torna al Menu (:m)</button>
             </div>
         </div>
 
@@ -248,9 +248,9 @@
          * DIZIONARIO TEMI
          */
         const THEMES = {
-            matrix: { '--bg-color': '#0d0d0d', '--primary-color': '#00ff41', '--secondary-color': '#003300', '--grid-color': '#001a00', '--card-bg': 'rgba(0, 0, 0, 0.9)', '--text-color': '#00ff41', '--font-family': '"Fira Code", monospace', '--crt-display': 'block', '--border-color': '#00ff41', '--shadow-color': 'rgba(0, 255, 65, 0.2)', '--text-shadow': '0 0 5px var(--primary-color)' },
-            tokyo: { '--bg-color': '#1a1b26', '--primary-color': '#7aa2f7', '--secondary-color': '#24283b', '--grid-color': '#414868', '--card-bg': 'rgba(26, 27, 38, 0.95)', '--text-color': '#c0caf5', '--font-family': '"Fira Code", monospace', '--crt-display': 'none', '--border-color': '#7aa2f7', '--shadow-color': 'rgba(122, 162, 247, 0.2)', '--text-shadow': 'none' },
-            material: { '--bg-color': '#fafafa', '--primary-color': '#6200ea', '--secondary-color': '#e0e0e0', '--grid-color': '#eeeeee', '--card-bg': '#ffffff', '--text-color': '#212121', '--font-family': '"Roboto", sans-serif', '--crt-display': 'none', '--border-color': '#e0e0e0', '--shadow-color': 'rgba(0, 0, 0, 0.15)', '--text-shadow': 'none' }
+            matrix: { '--bg-color': '#0d0d0d', '--primary-color': '#00ff41', '--secondary-color': '#003300', '--grid-color': '#001a00', '--card-bg': 'rgba(0, 0, 0, 0.9)', '--text-color': '#00ff41', '--font-family': '"Fira Code", monospace', '--crt-display': 'block', '--border-color': '#00ff41', '--shadow-color': 'rgba(0, 255, 65, 0.2)', '--text-shadow': '0 0 5px var(--primary-color)', '--highlight-color': '#fffb00' },
+            tokyo: { '--bg-color': '#1a1b26', '--primary-color': '#7aa2f7', '--secondary-color': '#24283b', '--grid-color': '#414868', '--card-bg': 'rgba(26, 27, 38, 0.95)', '--text-color': '#c0caf5', '--font-family': '"Fira Code", monospace', '--crt-display': 'none', '--border-color': '#7aa2f7', '--shadow-color': 'rgba(122, 162, 247, 0.2)', '--text-shadow': 'none', '--highlight-color': '#f7768e' },
+            material: { '--bg-color': '#fafafa', '--primary-color': '#6200ea', '--secondary-color': '#e0e0e0', '--grid-color': '#eeeeee', '--card-bg': '#ffffff', '--text-color': '#212121', '--font-family': '"Roboto", sans-serif', '--crt-display': 'none', '--border-color': '#e0e0e0', '--shadow-color': 'rgba(0, 0, 0, 0.15)', '--text-shadow': 'none', '--highlight-color': '#d50000' }
         };
 
         const DIFFICULTIES = {
@@ -298,7 +298,7 @@
                 { id: 'game_jkmode', label: '1. Gioca a JKMODE (Flappy)', isAction: true },
                 { id: 'game_jump', label: '2. Gioca a /jump (Platformer)', isAction: true },
                 { id: 'game_tests', label: '3. >>> ESEGUI_TESTS.sh <<<', isAction: true },
-                { id: 'open_global', label: '4. Opzioni App (Temi/Social) [m]', isAction: true }
+                { id: 'open_global', label: '4. Opzioni App (Temi/Social) [:m]', isAction: true }
             ]
         };
 
@@ -619,19 +619,30 @@
                     // --- TEST /JUMP ---
                     this.logs.push("<div class='test-group'>=== TEST /JUMP ===</div>");
                     
-                    // Simulazione dati per il match
+                    // Simulazione dati per il match con coordinate Y
                     let mockPlatforms = [
-                        { word: "public" },
-                        { word: "if" },
-                        { word: "return" },
-                        { word: "Console.WriteLine();" },
-                        { word: "class" }
+                        { targetWord: "public", y: 400 },
+                        { targetWord: "if", y: 300 },
+                        { targetWord: "return", y: 200 },
+                        { targetWord: "WriteLine", y: 100 },
+                        { targetWord: "class", y: -100 } // Fuori dallo schermo visibile (sopra lo 0)
                     ];
+
+                    let mockCameraY = 0;
+                    let mockCanvasHeight = 500;
 
                     let performSearch = (buffer, currentIndex) => {
                         let searchWord = buffer.substring(1).toLowerCase();
                         for (let i = currentIndex + 1; i < mockPlatforms.length; i++) {
-                            const platWord = mockPlatforms[i].word.toLowerCase();
+                            let screenY = mockPlatforms[i].y + mockCameraY;
+                            
+                            // Check visibilità
+                            if (screenY < -30 || screenY > mockCanvasHeight + 30) {
+                                if (screenY < -30) break;
+                                continue;
+                            }
+
+                            const platWord = mockPlatforms[i].targetWord.toLowerCase();
                             // Match esatto (per parole corte) o match di 3 lettere (per parole lunghe)
                             if (platWord === searchWord || (searchWord.length >= 3 && platWord.startsWith(searchWord))) {
                                 return i;
@@ -644,8 +655,9 @@
                     this.assert(performSearch("/i", 0) === -1, "Nessun salto anticipato per parole corte: '/i' non salta a 'if'");
                     this.assert(performSearch("/if", 0) === 1, "Match esatto per parole corte funzionante: '/if' -> 'if'");
                     this.assert(performSearch("/ret", 1) === 2, "Match corretto saltando piattaforma: '/ret' -> 'return'");
-                    this.assert(performSearch("/con", 2) === 3, "Match corretto snippet e case-insensitive: '/con' -> 'Console.WriteLine();'");
+                    this.assert(performSearch("/wri", 2) === 3, "Match corretto snippet target: '/wri' -> 'WriteLine' dentro 'Console.WriteLine()'");
                     this.assert(performSearch("/xyz", 1) === -1, "Mancato match gestito correttamente: '/xyz' non trovato");
+                    this.assert(performSearch("/cla", 3) === -1, "Piattaforma fuori dallo schermo ignorata: '/cla' non salta a 'class'");
 
                     let jumpTime = 60; // 1 secondo
                     jumpTime--;
@@ -685,6 +697,7 @@
                 this.currentAction = null;
                 this.highScores = { pipes: 0, meteors: 0 };
                 this.hasHiddenInstructions = false;
+                this.lastKey = ''; // <-- Variabile per tracciare la shortcut :m
 
                 this.loadHighScores();
 
@@ -740,35 +753,43 @@
             }
 
             handleKey(key, e) {
+                // Intercetta la scorciatoia :m globale per tornare indietro in maniera sicura
+                const isMenuCommand = (this.lastKey === ':' && key === 'm');
+                this.lastKey = key;
+
+                if (isMenuCommand) {
+                    this.lastKey = ''; // Reset per evitare trigger doppi
+                    if (this.state === 'MAIN_MENU') {
+                        this.goToGlobalMenu();
+                    } else {
+                        this.goToMainMenu(); // Se siamo in gioco o in qualsiasi altro menu, torniamo alla base
+                    }
+                    return; // Fermiamo l'elaborazione del tasto "m" qui
+                }
+
+                // Logica normale (tolti i controlli diretti sul tasto "m")
                 if (this.state === 'MAIN_MENU') {
-                    if (key === 'm') this.goToGlobalMenu();
-                    else this.handleMainMenuNavigation(key);
+                    this.handleMainMenuNavigation(key);
                 } else if (this.state === 'GLOBAL_MENU') {
                     this.handleGlobalMenuNavigation(key);
                 } else if (this.state === 'CONFIG_MENU') {
                     this.handleConfigMenuNavigation(key);
                 } else if (this.state === 'GAMEOVER') {
-                    if (key === 'm') this.goToMainMenu(); 
                     if (key === 'k' || key === 'Enter') this.start();
-                } else if (this.state === 'TESTING') {
-                    if (key === 'm') this.goToMainMenu();
                 }
 
                 // CONTROLLI GIOCO /JUMP
                 if (SETTINGS.GAME === 'jump') {
                     if (this.state === 'PLAYING') {
-                        if (key === 'm') this.goToMainMenu();
-                        else this.handleJumpInput(key, e);
+                        this.handleJumpInput(key, e);
                     } else if (this.state === 'AT_DOOR') {
-                        if (key === 'm') this.goToMainMenu();
-                        else if (key === '[' && e.ctrlKey) {
+                        if (key === '[' && e.ctrlKey) {
                             e.preventDefault();
                             this.jumpLevel++;
                             this.startJumpMode();
                         }
                     } else if (this.state === 'DOOR_CLOSED') {
-                        if (key === 'm') this.goToMainMenu();
-                        else if (key === 'o' && e.ctrlKey) {
+                        if (key === 'o' && e.ctrlKey) {
                             e.preventDefault();
                             this.jumpLevel = Math.max(1, this.jumpLevel - 1);
                             this.startJumpMode();
@@ -1198,9 +1219,31 @@
                 const dataArray = LANG_DATA[langId][contentType];
 
                 for (let i = 0; i < this.jumpNumPlatforms; i++) {
-                    const word = dataArray[Math.floor(Math.random() * dataArray.length)];
+                    const fullText = dataArray[Math.floor(Math.random() * dataArray.length)];
+                    let targetWord = fullText;
+                    let parts = { prefix: "", target: fullText, suffix: "" };
+
+                    // Se è uno snippet, seleziona una parola casuale da evidenziare per il salto
+                    if (contentType === 'snippets') {
+                        // Estrae solo le vere e proprie parole alfanumeriche escludendo punteggiatura
+                        const words = fullText.match(/[a-zA-Z_]\w*/g) || [];
+                        if (words.length > 0) {
+                            targetWord = words[Math.floor(Math.random() * words.length)];
+                            
+                            // Suddivide la stringa per colorare in modo differente il target in renderJumpMode
+                            const matchIdx = fullText.indexOf(targetWord);
+                            parts = {
+                                prefix: fullText.substring(0, matchIdx),
+                                target: targetWord,
+                                suffix: fullText.substring(matchIdx + targetWord.length)
+                            };
+                        }
+                    }
+
                     this.jumpPlatforms.push({
-                        word: word,
+                        word: fullText,
+                        targetWord: targetWord,
+                        parts: parts,
                         y: groundY - ((i + 1) * 120),
                         x: Math.random() * (this.canvas.width - 250) + 50
                     });
@@ -1234,12 +1277,22 @@
                     if (this.jumpBuffer.length > 1) { // Ha digitato '/' e almeno una lettera
                         const searchWord = this.jumpBuffer.substring(1).toLowerCase();
                         let startIdx = this.jumpPlayerIdx + 1;
-                        let endIdx = Math.min(startIdx + 8, this.jumpPlatforms.length); 
                         let matchedIdx = -1;
                         
-                        for (let i = startIdx; i < endIdx; i++) {
-                            const platWord = this.jumpPlatforms[i].word.toLowerCase();
-                            // Se è una parola corta fa il match esatto, altrimenti aspetta le 3 lettere
+                        for (let i = startIdx; i < this.jumpPlatforms.length; i++) {
+                            const plat = this.jumpPlatforms[i];
+                            const screenY = plat.y + this.cameraY;
+                            
+                            // Permetti il salto solo se la piattaforma è nell'area visibile (con piccolo margine)
+                            if (screenY < -30 || screenY > this.canvas.height + 30) {
+                                // Le piattaforme vanno verso l'alto (y decrescente). 
+                                // Se superiamo il bordo superiore non serve controllare le successive.
+                                if (screenY < -30) break; 
+                                continue;
+                            }
+
+                            const platWord = plat.targetWord.toLowerCase();
+                            // Usa la targetWord calcolata per fare il match
                             if (platWord === searchWord || (searchWord.length >= 3 && platWord.startsWith(searchWord))) {
                                 matchedIdx = i;
                                 break;
@@ -1295,11 +1348,32 @@
                     ctx.fillRect(plat.x, plat.y, platW, 20);
                     ctx.strokeRect(plat.x, plat.y, platW, 20);
                     
-                    ctx.fillStyle = SETTINGS.THEME['--text-color'];
-                    // Riduci font per snippet molto lunghi
                     const fontSize = plat.word.length > 15 ? 12 : 14;
                     ctx.font = `${fontSize}px ${SETTINGS.THEME['--font-family']}`;
-                    ctx.fillText(plat.word, plat.x + 10, plat.y + 15);
+                    
+                    // Disegno del testo con Highlight della parola bersaglio
+                    if (SETTINGS.JUMP.CONTENT === 'snippets' && plat.parts && plat.parts.prefix !== undefined) {
+                        let currentX = plat.x + 10;
+                        const textY = plat.y + 15;
+
+                        // Prefisso (normale)
+                        ctx.fillStyle = SETTINGS.THEME['--text-color'];
+                        ctx.fillText(plat.parts.prefix, currentX, textY);
+                        currentX += ctx.measureText(plat.parts.prefix).width;
+
+                        // Parola Target Evidenziata (colorata)
+                        ctx.fillStyle = SETTINGS.THEME['--highlight-color'];
+                        ctx.fillText(plat.parts.target, currentX, textY);
+                        currentX += ctx.measureText(plat.parts.target).width;
+
+                        // Suffisso (normale)
+                        ctx.fillStyle = SETTINGS.THEME['--text-color'];
+                        ctx.fillText(plat.parts.suffix, currentX, textY);
+                    } else {
+                        // Normale o Keywords
+                        ctx.fillStyle = SETTINGS.THEME['--text-color'];
+                        ctx.fillText(plat.word, plat.x + 10, plat.y + 15);
+                    }
                 });
 
                 // Disegna Porta
@@ -1336,7 +1410,7 @@
                 ctx.fillText(`Cerca: ${this.jumpBuffer}_`, 20, canvas.height - 30);
                 
                 ctx.font = `14px ${SETTINGS.THEME['--font-family']}`;
-                ctx.fillText(`[m] Esci al menu`, canvas.width - 150, 40);
+                ctx.fillText(`[:m] Esci al menu`, canvas.width - 150, 40);
 
                 // Overlays
                 if (this.state === 'AT_DOOR') {
