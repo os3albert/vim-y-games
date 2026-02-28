@@ -93,29 +93,9 @@
         }
 
         @keyframes crt-collapse {
-            0% { 
-                max-height: 250px; 
-                opacity: 1; 
-                transform: scale(1, 1); 
-                margin-bottom: 1.5rem; 
-            }
-            30% { 
-                max-height: 250px;
-                transform: scale(1.02, 0.02); 
-                opacity: 0.8; 
-                margin-bottom: 1.5rem; 
-                padding-top: 0;
-                padding-bottom: 0;
-            }
-            100% { 
-                max-height: 0; 
-                opacity: 0; 
-                transform: scale(0, 0); 
-                margin-bottom: 0; 
-                padding-top: 0; 
-                padding-bottom: 0; 
-                border-width: 0; 
-            }
+            0% { max-height: 250px; opacity: 1; transform: scale(1, 1); margin-bottom: 1.5rem; }
+            30% { max-height: 250px; transform: scale(1.02, 0.02); opacity: 0.8; margin-bottom: 1.5rem; padding-top: 0; padding-bottom: 0; }
+            100% { max-height: 0; opacity: 0; transform: scale(0, 0); margin-bottom: 0; padding-top: 0; padding-bottom: 0; border-width: 0; }
         }
 
         .info-title {
@@ -152,26 +132,15 @@
         .menu-value-dim { opacity: 0.4; }
 
         /* Custom Scrollbar Dinamica basata sul Tema */
-        * {
-            scrollbar-width: thin;
-            scrollbar-color: var(--primary-color) transparent;
-        }
-        *::-webkit-scrollbar {
-            width: 8px;
-        }
-        *::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 4px;
-        }
-        *::-webkit-scrollbar-thumb {
-            background-color: var(--primary-color);
-            border-radius: 4px;
-            border: 1px solid var(--card-bg);
-        }
+        * { scrollbar-width: thin; scrollbar-color: var(--primary-color) transparent; }
+        *::-webkit-scrollbar { width: 8px; }
+        *::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); border-radius: 4px; }
+        *::-webkit-scrollbar-thumb { background-color: var(--primary-color); border-radius: 4px; border: 1px solid var(--card-bg); }
 
         /* Stili output Test */
         .test-pass { color: #00ff41; }
         .test-fail { color: #ff3333; font-weight: bold; }
+        .test-group { color: var(--primary-color); font-weight: bold; font-size: 1.1em; margin-top: 1rem; border-bottom: 1px dashed var(--primary-color); display: inline-block;}
 
         /* Effetto CRT opzionale */
         .crt-overlay::before {
@@ -227,7 +196,7 @@
         </div>
 
         <!-- Menu Configurazione Gioco -->
-        <div id="config-menu" class="retro-card hidden" style="width: 90%; max-width: 600px;">
+        <div id="config-menu" class="retro-card hidden" style="width: 90%; max-width: 650px;">
             <h1 id="config-title" class="text-4xl font-bold mb-2 tracking-tighter uppercase text-[#00ff41]">CONFIGURAZIONE</h1>
             <p class="mb-4 opacity-70">Imposta i parametri della partita</p>
             
@@ -246,7 +215,7 @@
         <!-- Schermata Runner dei Test -->
         <div id="test-runner" class="retro-card hidden text-left" style="width: 90%; max-width: 800px;">
             <h1 class="text-4xl font-bold mb-2 tracking-tighter uppercase border-b border-[#00ff41] pb-2">SUITE TEST DI UNITÀ</h1>
-            <div id="test-output" class="font-mono text-sm mb-4" style="line-height: 1.5;">
+            <div id="test-output" class="font-mono text-sm mb-4" style="line-height: 1.5; max-height: 50vh; overflow-y: auto;">
                 <!-- Output Test JS -->
             </div>
             <div class="text-center mt-6">
@@ -279,45 +248,9 @@
          * DIZIONARIO TEMI
          */
         const THEMES = {
-            matrix: {
-                '--bg-color': '#0d0d0d',
-                '--primary-color': '#00ff41',
-                '--secondary-color': '#003300',
-                '--grid-color': '#001a00',
-                '--card-bg': 'rgba(0, 0, 0, 0.9)',
-                '--text-color': '#00ff41',
-                '--font-family': '"Fira Code", monospace',
-                '--crt-display': 'block',
-                '--border-color': '#00ff41',
-                '--shadow-color': 'rgba(0, 255, 65, 0.2)',
-                '--text-shadow': '0 0 5px var(--primary-color)'
-            },
-            tokyo: {
-                '--bg-color': '#1a1b26',
-                '--primary-color': '#7aa2f7',
-                '--secondary-color': '#24283b',
-                '--grid-color': '#414868',
-                '--card-bg': 'rgba(26, 27, 38, 0.95)',
-                '--text-color': '#c0caf5',
-                '--font-family': '"Fira Code", monospace',
-                '--crt-display': 'none',
-                '--border-color': '#7aa2f7',
-                '--shadow-color': 'rgba(122, 162, 247, 0.2)',
-                '--text-shadow': 'none'
-            },
-            material: {
-                '--bg-color': '#fafafa',
-                '--primary-color': '#6200ea',
-                '--secondary-color': '#e0e0e0',
-                '--grid-color': '#eeeeee',
-                '--card-bg': '#ffffff',
-                '--text-color': '#212121',
-                '--font-family': '"Roboto", sans-serif',
-                '--crt-display': 'none',
-                '--border-color': '#e0e0e0',
-                '--shadow-color': 'rgba(0, 0, 0, 0.15)',
-                '--text-shadow': 'none'
-            }
+            matrix: { '--bg-color': '#0d0d0d', '--primary-color': '#00ff41', '--secondary-color': '#003300', '--grid-color': '#001a00', '--card-bg': 'rgba(0, 0, 0, 0.9)', '--text-color': '#00ff41', '--font-family': '"Fira Code", monospace', '--crt-display': 'block', '--border-color': '#00ff41', '--shadow-color': 'rgba(0, 255, 65, 0.2)', '--text-shadow': '0 0 5px var(--primary-color)' },
+            tokyo: { '--bg-color': '#1a1b26', '--primary-color': '#7aa2f7', '--secondary-color': '#24283b', '--grid-color': '#414868', '--card-bg': 'rgba(26, 27, 38, 0.95)', '--text-color': '#c0caf5', '--font-family': '"Fira Code", monospace', '--crt-display': 'none', '--border-color': '#7aa2f7', '--shadow-color': 'rgba(122, 162, 247, 0.2)', '--text-shadow': 'none' },
+            material: { '--bg-color': '#fafafa', '--primary-color': '#6200ea', '--secondary-color': '#e0e0e0', '--grid-color': '#eeeeee', '--card-bg': '#ffffff', '--text-color': '#212121', '--font-family': '"Roboto", sans-serif', '--crt-display': 'none', '--border-color': '#e0e0e0', '--shadow-color': 'rgba(0, 0, 0, 0.15)', '--text-shadow': 'none' }
         };
 
         const DIFFICULTIES = {
@@ -326,9 +259,35 @@
             hard: { SPEED: 6.5, SPAWN_RATE: 55, GAP: 150, GRAVITY: 0.35 }
         };
 
-        const CSHARP_KEYWORDS = [
-            "public", "private", "protected", "internal", "class", "struct", "interface", "enum", "void", "static", "readonly", "const", "string", "int", "bool", "float", "double", "decimal", "var", "dynamic", "object", "Console.WriteLine", "if", "else", "switch", "case", "break", "continue", "for", "foreach", "while", "do", "return", "new", "namespace", "using", "System", "async", "await", "Task", "IEnumerable", "List<T>", "Dictionary", "try", "catch", "finally", "throw", "override", "virtual", "abstract", "sealed", "base", "this", "null", "true", "false"
-        ];
+        /**
+         * DIZIONARIO LINGUAGGI E SNIPPETS PER GIOCO /JUMP
+         */
+        const LANG_DATA = {
+            'c#': {
+                keywords: ["public", "private", "protected", "class", "interface", "enum", "void", "static", "readonly", "string", "int", "bool", "if", "else", "switch", "return", "new", "namespace", "using", "async", "await", "Task", "override", "virtual"],
+                snippets: ["Console.WriteLine();", "public void Main()", "Task.Delay(100);", "List<int> list =", "return true;", "if (x > 0)", "throw new Exception()", "public class App", "await fetchAsync()", "var data = new();"]
+            },
+            'python': {
+                keywords: ["def", "class", "import", "from", "return", "yield", "if", "elif", "else", "True", "False", "None", "async", "await", "try", "except", "pass", "break", "continue", "for", "in", "while"],
+                snippets: ["def __init__(self):", "import sys, os", "print('hello')", "return False", "yield data", "if __name__ == '__main__':", "x = [i for i in l]", "with open('f.txt') as f:"]
+            },
+            'javascript': {
+                keywords: ["function", "const", "let", "var", "async", "await", "return", "if", "else", "export", "import", "class", "extends", "true", "false", "null", "undefined", "switch", "case"],
+                snippets: ["console.log(data);", "const x = 10;", "await fetch(url)", "return true;", "export default App;", "document.getElementById()", "setTimeout(() => {}, 1000);", "arr.map(x => x*2);"]
+            },
+            'java': {
+                keywords: ["public", "private", "class", "void", "int", "boolean", "if", "else", "return", "new", "import", "package", "extends", "implements", "throw", "throws", "try", "catch"],
+                snippets: ["System.out.println();", "public static void main", "new ArrayList<>();", "return false;", "Thread.sleep(1000);", "import java.util.List;", "@Override"]
+            },
+            'css': {
+                keywords: ["display", "margin", "padding", "color", "background", "border", "position", "flex", "grid", "width", "height", "font-size", "font-family", "align-items", "justify-content"],
+                snippets: ["display: flex;", "margin: 0 auto;", "color: #ffffff;", "background-color: #000;", "position: absolute;", "justify-content: center;", "border-radius: 8px;", "box-sizing: border-box;"]
+            },
+            'html': {
+                keywords: ["div", "span", "a", "p", "h1", "h2", "img", "script", "style", "html", "body", "head", "link", "meta", "form", "input", "button"],
+                snippets: ["<div class='box'>", "<a href='#'>Link</a>", "<img src='img.png'>", "<script src='app.js'>", "<link rel='stylesheet'>", "<button type='submit'>", "<input type='text'>"]
+            }
+        };
 
         /**
          * STRUTTURE DEI MENU
@@ -336,8 +295,8 @@
         const MAIN_MENU_DATA = {
             activeIndex: 0,
             items: [
-                { id: 'game_jkmode', label: '1. Gioca a JKMODE', isAction: true },
-                { id: 'game_jump', label: '2. Gioca a /jump (Platformer C#)', isAction: true },
+                { id: 'game_jkmode', label: '1. Gioca a JKMODE (Flappy)', isAction: true },
+                { id: 'game_jump', label: '2. Gioca a /jump (Platformer)', isAction: true },
                 { id: 'game_tests', label: '3. >>> ESEGUI_TESTS.sh <<<', isAction: true },
                 { id: 'open_global', label: '4. Opzioni App (Temi/Social) [m]', isAction: true }
             ]
@@ -355,33 +314,48 @@
         };
 
         const SETTINGS = {
-            GAME: 'jkmode', 
-            MODE: 'zero-g', 
-            OBSTACLE_TYPE: 'pipes', 
-            PHYSICS: {
-                MAX_VELOCITY: 15,
-                ACCEL: 1.5,
-                FRICTION: 0.88,
-                GRAVITY: DIFFICULTIES.normal.GRAVITY,
-                JUMP: -6.5,
-                DIVE: 5
-            },
-            WORLD: {
-                PIPE_SPEED: DIFFICULTIES.normal.SPEED,
-                PIPE_SPAWN_RATE: DIFFICULTIES.normal.SPAWN_RATE,
-                PIPE_GAP: DIFFICULTIES.normal.GAP,
-                PIPE_WIDTH: 80
-            },
+            GAME: 'jkmode', // 'jkmode' o 'jump'
             THEME: { ...THEMES.matrix },
-            MENU: {
-                activeIndex: 0,
-                items: [
-                    { id: 'mode', label: 'Fisica', options: ['zero-g', 'gravity'], idx: 0 },
-                    { id: 'obstacle', label: 'Ostacoli', options: ['pipes', 'meteors'], idx: 0 },
-                    { id: 'difficulty', label: 'Difficoltà', options: ['easy', 'normal', 'hard'], idx: 1 },
-                    { id: 'start', label: '>>> RUN_GAME.sh <<<', isAction: true },
-                    { id: 'back', label: '<<< TORNA AI GIOCHI', isAction: true }
-                ]
+            
+            // Configurazione specifica JKMODE
+            JKMODE: {
+                MODE: 'zero-g', 
+                OBSTACLE_TYPE: 'pipes', 
+                PHYSICS: {
+                    MAX_VELOCITY: 15, ACCEL: 1.5, FRICTION: 0.88,
+                    GRAVITY: DIFFICULTIES.normal.GRAVITY, JUMP: -6.5, DIVE: 5
+                },
+                WORLD: {
+                    PIPE_SPEED: DIFFICULTIES.normal.SPEED, PIPE_SPAWN_RATE: DIFFICULTIES.normal.SPAWN_RATE,
+                    PIPE_GAP: DIFFICULTIES.normal.GAP, PIPE_WIDTH: 80
+                },
+                MENU: {
+                    activeIndex: 0,
+                    items: [
+                        { id: 'mode', label: 'Fisica', options: ['zero-g', 'gravity'], idx: 0 },
+                        { id: 'obstacle', label: 'Ostacoli', options: ['pipes', 'meteors'], idx: 0 },
+                        { id: 'difficulty', label: 'Difficoltà', options: ['easy', 'normal', 'hard'], idx: 1 },
+                        { id: 'start', label: '>>> AVVIA JKMODE <<<', isAction: true },
+                        { id: 'back', label: '<<< TORNA AI GIOCHI', isAction: true }
+                    ]
+                }
+            },
+
+            // Configurazione specifica /JUMP
+            JUMP: {
+                LANGUAGE: 'c#',
+                CONTENT: 'keywords', // 'keywords' o 'snippets'
+                DIFFICULTY: 'normal',
+                MENU: {
+                    activeIndex: 0,
+                    items: [
+                        { id: 'jump_lang', label: 'Sintassi', options: ['c#', 'python', 'javascript', 'java', 'css', 'html'], idx: 0 },
+                        { id: 'jump_content', label: 'Contenuto', options: ['keywords', 'snippets'], idx: 0 },
+                        { id: 'jump_diff', label: 'Difficoltà', options: ['easy', 'normal', 'hard'], idx: 1 },
+                        { id: 'start', label: '>>> AVVIA /JUMP <<<', isAction: true },
+                        { id: 'back', label: '<<< TORNA AI GIOCHI', isAction: true }
+                    ]
+                }
             }
         };
 
@@ -433,7 +407,7 @@
         }
 
         /**
-         * ENTITÀ: GIOCATORE
+         * ENTITÀ: GIOCATORE (JKMODE)
          */
         class Player {
             constructor(h) {
@@ -444,24 +418,24 @@
             }
 
             update(h, inputKeys, actionEvent) {
-                if (SETTINGS.MODE === 'gravity') {
-                    if (actionEvent === 'jump' || actionEvent === 'swipe-up') this.v = SETTINGS.PHYSICS.JUMP;
-                    if (actionEvent === 'dive' || actionEvent === 'swipe-down') this.v += SETTINGS.PHYSICS.DIVE;
+                if (SETTINGS.JKMODE.MODE === 'gravity') {
+                    if (actionEvent === 'jump' || actionEvent === 'swipe-up') this.v = SETTINGS.JKMODE.PHYSICS.JUMP;
+                    if (actionEvent === 'dive' || actionEvent === 'swipe-down') this.v += SETTINGS.JKMODE.PHYSICS.DIVE;
 
-                    this.v += SETTINGS.PHYSICS.GRAVITY;
-                    if (this.v > SETTINGS.PHYSICS.MAX_VELOCITY) this.v = SETTINGS.PHYSICS.MAX_VELOCITY;
+                    this.v += SETTINGS.JKMODE.PHYSICS.GRAVITY;
+                    if (this.v > SETTINGS.JKMODE.PHYSICS.MAX_VELOCITY) this.v = SETTINGS.JKMODE.PHYSICS.MAX_VELOCITY;
                     this.y += this.v;
                 } else {
-                    if (inputKeys.up) this.v -= SETTINGS.PHYSICS.ACCEL;
-                    if (inputKeys.down) this.v += SETTINGS.PHYSICS.ACCEL;
+                    if (inputKeys.up) this.v -= SETTINGS.JKMODE.PHYSICS.ACCEL;
+                    if (inputKeys.down) this.v += SETTINGS.JKMODE.PHYSICS.ACCEL;
                     if (actionEvent === 'swipe-up') this.v -= 12;
                     if (actionEvent === 'swipe-down') this.v += 12;
                     if (actionEvent === 'jump') this.v -= 5;
 
-                    if (this.v > SETTINGS.PHYSICS.MAX_VELOCITY) this.v = SETTINGS.PHYSICS.MAX_VELOCITY;
-                    if (this.v < -SETTINGS.PHYSICS.MAX_VELOCITY) this.v = -SETTINGS.PHYSICS.MAX_VELOCITY;
+                    if (this.v > SETTINGS.JKMODE.PHYSICS.MAX_VELOCITY) this.v = SETTINGS.JKMODE.PHYSICS.MAX_VELOCITY;
+                    if (this.v < -SETTINGS.JKMODE.PHYSICS.MAX_VELOCITY) this.v = -SETTINGS.JKMODE.PHYSICS.MAX_VELOCITY;
 
-                    this.v *= SETTINGS.PHYSICS.FRICTION;
+                    this.v *= SETTINGS.JKMODE.PHYSICS.FRICTION;
                     this.y += this.v;
                 }
 
@@ -488,13 +462,13 @@
         class Pipe {
             constructor(w, h) {
                 this.x = w;
-                this.w = SETTINGS.WORLD.PIPE_WIDTH;
+                this.w = SETTINGS.JKMODE.WORLD.PIPE_WIDTH;
                 this.top = Math.random() * (h / 2) + 60;
-                this.gap = SETTINGS.WORLD.PIPE_GAP;
+                this.gap = SETTINGS.JKMODE.WORLD.PIPE_GAP;
                 this.passed = false;
             }
 
-            update() { this.x -= SETTINGS.WORLD.PIPE_SPEED; }
+            update() { this.x -= SETTINGS.JKMODE.WORLD.PIPE_SPEED; }
 
             draw(ctx, h) {
                 ctx.fillStyle = SETTINGS.THEME['--secondary-color'];
@@ -533,7 +507,7 @@
                 this.x = w;
                 this.y = Math.random() * (h - 60) + 30; 
                 this.size = 30 + Math.random() * 25; 
-                this.speed = SETTINGS.WORLD.PIPE_SPEED * (1.2 + Math.random() * 0.6); 
+                this.speed = SETTINGS.JKMODE.WORLD.PIPE_SPEED * (1.2 + Math.random() * 0.6); 
                 this.passed = false;
                 this.w = this.size; 
             }
@@ -597,69 +571,93 @@
                 this.logs = [];
                 this.logs.push("=> Inizio esecuzione suite di test...");
 
-                const backupMode = SETTINGS.MODE;
-                const backupGravity = SETTINGS.PHYSICS.GRAVITY;
-                const backupMaxVel = SETTINGS.PHYSICS.MAX_VELOCITY;
-                const backupAccel = SETTINGS.PHYSICS.ACCEL;
-                const backupFriction = SETTINGS.PHYSICS.FRICTION;
+                // BACKUP CONFIG
+                const backupMode = SETTINGS.JKMODE.MODE;
+                const backupGravity = SETTINGS.JKMODE.PHYSICS.GRAVITY;
+                const backupMaxVel = SETTINGS.JKMODE.PHYSICS.MAX_VELOCITY;
+                const backupAccel = SETTINGS.JKMODE.PHYSICS.ACCEL;
+                const backupFriction = SETTINGS.JKMODE.PHYSICS.FRICTION;
 
                 try {
+                    // --- TEST JKMODE ---
+                    this.logs.push("<div class='test-group'>=== TEST JKMODE ===</div>");
+                    
                     let p = new Player(500);
-                    this.assert(p.y === 250 && p.v === 0, "Player inizializzato correttamente al centro dello schermo");
+                    this.assert(p.y === 250 && p.v === 0, "Player inizializzato correttamente al centro");
 
-                    SETTINGS.MODE = 'gravity';
-                    SETTINGS.PHYSICS.GRAVITY = 1.0;
-                    SETTINGS.PHYSICS.MAX_VELOCITY = 10;
+                    SETTINGS.JKMODE.MODE = 'gravity';
+                    SETTINGS.JKMODE.PHYSICS.GRAVITY = 1.0;
+                    SETTINGS.JKMODE.PHYSICS.MAX_VELOCITY = 10;
                     p = new Player(500);
                     p.update(500, {up:false, down:false}, null);
-                    this.assert(p.v === 1.0 && p.y === 251, "Player cade a causa della gravità");
+                    this.assert(p.v === 1.0 && p.y === 251, "Caduta libera con gravità funzionante");
 
-                    SETTINGS.MODE = 'zero-g';
-                    SETTINGS.PHYSICS.ACCEL = 2.0;
-                    SETTINGS.PHYSICS.FRICTION = 0.5;
+                    SETTINGS.JKMODE.MODE = 'zero-g';
+                    SETTINGS.JKMODE.PHYSICS.ACCEL = 2.0;
+                    SETTINGS.JKMODE.PHYSICS.FRICTION = 0.5;
                     p = new Player(500);
                     p.update(500, {up:true, down:false}, null);
-                    this.assert(p.v === -1.0 && p.y === 249, "Player si muove verso l'alto con input 'up' in Zero-G");
+                    this.assert(p.v === -1.0 && p.y === 249, "Movimento accelerato in Zero-G funzionante");
 
                     p = new Player(500);
-                    p.y = 5;
-                    p.v = -10;
-                    const mortoSoffitto = p.update(500, {up:false, down:false}, null);
-                    this.assert(mortoSoffitto === true, "Player muore se tocca o supera il soffitto (y <= 0)");
+                    p.y = 5; p.v = -10;
+                    this.assert(p.update(500, {up:false, down:false}, null) === true, "Collisione col Soffitto rilevata");
 
                     p = new Player(500);
-                    p.y = 480;
-                    p.v = 10;
-                    p.size = 28;
-                    const mortoPavimento = p.update(500, {up:false, down:false}, null);
-                    this.assert(mortoPavimento === true, "Player muore se tocca o supera il pavimento");
+                    p.y = 480; p.v = 10; p.size = 28;
+                    this.assert(p.update(500, {up:false, down:false}, null) === true, "Collisione col Pavimento rilevata");
 
                     p = new Player(500);
                     p.x = 100; p.y = 150; p.size = 28;
                     let pipe = new Pipe(100, 500);
                     pipe.x = 100; pipe.w = 50; pipe.top = 100; pipe.gap = 200; 
-                    this.assert(pipe.collides(p, 500) === false, "Nessuna collisione: Player è passato attraverso il gap del tubo");
+                    this.assert(pipe.collides(p, 500) === false, "Nessuna collisione se passa nel gap del Tubo");
 
                     p.y = 90;
-                    this.assert(pipe.collides(p, 500) === true, "Collisione rilevata: Player tocca il tubo superiore");
+                    this.assert(pipe.collides(p, 500) === true, "Collisione col bordo del Tubo rilevata");
 
-                    p = new Player(500);
-                    p.x = 100; p.y = 100; p.size = 20; 
-                    let met = new Meteor(100, 500);
-                    met.x = 110; met.y = 110; met.size = 30; 
-                    this.assert(met.collides(p, 500) === true, "Collisione rilevata: Player è colpito dal meteorite");
+                    // --- TEST /JUMP ---
+                    this.logs.push("<div class='test-group'>=== TEST /JUMP ===</div>");
+                    
+                    // Simulazione dati per il match
+                    let mockPlatforms = [
+                        { word: "public" },
+                        { word: "return" },
+                        { word: "Console.WriteLine();" },
+                        { word: "class" }
+                    ];
+
+                    let performSearch = (buffer, currentIndex) => {
+                        let searchWord = buffer.substring(1).toLowerCase();
+                        for (let i = currentIndex + 1; i < mockPlatforms.length; i++) {
+                            if (mockPlatforms[i].word.toLowerCase().startsWith(searchWord)) {
+                                return i;
+                            }
+                        }
+                        return -1;
+                    };
+
+                    this.assert(performSearch("/pub", -1) === 0, "Match corretto keyword: '/pub' -> 'public'");
+                    this.assert(performSearch("/ret", 0) === 1, "Match corretto saltando piattaforma: '/ret' -> 'return'");
+                    this.assert(performSearch("/con", 1) === 2, "Match corretto snippet e case-insensitive: '/con' -> 'Console.WriteLine();'");
+                    this.assert(performSearch("/xyz", 1) === -1, "Mancato match gestito correttamente: '/xyz' non trovato");
+
+                    let jumpTime = 60; // 1 secondo
+                    jumpTime--;
+                    this.assert(jumpTime === 59, "Timer /jump scala correttamente");
 
                 } catch (e) {
-                    this.logs.push(`<span class="test-fail">[ERRORE FATALE]</span> Eccezione durante il test: ${e.message}`);
+                    this.logs.push(`<span class="test-fail">[ERRORE FATALE]</span> Eccezione: ${e.message}`);
                 }
 
-                SETTINGS.MODE = backupMode;
-                SETTINGS.PHYSICS.GRAVITY = backupGravity;
-                SETTINGS.PHYSICS.MAX_VELOCITY = backupMaxVel;
-                SETTINGS.PHYSICS.ACCEL = backupAccel;
-                SETTINGS.PHYSICS.FRICTION = backupFriction;
+                // RIPRISTINO CONFIG
+                SETTINGS.JKMODE.MODE = backupMode;
+                SETTINGS.JKMODE.PHYSICS.GRAVITY = backupGravity;
+                SETTINGS.JKMODE.PHYSICS.MAX_VELOCITY = backupMaxVel;
+                SETTINGS.JKMODE.PHYSICS.ACCEL = backupAccel;
+                SETTINGS.JKMODE.PHYSICS.FRICTION = backupFriction;
 
-                this.logs.push("----------------------------------------");
+                this.logs.push("<br>----------------------------------------");
                 this.logs.push(`Risultati: <span class="test-pass">${this.passed} PASS</span> | <span class="test-fail">${this.failed} FAIL</span>`);
                 
                 return this.logs;
@@ -674,7 +672,7 @@
             constructor() {
                 this.canvas = document.getElementById('gameCanvas');
                 this.ctx = this.canvas.getContext('2d');
-                // Stati possibili: MAIN_MENU, GLOBAL_MENU, CONFIG_MENU, PLAYING, GAMEOVER, TESTING, AT_DOOR, DOOR_CLOSED
+                // Stati: MAIN_MENU, GLOBAL_MENU, CONFIG_MENU, PLAYING, GAMEOVER, TESTING, AT_DOOR, DOOR_CLOSED
                 this.state = 'MAIN_MENU'; 
                 this.score = 0;
                 this.obstacles = [];
@@ -697,19 +695,16 @@
                 this._setupUI();
                 this.renderMainMenu();
                 this.renderGlobalMenu();
-                this.renderConfigMenu();
                 window.addEventListener('resize', () => this.onResize());
                 this.onResize();
                 this.run();
             }
 
             loadHighScores() {
-                const saved = localStorage.getItem('vimygames_highscores');
+                const saved = localStorage.getItem('vimygames_highscores_v2');
                 if (saved) {
                     try {
                         this.highScores = JSON.parse(saved);
-                        if (this.highScores.pipes === undefined) this.highScores.pipes = 0;
-                        if (this.highScores.meteors === undefined) this.highScores.meteors = 0;
                     } catch (e) {
                         this.highScores = { pipes: 0, meteors: 0 };
                     }
@@ -717,7 +712,7 @@
             }
 
             saveHighScores() {
-                localStorage.setItem('vimygames_highscores', JSON.stringify(this.highScores));
+                localStorage.setItem('vimygames_highscores_v2', JSON.stringify(this.highScores));
             }
 
             _setupUI() {
@@ -741,14 +736,14 @@
 
             handleKey(key, e) {
                 if (this.state === 'MAIN_MENU') {
-                    if (key === 'm') this.goToGlobalMenu(); // Shortcut
+                    if (key === 'm') this.goToGlobalMenu();
                     else this.handleMainMenuNavigation(key);
                 } else if (this.state === 'GLOBAL_MENU') {
                     this.handleGlobalMenuNavigation(key);
                 } else if (this.state === 'CONFIG_MENU') {
                     this.handleConfigMenuNavigation(key);
                 } else if (this.state === 'GAMEOVER') {
-                    if (key === 'm') this.goToMainMenu(); // Tornare al Main Menu
+                    if (key === 'm') this.goToMainMenu(); 
                     if (key === 'k' || key === 'Enter') this.start();
                 } else if (this.state === 'TESTING') {
                     if (key === 'm') this.goToMainMenu();
@@ -817,7 +812,8 @@
                     this.goToConfigMenu();
                 } else if (item.id === 'game_jump') {
                     SETTINGS.GAME = 'jump';
-                    this.start(); // Salta config menu e inizia diretto /jump
+                    document.getElementById('config-title').innerText = 'CONFIGURAZIONE - /JUMP';
+                    this.goToConfigMenu();
                 } else if (item.id === 'game_tests') {
                     this.runUnitTests();
                 } else if (item.id === 'open_global') {
@@ -1005,12 +1001,16 @@
             }
 
             /* --- CONFIG MENU LOGIC --- */
+            getActiveMenu() {
+                return SETTINGS.GAME === 'jkmode' ? SETTINGS.JKMODE.MENU : SETTINGS.JUMP.MENU;
+            }
+
             handleConfigMenuNavigation(key) {
                 if (['j', 'k', 'h', 'l', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) {
                     this.hideInfoBoxes();
                 }
 
-                const menu = SETTINGS.MENU;
+                const menu = this.getActiveMenu();
                 const item = menu.items[menu.activeIndex];
 
                 if (key === 'j' || key === 'ArrowDown') {
@@ -1042,7 +1042,7 @@
             handleConfigMenuClick(index) {
                 this.hideInfoBoxes();
                 if (this.state !== 'CONFIG_MENU') return;
-                const menu = SETTINGS.MENU;
+                const menu = this.getActiveMenu();
                 
                 if (menu.activeIndex === index) {
                     const item = menu.items[index];
@@ -1061,9 +1061,15 @@
 
             applyMenuSetting(item) {
                 const val = item.options[item.idx];
-                if (item.id === 'mode') SETTINGS.MODE = val;
-                else if (item.id === 'obstacle') SETTINGS.OBSTACLE_TYPE = val;
-                else if (item.id === 'difficulty') this.setDifficulty(val);
+                if (SETTINGS.GAME === 'jkmode') {
+                    if (item.id === 'mode') SETTINGS.JKMODE.MODE = val;
+                    else if (item.id === 'obstacle') SETTINGS.JKMODE.OBSTACLE_TYPE = val;
+                    else if (item.id === 'difficulty') this.setDifficulty(val);
+                } else if (SETTINGS.GAME === 'jump') {
+                    if (item.id === 'jump_lang') SETTINGS.JUMP.LANGUAGE = val;
+                    else if (item.id === 'jump_content') SETTINGS.JUMP.CONTENT = val;
+                    else if (item.id === 'jump_diff') SETTINGS.JUMP.DIFFICULTY = val;
+                }
             }
 
             renderConfigMenu() {
@@ -1071,8 +1077,10 @@
                 if(!container) return;
                 container.innerHTML = '';
                 
-                SETTINGS.MENU.items.forEach((item, index) => {
-                    const isActive = index === SETTINGS.MENU.activeIndex;
+                const menu = this.getActiveMenu();
+
+                menu.items.forEach((item, index) => {
+                    const isActive = index === menu.activeIndex;
                     const row = document.createElement('div');
                     row.className = `menu-row ${isActive ? 'active' : ''}`;
                     row.onclick = () => this.handleConfigMenuClick(index);
@@ -1117,18 +1125,15 @@
             setTheme(themeName) {
                 const theme = THEMES[themeName];
                 SETTINGS.THEME = { ...theme };
-                
-                for (let key in theme) {
-                    document.documentElement.style.setProperty(key, theme[key]);
-                }
+                for (let key in theme) document.documentElement.style.setProperty(key, theme[key]);
             }
 
             setDifficulty(level) {
                 const diff = DIFFICULTIES[level];
-                SETTINGS.WORLD.PIPE_SPEED = diff.SPEED;
-                SETTINGS.WORLD.PIPE_SPAWN_RATE = diff.SPAWN_RATE;
-                SETTINGS.WORLD.PIPE_GAP = diff.GAP;
-                SETTINGS.PHYSICS.GRAVITY = diff.GRAVITY;
+                SETTINGS.JKMODE.WORLD.PIPE_SPEED = diff.SPEED;
+                SETTINGS.JKMODE.WORLD.PIPE_SPAWN_RATE = diff.SPAWN_RATE;
+                SETTINGS.JKMODE.WORLD.PIPE_GAP = diff.GAP;
+                SETTINGS.JKMODE.PHYSICS.GRAVITY = diff.GRAVITY;
             }
 
             onResize() {
@@ -1157,7 +1162,7 @@
                 document.getElementById('game-over').classList.add('hidden');
                 document.getElementById('hud').classList.remove('hidden');
                 
-                const currentType = SETTINGS.OBSTACLE_TYPE;
+                const currentType = SETTINGS.JKMODE.OBSTACLE_TYPE;
                 document.getElementById('hud-mode').innerText = currentType.toUpperCase();
                 document.getElementById('best-score').innerText = this.highScores[currentType];
                 
@@ -1169,16 +1174,26 @@
                 this.state = 'PLAYING';
                 this.jumpLevel = this.jumpLevel || 1;
                 this.jumpNumPlatforms = this.jumpLevel * 10;
-                this.jumpTimeLeft = this.jumpNumPlatforms * 3 * 60; // 3 secondi per piattaforma (a 60 fps)
+                
+                // Difficoltà Time (Secondi per piattaforma)
+                let timePerPlatform = 3;
+                if (SETTINGS.JUMP.DIFFICULTY === 'easy') timePerPlatform = 4;
+                if (SETTINGS.JUMP.DIFFICULTY === 'hard') timePerPlatform = 2;
+                
+                this.jumpTimeLeft = this.jumpNumPlatforms * timePerPlatform * 60; // calcolato a 60 FPS
                 this.jumpBuffer = "";
                 this.jumpPlatforms = [];
-                this.jumpPlayerIdx = -1; // -1 = ground
+                this.jumpPlayerIdx = -1; // -1 = suolo
                 this.cameraY = 0;
                 
                 let groundY = this.canvas.height - 20;
 
+                const langId = SETTINGS.JUMP.LANGUAGE;
+                const contentType = SETTINGS.JUMP.CONTENT;
+                const dataArray = LANG_DATA[langId][contentType];
+
                 for (let i = 0; i < this.jumpNumPlatforms; i++) {
-                    const word = CSHARP_KEYWORDS[Math.floor(Math.random() * CSHARP_KEYWORDS.length)];
+                    const word = dataArray[Math.floor(Math.random() * dataArray.length)];
                     this.jumpPlatforms.push({
                         word: word,
                         y: groundY - ((i + 1) * 120),
@@ -1186,7 +1201,6 @@
                     });
                 }
                 
-                // La porta in cima si posiziona sull'ultima piattaforma
                 this.jumpDoor = {
                     y: this.jumpPlatforms[this.jumpNumPlatforms - 1].y - 100,
                     x: this.jumpPlatforms[this.jumpNumPlatforms - 1].x + 10
@@ -1196,7 +1210,7 @@
                 document.getElementById('config-menu').classList.add('hidden');
                 document.getElementById('global-menu').classList.add('hidden');
                 document.getElementById('game-over').classList.add('hidden');
-                document.getElementById('hud').classList.add('hidden'); // Disegna l'HUD a custom in Canvas
+                document.getElementById('hud').classList.add('hidden'); 
             }
 
             handleJumpInput(key, e) {
@@ -1206,17 +1220,18 @@
                 } else if (key === 'Escape') {
                     this.jumpBuffer = "";
                 } else if (key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
-                    if (key === '/') e.preventDefault(); // eviti quick search in Firefox
-                    if (key === ' ') e.preventDefault(); // eviti page scroll
+                    if (key === '/') e.preventDefault(); 
+                    if (key === ' ') e.preventDefault(); 
                     
                     if (this.jumpBuffer === "" && key !== "/") return; 
                     this.jumpBuffer += key;
                     
-                    if (this.jumpBuffer.length >= 4) { // "/" + 3 lettere
+                    if (this.jumpBuffer.length >= 4) { // "/" + 3 caratteri
                         const searchWord = this.jumpBuffer.substring(1).toLowerCase();
                         let startIdx = this.jumpPlayerIdx + 1;
-                        let endIdx = Math.min(startIdx + 8, this.jumpPlatforms.length); // Cerca nelle prossime 8 piattaforme
+                        let endIdx = Math.min(startIdx + 8, this.jumpPlatforms.length); 
                         let matchedIdx = -1;
+                        
                         for (let i = startIdx; i < endIdx; i++) {
                             if (this.jumpPlatforms[i].word.toLowerCase().startsWith(searchWord)) {
                                 matchedIdx = i;
@@ -1263,17 +1278,20 @@
                 ctx.fillStyle = SETTINGS.THEME['--grid-color'];
                 ctx.fillRect(0, canvas.height - 20, canvas.width, 40);
 
-                // Disegna Piattaforme (Keyword C#)
+                // Disegna Piattaforme 
                 this.jumpPlatforms.forEach((plat, i) => {
                     ctx.fillStyle = SETTINGS.THEME['--secondary-color'];
                     ctx.strokeStyle = SETTINGS.THEME['--primary-color'];
                     ctx.lineWidth = 2;
-                    const platW = Math.max(120, plat.word.length * 12);
+                    // Se la stringa è lunga (snippet), la piattaforma è più larga
+                    const platW = Math.max(120, plat.word.length * 10);
                     ctx.fillRect(plat.x, plat.y, platW, 20);
                     ctx.strokeRect(plat.x, plat.y, platW, 20);
                     
                     ctx.fillStyle = SETTINGS.THEME['--text-color'];
-                    ctx.font = `14px ${SETTINGS.THEME['--font-family']}`;
+                    // Riduci font per snippet molto lunghi
+                    const fontSize = plat.word.length > 15 ? 12 : 14;
+                    ctx.font = `${fontSize}px ${SETTINGS.THEME['--font-family']}`;
                     ctx.fillText(plat.word, plat.x + 10, plat.y + 15);
                 });
 
@@ -1346,7 +1364,7 @@
             die() {
                 this.state = 'GAMEOVER';
                 
-                const currentType = SETTINGS.OBSTACLE_TYPE;
+                const currentType = SETTINGS.JKMODE.OBSTACLE_TYPE;
                 let isNewRecord = false;
                 
                 if (this.score > this.highScores[currentType]) {
@@ -1385,12 +1403,12 @@
                 }
                 this.currentAction = null; 
 
-                if (SETTINGS.OBSTACLE_TYPE === 'pipes') {
-                    if (this.ticks % SETTINGS.WORLD.PIPE_SPAWN_RATE === 0) {
+                if (SETTINGS.JKMODE.OBSTACLE_TYPE === 'pipes') {
+                    if (this.ticks % SETTINGS.JKMODE.WORLD.PIPE_SPAWN_RATE === 0) {
                         this.obstacles.push(new Pipe(this.canvas.width, this.canvas.height));
                     }
                 } else {
-                    const meteorSpawnRate = Math.max(20, Math.floor(SETTINGS.WORLD.PIPE_SPAWN_RATE / 2.5));
+                    const meteorSpawnRate = Math.max(20, Math.floor(SETTINGS.JKMODE.WORLD.PIPE_SPAWN_RATE / 2.5));
                     if (this.ticks % meteorSpawnRate === 0) {
                         const count = Math.random() > 0.7 ? 2 : 1; 
                         for(let m=0; m<count; m++) {
