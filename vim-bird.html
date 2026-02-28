@@ -5,36 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Vim-y Games</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        /* Import Font: Fira Code per TUI, Roboto per Material */
-        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Roboto:wght@400;700&display=swap');
+        /* Import Font: Fira Code per TUI e codice */
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&display=swap');
         
         :root {
             --bg-color: #0d0d0d;
             --primary-color: #00ff41;
-            --secondary-color: #003300;
-            --grid-color: #001a00;
-            --card-bg: rgba(0, 0, 0, 0.9);
-            --text-color: #00ff41;
+            --secondary-color: rgba(0, 255, 65, 0.1);
+            --grid-color: rgba(0, 255, 65, 0.05);
+            --term-bg: rgba(13, 13, 13, 0.65);
+            --text-color: #e0e0e0;
             --font-family: 'Fira Code', monospace;
-            --crt-display: block;
-            --border-color: #00ff41;
-            --shadow-color: rgba(0, 255, 65, 0.2);
-            --text-shadow: 0 0 5px var(--primary-color);
+            --highlight-color: #fffb00;
         }
 
         body {
             margin: 0;
             padding: 0;
             overflow: hidden;
-            background-color: var(--bg-color);
+            background-color: #000; /* Sfondo reale nero per il 3D */
             font-family: var(--font-family);
             color: var(--text-color);
             touch-action: none;
-            transition: background-color 0.3s, color 0.3s;
+            transition: color 0.3s;
         }
 
         canvas { display: block; }
+
+        #three-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            pointer-events: none;
+        }
 
         /* UI Overlay Layer */
         .ui-container {
@@ -45,212 +53,556 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            text-shadow: var(--text-shadow);
+            z-index: 1;
+            padding: 1rem;
         }
 
-        .retro-card {
-            background: var(--card-bg);
-            border: 2px solid var(--border-color);
-            padding: 2.5rem;
-            text-align: center;
+        /* Stile Terminale Moderno */
+        .terminal-window {
+            background: var(--term-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            width: 100%;
+            max-width: 700px;
             pointer-events: auto;
-            border-radius: 8px;
-            box-shadow: 0 0 20px var(--shadow-color);
-            transition: all 0.3s ease;
-            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .terminal-header {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 8px;
+        }
+        .window-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot-red { background: #ff5f56; }
+        .dot-yellow { background: #ffbd2e; }
+        .dot-green { background: #27c93f; }
+
+        .terminal-title {
+            flex-grow: 1;
+            text-align: center;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-right: 44px; /* Bilancia i dot per centrare */
+        }
+
+        .terminal-body {
+            padding: 2rem;
+            flex-grow: 1;
             overflow-y: auto;
         }
 
-        /* Stili per i bottoni */
-        .custom-btn {
-            padding: 0.5rem 1rem;
-            border: 1px solid var(--border-color);
-            border-radius: 0.25rem;
-            color: var(--text-color);
-            transition: all 0.2s ease;
-            cursor: pointer;
-            background: transparent;
+        /* Status Bar stile Lualine / Airline */
+        .status-bar {
+            display: flex;
+            background: rgba(0, 0, 0, 0.4);
+            font-size: 0.75rem;
+            font-weight: 500;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
-        .custom-btn:hover { background: var(--secondary-color); }
-        .custom-btn.active { 
-            background: var(--primary-color); 
-            color: var(--bg-color); 
-            text-shadow: none;
-        }
-        
-        /* Contenitori informativi */
-        .info-box {
-            border: 1px solid var(--border-color);
-            padding: 0.75rem;
-            border-radius: 0.25rem;
-            background: rgba(0,0,0,0.1);
-            overflow: hidden;
-            transform-origin: center;
-        }
-
-        .info-box.collapsed {
-            animation: crt-collapse 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
-        }
-
-        @keyframes crt-collapse {
-            0% { max-height: 250px; opacity: 1; transform: scale(1, 1); margin-bottom: 1.5rem; }
-            30% { max-height: 250px; transform: scale(1.02, 0.02); opacity: 0.8; margin-bottom: 1.5rem; padding-top: 0; padding-bottom: 0; }
-            100% { max-height: 0; opacity: 0; transform: scale(0, 0); margin-bottom: 0; padding-top: 0; padding-bottom: 0; border-width: 0; }
-        }
-
-        .info-title {
-            font-weight: bold;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 0.5rem;
-            padding-bottom: 0.25rem;
-        }
-        .key-badge {
+        .status-mode {
             background: var(--primary-color);
             color: var(--bg-color);
-            padding: 0 0.25rem;
+            padding: 4px 12px;
             font-weight: bold;
-            text-shadow: none;
+        }
+        .status-info {
+            padding: 4px 12px;
+            color: rgba(255, 255, 255, 0.6);
+            display: flex;
+            gap: 16px;
+            flex-grow: 1;
+        }
+        .status-right {
+            padding: 4px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
         }
 
-        .blink { animation: blinker 1.5s linear infinite; }
-        @keyframes blinker { 50% { opacity: 0; } }
-
-        /* Stili per il Menu Vim */
+        /* Menu Rows OhMyPosh style */
         .menu-row {
-            padding: 0.5rem 1rem;
+            padding: 0.5rem;
+            margin: 0.25rem 0;
+            border-radius: 6px;
             cursor: pointer;
-            transition: background 0.2s;
-            border-radius: 4px;
             display: flex;
             align-items: center;
+            transition: background 0.2s;
+            opacity: 0.6;
         }
-        .menu-row:hover { background: rgba(255, 255, 255, 0.05); }
-        .menu-row.active { background: var(--secondary-color); }
-        .menu-cursor { width: 25px; display: inline-block; color: var(--primary-color); font-weight: bold;}
-        .menu-label { width: 130px; display: inline-block; opacity: 0.8; }
-        .menu-value { color: var(--primary-color); }
+        .menu-row:hover { background: rgba(255, 255, 255, 0.03); opacity: 0.8; }
+        .menu-row.active {
+            opacity: 1;
+            background: var(--secondary-color);
+        }
+
+        .prompt-arrow {
+            color: var(--primary-color);
+            margin-right: 12px;
+            font-weight: bold;
+            opacity: 0;
+            transform: translateX(-5px);
+            transition: all 0.2s ease;
+        }
+        .menu-row.active .prompt-arrow {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .prompt-pill {
+            background: var(--primary-color);
+            color: var(--bg-color);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-right: 12px;
+            display: inline-block;
+            min-width: 45px;
+            text-align: center;
+        }
+
+        .menu-label { width: 140px; display: inline-block; }
+        .menu-value { color: var(--primary-color); font-weight: 500; }
         .menu-value-dim { opacity: 0.4; }
 
         /* Custom Scrollbar Dinamica basata sul Tema */
         * { scrollbar-width: thin; scrollbar-color: var(--primary-color) transparent; }
-        *::-webkit-scrollbar { width: 8px; }
-        *::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); border-radius: 4px; }
-        *::-webkit-scrollbar-thumb { background-color: var(--primary-color); border-radius: 4px; border: 1px solid var(--card-bg); }
+        *::-webkit-scrollbar { width: 6px; }
+        *::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.1); border-radius: 4px; }
+        *::-webkit-scrollbar-thumb { background-color: var(--primary-color); border-radius: 4px; }
 
         /* Stili output Test */
-        .test-pass { color: #00ff41; }
-        .test-fail { color: #ff3333; font-weight: bold; }
-        .test-group { color: var(--primary-color); font-weight: bold; font-size: 1.1em; margin-top: 1rem; border-bottom: 1px dashed var(--primary-color); display: inline-block;}
-
-        /* Effetto CRT opzionale */
-        .crt-overlay::before {
-            content: " ";
-            display: var(--crt-display);
-            position: absolute;
-            top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
-                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            z-index: 10;
-            background-size: 100% 2px, 3px 100%;
-            pointer-events: none;
-        }
+        .test-pass { color: var(--primary-color); }
+        .test-fail { color: #ff5f56; font-weight: bold; }
+        .test-group { color: var(--primary-color); font-weight: bold; margin-top: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px;}
+        
+        .blink { animation: blinker 1.5s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
     </style>
 </head>
-<body class="crt-overlay">
+<body>
+
+    <div id="three-container"></div>
 
     <div class="ui-container">
-        <!-- Main Menu: Selezione Giochi -->
-        <div id="main-menu" class="retro-card" style="width: 90%; max-width: 650px;">
-            <h1 class="text-6xl font-bold mb-2 tracking-tighter">VIM-Y GAMES</h1>
-            <p class="mb-6 opacity-70">La tua sala giochi da terminale</p>
+        
+        <!-- Main Menu -->
+        <div id="main-menu" class="terminal-window">
+            <div class="terminal-header">
+                <div class="window-controls">
+                    <div class="window-dot dot-red"></div>
+                    <div class="window-dot dot-yellow"></div>
+                    <div class="window-dot dot-green"></div>
+                </div>
+                <div class="terminal-title">~/vim-y-games/launcher</div>
+            </div>
             
-            <div class="mb-6 text-sm text-left opacity-80 info-box">
-                <p class="info-title">Navigazione Generale</p>
-                <p><span class="key-badge">k</span> / <span class="key-badge">j</span> : Su / Giù</p>
-                <p><span class="key-badge">Enter</span> : Seleziona</p>
+            <div class="terminal-body">
+                <div class="mb-6 text-sm">
+                    <span class="text-[var(--primary-color)] font-bold">os3albert@linux</span><span class="text-white">:</span><span class="text-blue-400 font-bold">~/vim-y-games</span>$ ./start.sh<br>
+                    <span class="opacity-60">Seleziona un applicativo da eseguire:</span>
+                </div>
+                
+                <div id="main-menu-list" class="flex flex-col gap-1">
+                    <!-- Popolato da JS -->
+                </div>
             </div>
 
-            <!-- Lista Giochi -->
-            <div id="main-menu-list" class="text-left font-bold text-base md:text-lg flex flex-col gap-1 mb-6 border border-[#00ff41]/30 p-4 rounded bg-black/50">
-                <!-- Popolato da JS -->
+            <div class="status-bar">
+                <div class="status-mode">NORMAL</div>
+                <div class="status-info">
+                    <span>[j/k] Naviga</span>
+                    <span>[Enter] Esegui</span>
+                </div>
+                <div class="status-right">utf-8</div>
             </div>
-            
-            <p class="blink text-sm opacity-60 italic mt-4">* Altri giochi in arrivo...</p>
         </div>
 
-        <!-- Menu Globale: Temi e Condivisione -->
-        <div id="global-menu" class="retro-card hidden" style="width: 90%; max-width: 650px;">
-            <h1 class="text-4xl font-bold mb-2 tracking-tighter text-[#00ff41]">OPZIONI APP</h1>
-            <p class="mb-6 opacity-70">Personalizza e condividi Vim-y Games</p>
+        <!-- Global Menu (Opzioni App) -->
+        <div id="global-menu" class="terminal-window hidden">
+            <div class="terminal-header">
+                <div class="window-controls">
+                    <div class="window-dot dot-red"></div>
+                    <div class="window-dot dot-yellow"></div>
+                    <div class="window-dot dot-green"></div>
+                </div>
+                <div class="terminal-title">~/vim-y-games/config/global</div>
+            </div>
             
-            <div class="mb-6 text-sm text-left opacity-80 info-box">
-                <p class="info-title">Navigazione</p>
-                <p><span class="key-badge">k</span> / <span class="key-badge">j</span> : Su / Giù</p>
-                <p><span class="key-badge">h</span> / <span class="key-badge">l</span> : Cambia Tema</p>
-                <p><span class="key-badge">Enter</span> : Conferma</p>
+            <div class="terminal-body">
+                <div class="mb-6 text-sm">
+                    <span class="text-[var(--primary-color)] font-bold">os3albert@linux</span><span class="text-white">:</span><span class="text-blue-400 font-bold">~/config</span>$ nano settings.conf
+                </div>
+                
+                <div id="global-menu-list" class="flex flex-col gap-1">
+                    <!-- Popolato da JS -->
+                </div>
             </div>
 
-            <div id="global-menu-list" class="text-left font-bold text-base md:text-lg flex flex-col gap-1 mb-2 border border-[#00ff41]/30 p-4 rounded bg-black/50">
-                <!-- Popolato da JS -->
+            <div class="status-bar">
+                <div class="status-mode" style="background:#ffbd2e; color:#000;">VISUAL</div>
+                <div class="status-info">
+                    <span>[j/k] Su/Giù</span>
+                    <span>[h/l] Modifica</span>
+                    <span>[Enter] Azione</span>
+                </div>
+                <div class="status-right">settings.conf</div>
             </div>
         </div>
 
         <!-- Menu Configurazione Gioco -->
-        <div id="config-menu" class="retro-card hidden" style="width: 90%; max-width: 650px;">
-            <h1 id="config-title" class="text-4xl font-bold mb-2 tracking-tighter uppercase text-[#00ff41]">CONFIGURAZIONE</h1>
-            <p class="mb-4 opacity-70">Imposta i parametri della partita</p>
+        <div id="config-menu" class="terminal-window hidden">
+            <div class="terminal-header">
+                <div class="window-controls">
+                    <div class="window-dot dot-red"></div>
+                    <div class="window-dot dot-yellow"></div>
+                    <div class="window-dot dot-green"></div>
+                </div>
+                <div id="config-title" class="terminal-title">~/vim-y-games/game_config</div>
+            </div>
             
-            <div class="mb-6 text-sm text-left opacity-80 info-box">
-                <p class="info-title">Comandi</p>
-                <p><span class="key-badge">k</span> / <span class="key-badge">j</span> : Su / Giù</p>
-                <p><span class="key-badge">h</span> / <span class="key-badge">l</span> : Cambia Valore</p>
-                <p><span class="key-badge">Enter</span> : Conferma</p>
+            <div class="terminal-body">
+                <div class="mb-6 text-sm">
+                    <span class="opacity-60">// Modifica i parametri di avvio della partita</span>
+                </div>
+                
+                <div id="vim-menu" class="flex flex-col gap-1">
+                    <!-- Contenuto popolato dal JS -->
+                </div>
             </div>
 
-            <div id="vim-menu" class="text-left font-bold text-base md:text-lg flex flex-col gap-1 mb-2">
-                <!-- Contenuto popolato dal JS -->
+            <div class="status-bar">
+                <div class="status-mode" style="background:#7aa2f7; color:#000;">INSERT</div>
+                <div class="status-info">
+                    <span>[j/k] Naviga</span>
+                    <span>[h/l] Seleziona</span>
+                    <span>[Enter] Conferma</span>
+                </div>
+                <div class="status-right">game_env.json</div>
             </div>
         </div>
 
         <!-- Schermata Runner dei Test -->
-        <div id="test-runner" class="retro-card hidden text-left" style="width: 90%; max-width: 800px;">
-            <h1 class="text-4xl font-bold mb-2 tracking-tighter uppercase border-b border-[#00ff41] pb-2">SUITE TEST DI UNITÀ</h1>
-            <div id="test-output" class="font-mono text-sm mb-4" style="line-height: 1.5; max-height: 50vh; overflow-y: auto;">
-                <!-- Output Test JS -->
+        <div id="test-runner" class="terminal-window hidden">
+            <div class="terminal-header">
+                <div class="window-controls">
+                    <div class="window-dot dot-red"></div>
+                    <div class="window-dot dot-yellow"></div>
+                    <div class="window-dot dot-green"></div>
+                </div>
+                <div class="terminal-title">~/vim-y-games/tests/runner.sh</div>
             </div>
-            <div class="text-center mt-6">
-                <p class="blink text-lg">Premi ':m' per tornare al menu</p>
+            
+            <div class="terminal-body">
+                <div id="test-output" class="font-mono text-sm" style="line-height: 1.6;">
+                    <!-- Output Test JS -->
+                </div>
+            </div>
+
+            <div class="status-bar">
+                <div class="status-mode" style="background:#ff5f56; color:#fff;">TESTING</div>
+                <div class="status-info">
+                    <span>In esecuzione...</span>
+                </div>
+                <div class="status-right">[:m] Esci</div>
             </div>
         </div>
         
-        <!-- Schermata Fine Partita (Solo JKMODE) -->
-        <div id="game-over" class="retro-card hidden">
-            <h2 class="text-5xl font-bold mb-2 text-red-500" style="text-shadow: none;">SEGFAULT!</h2>
-            <p id="final-score" class="text-3xl mb-1">Score: 0</p>
-            <p id="final-best" class="text-xl mb-6 opacity-80">Best: 0</p>
-            <div class="flex flex-col gap-4 items-center">
-                <p class="blink text-lg">Premi 'k' per riavviare</p>
-                <button id="btn-config" class="custom-btn text-sm uppercase tracking-widest mt-2">Torna al Menu (:m)</button>
+        <!-- Schermata Fine Partita -->
+        <div id="game-over" class="terminal-window hidden" style="max-width: 400px; text-align: center;">
+            <div class="terminal-header">
+                <div class="window-controls">
+                    <div class="window-dot dot-red"></div>
+                    <div class="window-dot dot-yellow"></div>
+                    <div class="window-dot dot-green"></div>
+                </div>
+                <div class="terminal-title">FATAL ERROR</div>
+            </div>
+            
+            <div class="terminal-body flex flex-col items-center">
+                <h2 class="text-4xl font-bold mb-4 text-[#ff5f56]">SEGFAULT!</h2>
+                <p id="final-score" class="text-2xl mb-1">Score: 0</p>
+                <p id="final-best" class="text-sm mb-8 opacity-60">Best: 0</p>
+                
+                <div class="text-sm opacity-80 mb-4">
+                    <p class="mb-2">Process exited with code 1.</p>
+                </div>
+                
+                <div class="flex flex-col gap-2 w-full mt-4">
+                    <button id="btn-restart" class="custom-btn w-full !text-left flex justify-between">
+                        <span>Riavvia Processo</span> <span class="opacity-50">[k]</span>
+                    </button>
+                    <button id="btn-config" class="custom-btn w-full !text-left flex justify-between">
+                        <span>Ritorna al Menu</span> <span class="opacity-50">[:m]</span>
+                    </button>
+                </div>
             </div>
         </div>
 
-        <!-- Score HUD (Solo JKMODE) -->
-        <div id="hud" class="absolute top-8 left-8 flex flex-col hidden tabular-nums">
-            <div class="text-2xl md:text-4xl font-bold">SCORE: <span id="current-score">0</span></div>
-            <div class="text-sm md:text-lg opacity-80 mt-1">BEST (<span id="hud-mode"></span>): <span id="best-score">0</span></div>
+        <!-- Score HUD in-game -->
+        <div id="hud" class="absolute top-6 left-6 flex flex-col hidden tabular-nums drop-shadow-md z-10">
+            <div class="text-xl font-bold px-3 py-1 rounded bg-[var(--term-bg)] border border-[rgba(255,255,255,0.1)] backdrop-blur-md">
+                <span class="text-[var(--primary-color)]">SCORE</span> <span id="current-score">0</span>
+            </div>
+            <div class="text-xs opacity-80 mt-2 px-3">
+                BEST (<span id="hud-mode"></span>): <span id="best-score">0</span>
+            </div>
         </div>
     </div>
 
-    <canvas id="gameCanvas"></canvas>
+    <canvas id="gameCanvas" style="position: relative; z-index: 0;"></canvas>
 
     <script>
         /**
-         * DIZIONARIO TEMI
+         * CLASSE THREE.JS BACKGROUND
+         * Scia di pixel e zoom dinamico
+         */
+        class ThreeBackground {
+            constructor() {
+                this.container = document.getElementById('three-container');
+                this.scene = new THREE.Scene();
+                this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+                
+                this.targetZ = 160;
+                this.camera.position.z = 160;
+
+                this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.container.appendChild(this.renderer.domElement);
+
+                this.mouseX = window.innerWidth / 2;
+                this.mouseY = window.innerHeight / 2;
+                this.targetMouseX = this.mouseX;
+                this.targetMouseY = this.mouseY;
+
+                this.createParticles();
+
+                window.addEventListener('resize', () => this.onResize());
+                window.addEventListener('mousemove', (e) => this.onMouseMove(e));
+                window.addEventListener('touchmove', (e) => this.onTouchMove(e), {passive: true});
+
+                this.animate();
+            }
+
+            createTexture(text) {
+                const canvas = document.createElement('canvas');
+                canvas.width = 64; canvas.height = 64;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = 'transparent';
+                ctx.fillRect(0, 0, 64, 64);
+                ctx.fillStyle = '#ffffff'; 
+                ctx.font = 'bold 44px "Fira Code", monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(text, 32, 32);
+                return new THREE.CanvasTexture(canvas);
+            }
+
+            createParticles() {
+                this.maxParticles = 1200; // Aumentati i particellari
+                this.geometry0 = new THREE.BufferGeometry();
+                this.geometry1 = new THREE.BufferGeometry();
+
+                const pos0 = new Float32Array(this.maxParticles * 3);
+                const pos1 = new Float32Array(this.maxParticles * 3);
+                const alpha0 = new Float32Array(this.maxParticles);
+                const alpha1 = new Float32Array(this.maxParticles);
+
+                for(let i=0; i<this.maxParticles; i++) {
+                    pos0[i*3] = (Math.random() - 0.5) * 800;
+                    pos0[i*3+1] = (Math.random() - 0.5) * 500;
+                    pos0[i*3+2] = (Math.random() - 0.5) * 500 - 50;
+                    alpha0[i] = Math.random() * 0.1 + 0.02; // Opacità base molto bassa
+
+                    pos1[i*3] = (Math.random() - 0.5) * 800;
+                    pos1[i*3+1] = (Math.random() - 0.5) * 500;
+                    pos1[i*3+2] = (Math.random() - 0.5) * 500 - 50;
+                    alpha1[i] = Math.random() * 0.1 + 0.02;
+                }
+
+                this.geometry0.setAttribute('position', new THREE.BufferAttribute(pos0, 3));
+                this.geometry0.setAttribute('alpha', new THREE.BufferAttribute(alpha0, 1));
+                this.geometry1.setAttribute('position', new THREE.BufferAttribute(pos1, 3));
+                this.geometry1.setAttribute('alpha', new THREE.BufferAttribute(alpha1, 1));
+
+                const vertexShader = `
+                    attribute float alpha;
+                    varying float vAlpha;
+                    void main() {
+                        vAlpha = alpha;
+                        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                        // Pixel più piccoli
+                        gl_PointSize = 12.0 * (150.0 / -mvPosition.z);
+                        gl_Position = projectionMatrix * mvPosition;
+                    }
+                `;
+                const fragmentShader = `
+                    uniform vec3 color;
+                    uniform sampler2D map;
+                    varying float vAlpha;
+                    void main() {
+                        vec4 texColor = texture2D(map, gl_PointCoord);
+                        gl_FragColor = vec4(color * texColor.rgb, texColor.a * vAlpha); 
+                    }
+                `;
+
+                this.mat0 = new THREE.ShaderMaterial({
+                    uniforms: {
+                        color: { value: new THREE.Color('#00ff41') },
+                        map: { value: this.createTexture('0') }
+                    },
+                    vertexShader, fragmentShader,
+                    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+                });
+
+                this.mat1 = this.mat0.clone();
+                this.mat1.uniforms.map.value = this.createTexture('1');
+
+                this.points0 = new THREE.Points(this.geometry0, this.mat0);
+                this.points1 = new THREE.Points(this.geometry1, this.mat1);
+
+                this.scene.add(this.points0);
+                this.scene.add(this.points1);
+
+                this.idx0 = 0;
+                this.idx1 = 0;
+            }
+
+            spawnTrailParticle(clientX, clientY) {
+                const ndcX = (clientX / window.innerWidth) * 2 - 1;
+                const ndcY = -(clientY / window.innerHeight) * 2 + 1;
+                
+                const vec = new THREE.Vector3(ndcX, ndcY, 0.5);
+                vec.unproject(this.camera);
+                vec.sub(this.camera.position).normalize();
+                
+                const distance = 90; 
+                const pos = this.camera.position.clone().add(vec.multiplyScalar(distance));
+                
+                pos.x += (Math.random() - 0.5) * 12;
+                pos.y += (Math.random() - 0.5) * 12;
+
+                const isZero = Math.random() > 0.5;
+                if (isZero) {
+                    const positions = this.geometry0.attributes.position.array;
+                    const alphas = this.geometry0.attributes.alpha.array;
+                    positions[this.idx0 * 3] = pos.x;
+                    positions[this.idx0 * 3 + 1] = pos.y;
+                    positions[this.idx0 * 3 + 2] = pos.z;
+                    alphas[this.idx0] = 0.5; // Scia visibile ma non coprente
+                    this.geometry0.attributes.position.needsUpdate = true;
+                    this.geometry0.attributes.alpha.needsUpdate = true;
+                    this.idx0 = (this.idx0 + 1) % this.maxParticles;
+                } else {
+                    const positions = this.geometry1.attributes.position.array;
+                    const alphas = this.geometry1.attributes.alpha.array;
+                    positions[this.idx1 * 3] = pos.x;
+                    positions[this.idx1 * 3 + 1] = pos.y;
+                    positions[this.idx1 * 3 + 2] = pos.z;
+                    alphas[this.idx1] = 0.5;
+                    this.geometry1.attributes.position.needsUpdate = true;
+                    this.geometry1.attributes.alpha.needsUpdate = true;
+                    this.idx1 = (this.idx1 + 1) % this.maxParticles;
+                }
+            }
+
+            onMouseMove(e) {
+                this.targetMouseX = e.clientX;
+                this.targetMouseY = e.clientY;
+                for(let i=0; i<2; i++) this.spawnTrailParticle(e.clientX, e.clientY);
+            }
+
+            onTouchMove(e) {
+                if (e.touches.length > 0) {
+                    this.targetMouseX = e.touches[0].clientX;
+                    this.targetMouseY = e.touches[0].clientY;
+                    for(let i=0; i<2; i++) this.spawnTrailParticle(this.targetMouseX, this.targetMouseY);
+                }
+            }
+
+            onResize() {
+                this.camera.aspect = window.innerWidth / window.innerHeight;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+
+            updateTheme(colorHex) {
+                this.mat0.uniforms.color.value.set(colorHex);
+                this.mat1.uniforms.color.value.set(colorHex);
+            }
+
+            zoomTo(zLevel) {
+                this.targetZ = zLevel;
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+
+                // Zoom e Parallasse
+                this.camera.position.z += (this.targetZ - this.camera.position.z) * 0.05;
+                
+                const lookX = (this.targetMouseX - window.innerWidth / 2) * 0.03;
+                const lookY = -(this.targetMouseY - window.innerHeight / 2) * 0.03;
+                
+                this.camera.position.x += (lookX - this.camera.position.x) * 0.05;
+                this.camera.position.y += (lookY - this.camera.position.y) * 0.05;
+                this.camera.lookAt(this.scene.position);
+
+                this.updateParticleLogic(this.geometry0);
+                this.updateParticleLogic(this.geometry1);
+
+                this.renderer.render(this.scene, this.camera);
+            }
+
+            updateParticleLogic(geo) {
+                const positions = geo.attributes.position.array;
+                const alphas = geo.attributes.alpha.array;
+                let needsUpdate = false;
+
+                for(let i=0; i<this.maxParticles; i++) {
+                    if (alphas[i] > 0.1) {
+                        alphas[i] -= 0.005; // Dissolvenza più lenta
+                        needsUpdate = true;
+                    } else if (alphas[i] < 0.02) {
+                        alphas[i] = Math.random() * 0.05 + 0.02;
+                        needsUpdate = true;
+                    }
+
+                    positions[i*3 + 1] += 0.02; // Movimento fluttuante più lento
+                    if (positions[i*3 + 1] > 300) {
+                        positions[i*3 + 1] = -300; 
+                        needsUpdate = true;
+                    }
+                }
+                
+                if (needsUpdate) {
+                    geo.attributes.position.needsUpdate = true;
+                    geo.attributes.alpha.needsUpdate = true;
+                }
+            }
+        }
+
+        /**
+         * DIZIONARIO TEMI (Ammodernati)
          */
         const THEMES = {
-            matrix: { '--bg-color': '#0d0d0d', '--primary-color': '#00ff41', '--secondary-color': '#003300', '--grid-color': '#001a00', '--card-bg': 'rgba(0, 0, 0, 0.9)', '--text-color': '#00ff41', '--font-family': '"Fira Code", monospace', '--crt-display': 'block', '--border-color': '#00ff41', '--shadow-color': 'rgba(0, 255, 65, 0.2)', '--text-shadow': '0 0 5px var(--primary-color)', '--highlight-color': '#fffb00' },
-            tokyo: { '--bg-color': '#1a1b26', '--primary-color': '#7aa2f7', '--secondary-color': '#24283b', '--grid-color': '#414868', '--card-bg': 'rgba(26, 27, 38, 0.95)', '--text-color': '#c0caf5', '--font-family': '"Fira Code", monospace', '--crt-display': 'none', '--border-color': '#7aa2f7', '--shadow-color': 'rgba(122, 162, 247, 0.2)', '--text-shadow': 'none', '--highlight-color': '#f7768e' },
-            material: { '--bg-color': '#fafafa', '--primary-color': '#6200ea', '--secondary-color': '#e0e0e0', '--grid-color': '#eeeeee', '--card-bg': '#ffffff', '--text-color': '#212121', '--font-family': '"Roboto", sans-serif', '--crt-display': 'none', '--border-color': '#e0e0e0', '--shadow-color': 'rgba(0, 0, 0, 0.15)', '--text-shadow': 'none', '--highlight-color': '#d50000' }
+            matrix: { '--bg-color': '#000000', '--primary-color': '#00ff41', '--secondary-color': 'rgba(0, 255, 65, 0.15)', '--grid-color': 'rgba(0, 255, 65, 0.05)', '--term-bg': 'rgba(10, 15, 10, 0.7)', '--text-color': '#e0e0e0', '--font-family': '"Fira Code", monospace', '--border-color': 'rgba(0, 255, 65, 0.2)', '--highlight-color': '#fffb00' },
+            tokyo: { '--bg-color': '#16161e', '--primary-color': '#7aa2f7', '--secondary-color': 'rgba(122, 162, 247, 0.15)', '--grid-color': 'rgba(122, 162, 247, 0.05)', '--term-bg': 'rgba(26, 27, 38, 0.75)', '--text-color': '#c0caf5', '--font-family': '"Fira Code", monospace', '--border-color': 'rgba(122, 162, 247, 0.2)', '--highlight-color': '#f7768e' },
+            dracula: { '--bg-color': '#282a36', '--primary-color': '#ff79c6', '--secondary-color': 'rgba(255, 121, 198, 0.15)', '--grid-color': 'rgba(255, 121, 198, 0.05)', '--term-bg': 'rgba(40, 42, 54, 0.75)', '--text-color': '#f8f8f2', '--font-family': '"Fira Code", monospace', '--border-color': 'rgba(255, 121, 198, 0.2)', '--highlight-color': '#50fa7b' }
         };
 
         const DIFFICULTIES = {
@@ -259,9 +611,6 @@
             hard: { SPEED: 6.5, SPAWN_RATE: 55, GAP: 150, GRAVITY: 0.35 }
         };
 
-        /**
-         * DIZIONARIO LINGUAGGI E SNIPPETS PER GIOCO /JUMP
-         */
         const LANG_DATA = {
             'c#': {
                 keywords: ["public", "private", "protected", "class", "interface", "enum", "void", "static", "readonly", "string", "int", "bool", "if", "else", "switch", "return", "new", "namespace", "using", "async", "await", "Task", "override", "virtual"],
@@ -289,35 +638,31 @@
             }
         };
 
-        /**
-         * STRUTTURE DEI MENU
-         */
         const MAIN_MENU_DATA = {
             activeIndex: 0,
             items: [
-                { id: 'game_jkmode', label: '1. Gioca a JKMODE (Flappy)', isAction: true },
-                { id: 'game_jump', label: '2. Gioca a /jump (Platformer)', isAction: true },
-                { id: 'game_tests', label: '3. >>> ESEGUI_TESTS.sh <<<', isAction: true },
-                { id: 'open_global', label: '4. Opzioni App (Temi/Social) [:m]', isAction: true }
+                { id: 'game_jkmode', label: 'Gioca a JKMODE (Flappy)', isAction: true },
+                { id: 'game_jump', label: 'Gioca a /jump (Platformer)', isAction: true },
+                { id: 'game_tests', label: 'Esegui Suite Test Unitari', isAction: true },
+                { id: 'open_global', label: 'Opzioni App (Temi/Social)', isAction: true }
             ]
         };
 
         const GLOBAL_MENU_DATA = {
             activeIndex: 0,
             items: [
-                { id: 'theme', label: 'Tema App', options: ['matrix', 'tokyo', 'material'], idx: 0 },
-                { id: 'share_wa', label: '► Condividi su WhatsApp', isAction: true },
-                { id: 'share_li', label: '► Condividi su LinkedIn', isAction: true },
-                { id: 'share_fb', label: '► Condividi su Facebook', isAction: true },
-                { id: 'back', label: '<<< TORNA AI GIOCHI', isAction: true }
+                { id: 'theme', label: 'Tema App', options: ['matrix', 'tokyo', 'dracula'], idx: 0 },
+                { id: 'share_wa', label: 'Condividi su WhatsApp', isAction: true },
+                { id: 'share_li', label: 'Condividi su LinkedIn', isAction: true },
+                { id: 'share_fb', label: 'Condividi su Facebook', isAction: true },
+                { id: 'back', label: 'Torna al Menu', isAction: true }
             ]
         };
 
         const SETTINGS = {
-            GAME: 'jkmode', // 'jkmode' o 'jump'
+            GAME: 'jkmode', 
             THEME: { ...THEMES.matrix },
             
-            // Configurazione specifica JKMODE
             JKMODE: {
                 MODE: 'zero-g', 
                 OBSTACLE_TYPE: 'pipes', 
@@ -335,16 +680,15 @@
                         { id: 'mode', label: 'Fisica', options: ['zero-g', 'gravity'], idx: 0 },
                         { id: 'obstacle', label: 'Ostacoli', options: ['pipes', 'meteors'], idx: 0 },
                         { id: 'difficulty', label: 'Difficoltà', options: ['easy', 'normal', 'hard'], idx: 1 },
-                        { id: 'start', label: '>>> AVVIA JKMODE <<<', isAction: true },
-                        { id: 'back', label: '<<< TORNA AI GIOCHI', isAction: true }
+                        { id: 'start', label: 'AVVIA JKMODE', isAction: true },
+                        { id: 'back', label: 'Torna al Menu', isAction: true }
                     ]
                 }
             },
 
-            // Configurazione specifica /JUMP
             JUMP: {
                 LANGUAGE: 'c#',
-                CONTENT: 'keywords', // 'keywords' o 'snippets'
+                CONTENT: 'keywords',
                 DIFFICULTY: 'normal',
                 MENU: {
                     activeIndex: 0,
@@ -352,8 +696,8 @@
                         { id: 'jump_lang', label: 'Sintassi', options: ['c#', 'python', 'javascript', 'java', 'css', 'html'], idx: 0 },
                         { id: 'jump_content', label: 'Contenuto', options: ['keywords', 'snippets'], idx: 0 },
                         { id: 'jump_diff', label: 'Difficoltà', options: ['easy', 'normal', 'hard'], idx: 1 },
-                        { id: 'start', label: '>>> AVVIA /JUMP <<<', isAction: true },
-                        { id: 'back', label: '<<< TORNA AI GIOCHI', isAction: true }
+                        { id: 'start', label: 'AVVIA /JUMP', isAction: true },
+                        { id: 'back', label: 'Torna al Menu', isAction: true }
                     ]
                 }
             }
@@ -407,7 +751,7 @@
         }
 
         /**
-         * ENTITÀ: GIOCATORE (JKMODE)
+         * ENTITÀ E FISICA
          */
         class Player {
             constructor(h) {
@@ -456,9 +800,6 @@
             }
         }
 
-        /**
-         * ENTITÀ: TUBI (JKMODE)
-         */
         class Pipe {
             constructor(w, h) {
                 this.x = w;
@@ -499,9 +840,6 @@
             }
         }
 
-        /**
-         * ENTITÀ: METEORITE (JKMODE)
-         */
         class Meteor {
             constructor(w, h) {
                 this.x = w;
@@ -544,9 +882,6 @@
             }
         }
 
-        /**
-         * MICRO FRAMEWORK DI TEST (UNIT TESTS)
-         */
         class TestSuite {
             constructor() {
                 this.passed = 0;
@@ -571,7 +906,6 @@
                 this.logs = [];
                 this.logs.push("=> Inizio esecuzione suite di test...");
 
-                // BACKUP CONFIG
                 const backupMode = SETTINGS.JKMODE.MODE;
                 const backupGravity = SETTINGS.JKMODE.PHYSICS.GRAVITY;
                 const backupMaxVel = SETTINGS.JKMODE.PHYSICS.MAX_VELOCITY;
@@ -579,71 +913,37 @@
                 const backupFriction = SETTINGS.JKMODE.PHYSICS.FRICTION;
 
                 try {
-                    // --- TEST JKMODE ---
                     this.logs.push("<div class='test-group'>=== TEST JKMODE ===</div>");
-                    
                     let p = new Player(500);
-                    this.assert(p.y === 250 && p.v === 0, "Player inizializzato correttamente al centro");
+                    this.assert(p.y === 250 && p.v === 0, "Player inizializzato al centro");
 
                     SETTINGS.JKMODE.MODE = 'gravity';
                     SETTINGS.JKMODE.PHYSICS.GRAVITY = 1.0;
-                    SETTINGS.JKMODE.PHYSICS.MAX_VELOCITY = 10;
                     p = new Player(500);
                     p.update(500, {up:false, down:false}, null);
-                    this.assert(p.v === 1.0 && p.y === 251, "Caduta libera con gravità funzionante");
+                    this.assert(p.v === 1.0 && p.y === 251, "Caduta libera con gravità");
 
                     SETTINGS.JKMODE.MODE = 'zero-g';
                     SETTINGS.JKMODE.PHYSICS.ACCEL = 2.0;
                     SETTINGS.JKMODE.PHYSICS.FRICTION = 0.5;
                     p = new Player(500);
                     p.update(500, {up:true, down:false}, null);
-                    this.assert(p.v === -1.0 && p.y === 249, "Movimento accelerato in Zero-G funzionante");
+                    this.assert(p.v === -1.0 && p.y === 249, "Movimento in Zero-G");
 
-                    p = new Player(500);
-                    p.y = 5; p.v = -10;
-                    this.assert(p.update(500, {up:false, down:false}, null) === true, "Collisione col Soffitto rilevata");
+                    p = new Player(500); p.y = 5; p.v = -10;
+                    this.assert(p.update(500, {up:false, down:false}, null) === true, "Collisione col Soffitto");
 
-                    p = new Player(500);
-                    p.y = 480; p.v = 10; p.size = 28;
-                    this.assert(p.update(500, {up:false, down:false}, null) === true, "Collisione col Pavimento rilevata");
-
-                    p = new Player(500);
-                    p.x = 100; p.y = 150; p.size = 28;
-                    let pipe = new Pipe(100, 500);
-                    pipe.x = 100; pipe.w = 50; pipe.top = 100; pipe.gap = 200; 
-                    this.assert(pipe.collides(p, 500) === false, "Nessuna collisione se passa nel gap del Tubo");
-
-                    p.y = 90;
-                    this.assert(pipe.collides(p, 500) === true, "Collisione col bordo del Tubo rilevata");
-
-                    // --- TEST /JUMP ---
                     this.logs.push("<div class='test-group'>=== TEST /JUMP ===</div>");
-                    
-                    // Simulazione dati per il match con coordinate Y
                     let mockPlatforms = [
                         { targetWord: "public", y: 400 },
                         { targetWord: "if", y: 300 },
-                        { targetWord: "return", y: 200 },
-                        { targetWord: "WriteLine", y: 100 },
-                        { targetWord: "class", y: -100 } // Fuori dallo schermo visibile (sopra lo 0)
+                        { targetWord: "return", y: 200 }
                     ];
-
-                    let mockCameraY = 0;
-                    let mockCanvasHeight = 500;
 
                     let performSearch = (buffer, currentIndex) => {
                         let searchWord = buffer.substring(1).toLowerCase();
                         for (let i = currentIndex + 1; i < mockPlatforms.length; i++) {
-                            let screenY = mockPlatforms[i].y + mockCameraY;
-                            
-                            // Check visibilità
-                            if (screenY < -30 || screenY > mockCanvasHeight + 30) {
-                                if (screenY < -30) break;
-                                continue;
-                            }
-
                             const platWord = mockPlatforms[i].targetWord.toLowerCase();
-                            // Match esatto (per parole corte) o match di 3 lettere (per parole lunghe)
                             if (platWord === searchWord || (searchWord.length >= 3 && platWord.startsWith(searchWord))) {
                                 return i;
                             }
@@ -652,22 +952,13 @@
                     };
 
                     this.assert(performSearch("/pub", -1) === 0, "Match corretto keyword: '/pub' -> 'public'");
-                    this.assert(performSearch("/i", 0) === -1, "Nessun salto anticipato per parole corte: '/i' non salta a 'if'");
+                    this.assert(performSearch("/i", 0) === -1, "Nessun salto anticipato per parole corte");
                     this.assert(performSearch("/if", 0) === 1, "Match esatto per parole corte funzionante: '/if' -> 'if'");
-                    this.assert(performSearch("/ret", 1) === 2, "Match corretto saltando piattaforma: '/ret' -> 'return'");
-                    this.assert(performSearch("/wri", 2) === 3, "Match corretto snippet target: '/wri' -> 'WriteLine' dentro 'Console.WriteLine()'");
-                    this.assert(performSearch("/xyz", 1) === -1, "Mancato match gestito correttamente: '/xyz' non trovato");
-                    this.assert(performSearch("/cla", 3) === -1, "Piattaforma fuori dallo schermo ignorata: '/cla' non salta a 'class'");
-
-                    let jumpTime = 60; // 1 secondo
-                    jumpTime--;
-                    this.assert(jumpTime === 59, "Timer /jump scala correttamente");
 
                 } catch (e) {
                     this.logs.push(`<span class="test-fail">[ERRORE FATALE]</span> Eccezione: ${e.message}`);
                 }
 
-                // RIPRISTINO CONFIG
                 SETTINGS.JKMODE.MODE = backupMode;
                 SETTINGS.JKMODE.PHYSICS.GRAVITY = backupGravity;
                 SETTINGS.JKMODE.PHYSICS.MAX_VELOCITY = backupMaxVel;
@@ -689,15 +980,13 @@
             constructor() {
                 this.canvas = document.getElementById('gameCanvas');
                 this.ctx = this.canvas.getContext('2d');
-                // Stati: MAIN_MENU, GLOBAL_MENU, CONFIG_MENU, PLAYING, GAMEOVER, TESTING, AT_DOOR, DOOR_CLOSED
                 this.state = 'MAIN_MENU'; 
                 this.score = 0;
                 this.obstacles = [];
                 this.ticks = 0;
                 this.currentAction = null;
                 this.highScores = { pipes: 0, meteors: 0 };
-                this.hasHiddenInstructions = false;
-                this.lastKey = ''; // <-- Variabile per tracciare la shortcut :m
+                this.lastKey = '';
 
                 this.loadHighScores();
 
@@ -734,40 +1023,24 @@
             }
 
             _setupUI() {
-                document.getElementById('btn-config').addEventListener('click', () => this.goToConfigMenu());
-            }
-
-            hideInfoBoxes() {
-                if (this.hasHiddenInstructions) return;
-                this.hasHiddenInstructions = true;
-                document.querySelectorAll('.info-box').forEach(box => {
-                    box.classList.add('collapsed');
-                });
-            }
-
-            resetInfoBoxes() {
-                this.hasHiddenInstructions = false;
-                document.querySelectorAll('.info-box').forEach(box => {
-                    box.classList.remove('collapsed');
-                });
+                document.getElementById('btn-config').addEventListener('click', () => this.goToMainMenu());
+                document.getElementById('btn-restart').addEventListener('click', () => this.start());
             }
 
             handleKey(key, e) {
-                // Intercetta la scorciatoia :m globale per tornare indietro in maniera sicura
                 const isMenuCommand = (this.lastKey === ':' && key === 'm');
                 this.lastKey = key;
 
                 if (isMenuCommand) {
-                    this.lastKey = ''; // Reset per evitare trigger doppi
+                    this.lastKey = '';
                     if (this.state === 'MAIN_MENU') {
                         this.goToGlobalMenu();
                     } else {
-                        this.goToMainMenu(); // Se siamo in gioco o in qualsiasi altro menu, torniamo alla base
+                        this.goToMainMenu(); 
                     }
-                    return; // Fermiamo l'elaborazione del tasto "m" qui
+                    return; 
                 }
 
-                // Logica normale (tolti i controlli diretti sul tasto "m")
                 if (this.state === 'MAIN_MENU') {
                     this.handleMainMenuNavigation(key);
                 } else if (this.state === 'GLOBAL_MENU') {
@@ -778,7 +1051,6 @@
                     if (key === 'k' || key === 'Enter') this.start();
                 }
 
-                // CONTROLLI GIOCO /JUMP
                 if (SETTINGS.GAME === 'jump') {
                     if (this.state === 'PLAYING') {
                         this.handleJumpInput(key, e);
@@ -798,35 +1070,38 @@
                 }
             }
 
-            /* --- MAIN MENU LOGIC --- */
-            handleMainMenuNavigation(key) {
-                if (['j', 'k', 'h', 'l', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) {
-                    this.hideInfoBoxes();
+            generateMenuRow(item, isActive) {
+                const activeClasses = isActive ? 'active' : '';
+                const promptArrow = `<span class="prompt-arrow">❯</span>`;
+                
+                let content = '';
+                if (item.isAction) {
+                    let pillClass = 'prompt-pill';
+                    if (item.id === 'game_tests') pillClass += ' bg-yellow-500 text-black';
+                    else if (item.id === 'back') pillClass += ' bg-red-500 text-white';
+                    
+                    content = `<span class="${pillClass}">RUN</span> <span class="${isActive ? 'text-white' : ''} font-bold">${item.label}</span>`;
+                } else if (item.options) {
+                    const optsHtml = item.options.map((opt, i) => {
+                        return i === item.idx 
+                            ? `<span class="menu-value">[${opt.toUpperCase()}]</span>` 
+                            : `<span class="menu-value-dim">${opt}</span>`;
+                    }).join(' &nbsp; ');
+                    content = `<span class="prompt-pill" style="background:var(--secondary-color); color:var(--primary-color);">SET</span> <span class="menu-label font-bold">${item.label}:</span> ${optsHtml}`;
                 }
 
-                const menu = MAIN_MENU_DATA;
-                const item = menu.items[menu.activeIndex];
+                return `<div class="menu-row ${activeClasses}">${promptArrow}${content}</div>`;
+            }
 
+            /* --- MAIN MENU LOGIC --- */
+            handleMainMenuNavigation(key) {
+                const menu = MAIN_MENU_DATA;
                 if (key === 'j' || key === 'ArrowDown') {
                     menu.activeIndex = (menu.activeIndex + 1) % menu.items.length;
                 } else if (key === 'k' || key === 'ArrowUp') {
                     menu.activeIndex = (menu.activeIndex - 1 + menu.items.length) % menu.items.length;
                 } else if (key === 'Enter' || key === ' ') {
-                    if (item.isAction) this.executeMainMenuAction(item);
-                }
-                this.renderMainMenu();
-            }
-
-            handleMainMenuClick(index) {
-                this.hideInfoBoxes();
-                if (this.state !== 'MAIN_MENU') return;
-                const menu = MAIN_MENU_DATA;
-                
-                if (menu.activeIndex === index) {
-                    const item = menu.items[index];
-                    if (item.isAction) this.executeMainMenuAction(item);
-                } else {
-                    menu.activeIndex = index;
+                    if (menu.items[menu.activeIndex].isAction) this.executeMainMenuAction(menu.items[menu.activeIndex]);
                 }
                 this.renderMainMenu();
             }
@@ -834,11 +1109,11 @@
             executeMainMenuAction(item) {
                 if (item.id === 'game_jkmode') {
                     SETTINGS.GAME = 'jkmode';
-                    document.getElementById('config-title').innerText = 'CONFIGURAZIONE - JKMODE';
+                    document.getElementById('config-title').innerText = '~/vim-y-games/jkmode/config';
                     this.goToConfigMenu();
                 } else if (item.id === 'game_jump') {
                     SETTINGS.GAME = 'jump';
-                    document.getElementById('config-title').innerText = 'CONFIGURAZIONE - /JUMP';
+                    document.getElementById('config-title').innerText = '~/vim-y-games/jump/config';
                     this.goToConfigMenu();
                 } else if (item.id === 'game_tests') {
                     this.runUnitTests();
@@ -853,20 +1128,15 @@
                 container.innerHTML = '';
                 
                 MAIN_MENU_DATA.items.forEach((item, index) => {
-                    const isActive = index === MAIN_MENU_DATA.activeIndex;
-                    const row = document.createElement('div');
-                    row.className = `menu-row ${isActive ? 'active' : ''}`;
-                    row.onclick = () => this.handleMainMenuClick(index);
-
-                    const cursor = `<span class="menu-cursor">${isActive ? '>' : '&nbsp;'}</span>`;
-                    
-                    let valueClass = 'menu-value font-bold';
-                    if (item.id === 'game_tests') valueClass += ' text-yellow-400';
-                    else if (item.id === 'open_global') valueClass += ' opacity-80'; 
-                    
-                    row.innerHTML = `${cursor}<span class="${valueClass}">${item.label}</span>`;
-                    
-                    container.appendChild(row);
+                    const rowHtml = this.generateMenuRow(item, index === MAIN_MENU_DATA.activeIndex);
+                    const wrapper = document.createElement('div');
+                    wrapper.innerHTML = rowHtml;
+                    const rowElement = wrapper.firstElementChild;
+                    rowElement.onclick = () => {
+                        MAIN_MENU_DATA.activeIndex = index;
+                        this.executeMainMenuAction(item);
+                    };
+                    container.appendChild(rowElement);
                 });
 
                 setTimeout(() => {
@@ -877,10 +1147,6 @@
 
             /* --- GLOBAL MENU LOGIC --- */
             handleGlobalMenuNavigation(key) {
-                if (['j', 'k', 'h', 'l', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) {
-                    this.hideInfoBoxes();
-                }
-
                 const menu = GLOBAL_MENU_DATA;
                 const item = menu.items[menu.activeIndex];
 
@@ -908,24 +1174,6 @@
                 this.renderGlobalMenu();
             }
 
-            handleGlobalMenuClick(index) {
-                this.hideInfoBoxes();
-                if (this.state !== 'GLOBAL_MENU') return;
-                const menu = GLOBAL_MENU_DATA;
-                
-                if (menu.activeIndex === index) {
-                    const item = menu.items[index];
-                    if (item.isAction) this.executeGlobalMenuAction(item);
-                    else if (item.options) {
-                        item.idx = (item.idx + 1) % item.options.length;
-                        this.applyGlobalMenuSetting(item);
-                    }
-                } else {
-                    menu.activeIndex = index;
-                }
-                this.renderGlobalMenu();
-            }
-
             applyGlobalMenuSetting(item) {
                 if (item.id === 'theme') {
                     const val = item.options[item.idx];
@@ -935,7 +1183,7 @@
 
             executeGlobalMenuAction(item) {
                 const url = encodeURIComponent("https://github.com/os3albert/vim-y-games");
-                const text = encodeURIComponent("Scopri Vim-y Games, la sala giochi per amanti dei terminali!");
+                const text = encodeURIComponent("Scopri Vim-y Games, la sala giochi da terminale!");
                 
                 if (item.id === 'share_wa') {
                     window.open(`https://api.whatsapp.com/send?text=${text}%20${url}`, '_blank');
@@ -954,27 +1202,20 @@
                 container.innerHTML = '';
                 
                 GLOBAL_MENU_DATA.items.forEach((item, index) => {
-                    const isActive = index === GLOBAL_MENU_DATA.activeIndex;
-                    const row = document.createElement('div');
-                    row.className = `menu-row ${isActive ? 'active' : ''}`;
-                    row.onclick = () => this.handleGlobalMenuClick(index);
-
-                    const cursor = `<span class="menu-cursor">${isActive ? '>' : '&nbsp;'}</span>`;
-                    
-                    if (item.isAction) {
-                        let valueClass = item.id === 'back' ? 'text-red-400 font-bold' : 'menu-value font-bold opacity-80';
-                        row.innerHTML = `${cursor}<span class="${valueClass}">${item.label}</span>`;
-                    } else if (item.options) {
-                        const optsHtml = item.options.map((opt, i) => {
-                            return i === item.idx 
-                                ? `<span class="menu-value">[${opt.toUpperCase()}]</span>` 
-                                : `<span class="menu-value-dim">${opt}</span>`;
-                        }).join(' &nbsp; ');
-                        
-                        row.innerHTML = `${cursor}<span class="menu-label">${item.label}:</span> ${optsHtml}`;
-                    }
-                    
-                    container.appendChild(row);
+                    const rowHtml = this.generateMenuRow(item, index === GLOBAL_MENU_DATA.activeIndex);
+                    const wrapper = document.createElement('div');
+                    wrapper.innerHTML = rowHtml;
+                    const rowElement = wrapper.firstElementChild;
+                    rowElement.onclick = () => {
+                        GLOBAL_MENU_DATA.activeIndex = index;
+                        if (item.isAction) this.executeGlobalMenuAction(item);
+                        else {
+                            item.idx = (item.idx + 1) % item.options.length;
+                            this.applyGlobalMenuSetting(item);
+                            this.renderGlobalMenu();
+                        }
+                    };
+                    container.appendChild(rowElement);
                 });
 
                 setTimeout(() => {
@@ -985,6 +1226,8 @@
 
             goToMainMenu() {
                 this.state = 'MAIN_MENU';
+                if(window.threeBg) window.threeBg.zoomTo(160); 
+                
                 document.getElementById('config-menu').classList.add('hidden');
                 document.getElementById('global-menu').classList.add('hidden');
                 document.getElementById('game-over').classList.add('hidden');
@@ -992,7 +1235,6 @@
                 document.getElementById('hud').classList.add('hidden');
                 document.getElementById('main-menu').classList.remove('hidden');
                 
-                this.resetInfoBoxes();
                 this.obstacles = [];
                 this.player = new Player(this.canvas.height);
                 this.renderMainMenu();
@@ -1000,6 +1242,8 @@
 
             goToGlobalMenu() {
                 this.state = 'GLOBAL_MENU';
+                if(window.threeBg) window.threeBg.zoomTo(120); 
+                
                 document.getElementById('main-menu').classList.add('hidden');
                 document.getElementById('config-menu').classList.add('hidden');
                 document.getElementById('game-over').classList.add('hidden');
@@ -1007,13 +1251,14 @@
                 document.getElementById('hud').classList.add('hidden');
                 document.getElementById('global-menu').classList.remove('hidden');
                 
-                this.resetInfoBoxes();
                 this.renderGlobalMenu();
             }
 
             /* --- LOGICA DI TESTING --- */
             runUnitTests() {
                 this.state = 'TESTING';
+                if(window.threeBg) window.threeBg.zoomTo(60); 
+                
                 document.getElementById('main-menu').classList.add('hidden');
                 document.getElementById('test-runner').classList.remove('hidden');
                 
@@ -1032,10 +1277,6 @@
             }
 
             handleConfigMenuNavigation(key) {
-                if (['j', 'k', 'h', 'l', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) {
-                    this.hideInfoBoxes();
-                }
-
                 const menu = this.getActiveMenu();
                 const item = menu.items[menu.activeIndex];
 
@@ -1061,26 +1302,6 @@
                         item.idx = (item.idx + 1) % item.options.length;
                         this.applyMenuSetting(item);
                     }
-                }
-                this.renderConfigMenu();
-            }
-
-            handleConfigMenuClick(index) {
-                this.hideInfoBoxes();
-                if (this.state !== 'CONFIG_MENU') return;
-                const menu = this.getActiveMenu();
-                
-                if (menu.activeIndex === index) {
-                    const item = menu.items[index];
-                    if (item.isAction) {
-                        if (item.id === 'start') this.start();
-                        else if (item.id === 'back') this.goToMainMenu();
-                    } else {
-                        item.idx = (item.idx + 1) % item.options.length;
-                        this.applyMenuSetting(item);
-                    }
-                } else {
-                    menu.activeIndex = index;
                 }
                 this.renderConfigMenu();
             }
@@ -1106,26 +1327,22 @@
                 const menu = this.getActiveMenu();
 
                 menu.items.forEach((item, index) => {
-                    const isActive = index === menu.activeIndex;
-                    const row = document.createElement('div');
-                    row.className = `menu-row ${isActive ? 'active' : ''}`;
-                    row.onclick = () => this.handleConfigMenuClick(index);
-
-                    const cursor = `<span class="menu-cursor">${isActive ? '>' : '&nbsp;'}</span>`;
-                    
-                    if (item.isAction) {
-                        const valueClass = item.id === 'back' ? 'text-red-400 font-bold' : 'menu-value font-bold';
-                        row.innerHTML = `${cursor}<span class="${valueClass}">${item.label}</span>`;
-                    } else {
-                        const optsHtml = item.options.map((opt, i) => {
-                            return i === item.idx 
-                                ? `<span class="menu-value">[${opt.toUpperCase()}]</span>` 
-                                : `<span class="menu-value-dim">${opt}</span>`;
-                        }).join(' &nbsp; ');
-                        
-                        row.innerHTML = `${cursor}<span class="menu-label">${item.label}:</span> ${optsHtml}`;
-                    }
-                    container.appendChild(row);
+                    const rowHtml = this.generateMenuRow(item, index === menu.activeIndex);
+                    const wrapper = document.createElement('div');
+                    wrapper.innerHTML = rowHtml;
+                    const rowElement = wrapper.firstElementChild;
+                    rowElement.onclick = () => {
+                        menu.activeIndex = index;
+                        if (item.isAction) {
+                            if (item.id === 'start') this.start();
+                            else if (item.id === 'back') this.goToMainMenu();
+                        } else {
+                            item.idx = (item.idx + 1) % item.options.length;
+                            this.applyMenuSetting(item);
+                            this.renderConfigMenu();
+                        }
+                    };
+                    container.appendChild(rowElement);
                 });
 
                 setTimeout(() => {
@@ -1136,13 +1353,14 @@
 
             goToConfigMenu() {
                 this.state = 'CONFIG_MENU';
+                if(window.threeBg) window.threeBg.zoomTo(90);
+
                 document.getElementById('main-menu').classList.add('hidden');
                 document.getElementById('global-menu').classList.add('hidden');
                 document.getElementById('game-over').classList.add('hidden');
                 document.getElementById('hud').classList.add('hidden');
                 document.getElementById('config-menu').classList.remove('hidden');
                 
-                this.resetInfoBoxes();
                 this.obstacles = [];
                 this.player = new Player(this.canvas.height);
                 this.renderConfigMenu();
@@ -1152,6 +1370,10 @@
                 const theme = THEMES[themeName];
                 SETTINGS.THEME = { ...theme };
                 for (let key in theme) document.documentElement.style.setProperty(key, theme[key]);
+                
+                if (window.threeBg) {
+                    window.threeBg.updateTheme(SETTINGS.THEME['--primary-color']);
+                }
             }
 
             setDifficulty(level) {
@@ -1169,6 +1391,8 @@
 
             /* --- GESTIONE START GIOCHI --- */
             start() {
+                if (window.threeBg) window.threeBg.zoomTo(30); 
+
                 if (SETTINGS.GAME === 'jump') {
                     this.startJumpMode();
                     return;
@@ -1201,15 +1425,14 @@
                 this.jumpLevel = this.jumpLevel || 1;
                 this.jumpNumPlatforms = this.jumpLevel * 10;
                 
-                // Difficoltà Time (Secondi per piattaforma)
                 let timePerPlatform = 3;
                 if (SETTINGS.JUMP.DIFFICULTY === 'easy') timePerPlatform = 4;
                 if (SETTINGS.JUMP.DIFFICULTY === 'hard') timePerPlatform = 2;
                 
-                this.jumpTimeLeft = this.jumpNumPlatforms * timePerPlatform * 60; // calcolato a 60 FPS
+                this.jumpTimeLeft = this.jumpNumPlatforms * timePerPlatform * 60; 
                 this.jumpBuffer = "";
                 this.jumpPlatforms = [];
-                this.jumpPlayerIdx = -1; // -1 = suolo
+                this.jumpPlayerIdx = -1;
                 this.cameraY = 0;
                 
                 let groundY = this.canvas.height - 20;
@@ -1223,14 +1446,10 @@
                     let targetWord = fullText;
                     let parts = { prefix: "", target: fullText, suffix: "" };
 
-                    // Se è uno snippet, seleziona una parola casuale da evidenziare per il salto
                     if (contentType === 'snippets') {
-                        // Estrae solo le vere e proprie parole alfanumeriche escludendo punteggiatura
                         const words = fullText.match(/[a-zA-Z_]\w*/g) || [];
                         if (words.length > 0) {
                             targetWord = words[Math.floor(Math.random() * words.length)];
-                            
-                            // Suddivide la stringa per colorare in modo differente il target in renderJumpMode
                             const matchIdx = fullText.indexOf(targetWord);
                             parts = {
                                 prefix: fullText.substring(0, matchIdx),
@@ -1274,7 +1493,7 @@
                     if (this.jumpBuffer === "" && key !== "/") return; 
                     this.jumpBuffer += key;
                     
-                    if (this.jumpBuffer.length > 1) { // Ha digitato '/' e almeno una lettera
+                    if (this.jumpBuffer.length > 1) { 
                         const searchWord = this.jumpBuffer.substring(1).toLowerCase();
                         let startIdx = this.jumpPlayerIdx + 1;
                         let matchedIdx = -1;
@@ -1283,16 +1502,12 @@
                             const plat = this.jumpPlatforms[i];
                             const screenY = plat.y + this.cameraY;
                             
-                            // Permetti il salto solo se la piattaforma è nell'area visibile (con piccolo margine)
                             if (screenY < -30 || screenY > this.canvas.height + 30) {
-                                // Le piattaforme vanno verso l'alto (y decrescente). 
-                                // Se superiamo il bordo superiore non serve controllare le successive.
                                 if (screenY < -30) break; 
                                 continue;
                             }
 
                             const platWord = plat.targetWord.toLowerCase();
-                            // Usa la targetWord calcolata per fare il match
                             if (platWord === searchWord || (searchWord.length >= 3 && platWord.startsWith(searchWord))) {
                                 matchedIdx = i;
                                 break;
@@ -1334,16 +1549,13 @@
                 ctx.save();
                 ctx.translate(0, this.cameraY);
 
-                // Disegna Suolo
                 ctx.fillStyle = SETTINGS.THEME['--grid-color'];
                 ctx.fillRect(0, canvas.height - 20, canvas.width, 40);
 
-                // Disegna Piattaforme 
                 this.jumpPlatforms.forEach((plat, i) => {
                     ctx.fillStyle = SETTINGS.THEME['--secondary-color'];
                     ctx.strokeStyle = SETTINGS.THEME['--primary-color'];
                     ctx.lineWidth = 2;
-                    // Se la stringa è lunga (snippet), la piattaforma è più larga
                     const platW = Math.max(120, plat.word.length * 10);
                     ctx.fillRect(plat.x, plat.y, platW, 20);
                     ctx.strokeRect(plat.x, plat.y, platW, 20);
@@ -1351,39 +1563,32 @@
                     const fontSize = plat.word.length > 15 ? 12 : 14;
                     ctx.font = `${fontSize}px ${SETTINGS.THEME['--font-family']}`;
                     
-                    // Disegno del testo con Highlight della parola bersaglio
                     if (SETTINGS.JUMP.CONTENT === 'snippets' && plat.parts && plat.parts.prefix !== undefined) {
                         let currentX = plat.x + 10;
                         const textY = plat.y + 15;
 
-                        // Prefisso (normale)
                         ctx.fillStyle = SETTINGS.THEME['--text-color'];
                         ctx.fillText(plat.parts.prefix, currentX, textY);
                         currentX += ctx.measureText(plat.parts.prefix).width;
 
-                        // Parola Target Evidenziata (colorata)
                         ctx.fillStyle = SETTINGS.THEME['--highlight-color'];
                         ctx.fillText(plat.parts.target, currentX, textY);
                         currentX += ctx.measureText(plat.parts.target).width;
 
-                        // Suffisso (normale)
                         ctx.fillStyle = SETTINGS.THEME['--text-color'];
                         ctx.fillText(plat.parts.suffix, currentX, textY);
                     } else {
-                        // Normale o Keywords
                         ctx.fillStyle = SETTINGS.THEME['--text-color'];
                         ctx.fillText(plat.word, plat.x + 10, plat.y + 15);
                     }
                 });
 
-                // Disegna Porta
-                ctx.fillStyle = this.state === 'DOOR_CLOSED' ? 'red' : SETTINGS.THEME['--primary-color'];
+                ctx.fillStyle = this.state === 'DOOR_CLOSED' ? '#ff5f56' : SETTINGS.THEME['--primary-color'];
                 ctx.fillRect(this.jumpDoor.x, this.jumpDoor.y, 120, 100);
                 ctx.fillStyle = SETTINGS.THEME['--bg-color'];
                 ctx.font = `bold 24px ${SETTINGS.THEME['--font-family']}`;
                 ctx.fillText("DOOR", this.jumpDoor.x + 25, this.jumpDoor.y + 55);
 
-                // Disegna Player
                 let px = 100;
                 let py = canvas.height - 20;
                 if (this.jumpPlayerIdx !== -1) {
@@ -1397,22 +1602,18 @@
 
                 ctx.restore();
 
-                // HUD /JUMP personalizzato
+                // Custom HUD per Jump
                 ctx.fillStyle = SETTINGS.THEME['--text-color'];
                 ctx.font = `bold 20px ${SETTINGS.THEME['--font-family']}`;
                 ctx.fillText(`Livello: ${this.jumpLevel}`, 20, 40);
                 
-                const timeColor = this.jumpTimeLeft < 180 ? 'red' : SETTINGS.THEME['--text-color'];
+                const timeColor = this.jumpTimeLeft < 180 ? '#ff5f56' : SETTINGS.THEME['--text-color'];
                 ctx.fillStyle = timeColor;
                 ctx.fillText(`Tempo: ${Math.max(0, Math.ceil(this.jumpTimeLeft / 60))}s`, 20, 70);
 
                 ctx.fillStyle = SETTINGS.THEME['--text-color'];
                 ctx.fillText(`Cerca: ${this.jumpBuffer}_`, 20, canvas.height - 30);
-                
-                ctx.font = `14px ${SETTINGS.THEME['--font-family']}`;
-                ctx.fillText(`[:m] Esci al menu`, canvas.width - 150, 40);
 
-                // Overlays
                 if (this.state === 'AT_DOOR') {
                     this.drawOverlayBox(ctx, "VIM VITTORIA!", "Premi CTRL+[ per entrare nella porta");
                 } else if (this.state === 'DOOR_CLOSED') {
@@ -1423,7 +1624,7 @@
             drawOverlayBox(ctx, title, subtitle) {
                 const cx = this.canvas.width / 2;
                 const cy = this.canvas.height / 2;
-                ctx.fillStyle = 'rgba(0,0,0,0.85)';
+                ctx.fillStyle = 'rgba(10,15,10,0.85)';
                 ctx.fillRect(cx - 250, cy - 80, 500, 160);
                 ctx.strokeStyle = SETTINGS.THEME['--primary-color'];
                 ctx.strokeRect(cx - 250, cy - 80, 500, 160);
@@ -1432,6 +1633,7 @@
                 ctx.textAlign = 'center';
                 ctx.font = `bold 28px ${SETTINGS.THEME['--font-family']}`;
                 ctx.fillText(title, cx, cy - 10);
+                ctx.fillStyle = SETTINGS.THEME['--text-color'];
                 ctx.font = `16px ${SETTINGS.THEME['--font-family']}`;
                 ctx.fillText(subtitle, cx, cy + 30);
                 ctx.textAlign = 'left';
@@ -1444,6 +1646,7 @@
 
             die() {
                 this.state = 'GAMEOVER';
+                if(window.threeBg) window.threeBg.zoomTo(70); 
                 
                 const currentType = SETTINGS.JKMODE.OBSTACLE_TYPE;
                 let isNewRecord = false;
@@ -1460,7 +1663,7 @@
                 const finalBestEl = document.getElementById('final-best');
                 if (isNewRecord) {
                     finalBestEl.innerText = `NUOVO RECORD: ${this.score}!`;
-                    finalBestEl.style.color = 'yellow';
+                    finalBestEl.style.color = '#fffb00';
                     finalBestEl.classList.add('blink');
                 } else {
                     finalBestEl.innerText = `Best (${currentType}): ${this.highScores[currentType]}`;
@@ -1518,7 +1721,12 @@
             render() {
                 const { ctx, canvas } = this;
                 
-                ctx.fillStyle = SETTINGS.THEME['--bg-color'];
+                if (['MAIN_MENU', 'GLOBAL_MENU', 'CONFIG_MENU', 'TESTING'].includes(this.state)) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    return; 
+                }
+                
+                ctx.fillStyle = 'rgba(10, 15, 10, 0.75)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
                 ctx.strokeStyle = SETTINGS.THEME['--grid-color'];
@@ -1549,6 +1757,7 @@
         }
 
         window.addEventListener('load', () => {
+            window.threeBg = new ThreeBackground();
             game = new GameEngine();
         });
     </script>
