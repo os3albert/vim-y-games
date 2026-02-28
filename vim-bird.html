@@ -84,7 +84,40 @@
             padding: 0.75rem;
             border-radius: 0.25rem;
             background: rgba(0,0,0,0.1);
+            overflow: hidden;
+            transform-origin: center;
         }
+
+        .info-box.collapsed {
+            animation: crt-collapse 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+        }
+
+        @keyframes crt-collapse {
+            0% { 
+                max-height: 250px; 
+                opacity: 1; 
+                transform: scale(1, 1); 
+                margin-bottom: 1.5rem; 
+            }
+            30% { 
+                max-height: 250px;
+                transform: scale(1.02, 0.02); 
+                opacity: 0.8; 
+                margin-bottom: 1.5rem; 
+                padding-top: 0;
+                padding-bottom: 0;
+            }
+            100% { 
+                max-height: 0; 
+                opacity: 0; 
+                transform: scale(0, 0); 
+                margin-bottom: 0; 
+                padding-top: 0; 
+                padding-bottom: 0; 
+                border-width: 0; 
+            }
+        }
+
         .info-title {
             font-weight: bold;
             border-bottom: 1px solid var(--border-color);
@@ -118,6 +151,24 @@
         .menu-value { color: var(--primary-color); }
         .menu-value-dim { opacity: 0.4; }
 
+        /* Custom Scrollbar Dinamica basata sul Tema */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-color) transparent;
+        }
+        *::-webkit-scrollbar {
+            width: 8px;
+        }
+        *::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+        *::-webkit-scrollbar-thumb {
+            background-color: var(--primary-color);
+            border-radius: 4px;
+            border: 1px solid var(--card-bg);
+        }
+
         /* Stili output Test */
         .test-pass { color: #00ff41; }
         .test-fail { color: #ff3333; font-weight: bold; }
@@ -139,7 +190,7 @@
 <body class="crt-overlay">
 
     <div class="ui-container">
-        <!-- Main Menu: Selezione Giochi, Tema e Share -->
+        <!-- Main Menu: Selezione Giochi -->
         <div id="main-menu" class="retro-card" style="width: 90%; max-width: 650px;">
             <h1 class="text-6xl font-bold mb-2 tracking-tighter">VIM-Y GAMES</h1>
             <p class="mb-6 opacity-70">La tua sala giochi da terminale</p>
@@ -147,16 +198,32 @@
             <div class="mb-6 text-sm text-left opacity-80 info-box">
                 <p class="info-title">Navigazione Generale</p>
                 <p><span class="key-badge">k</span> / <span class="key-badge">j</span> : Su / Giù</p>
-                <p><span class="key-badge">h</span> / <span class="key-badge">l</span> : Cambia Valore</p>
-                <p><span class="key-badge">Enter</span> : Seleziona / Avvia</p>
+                <p><span class="key-badge">Enter</span> : Seleziona</p>
             </div>
 
-            <!-- Lista Menu Principale -->
+            <!-- Lista Giochi -->
             <div id="main-menu-list" class="text-left font-bold text-base md:text-lg flex flex-col gap-1 mb-6 border border-[#00ff41]/30 p-4 rounded bg-black/50">
                 <!-- Popolato da JS -->
             </div>
             
             <p class="blink text-sm opacity-60 italic mt-4">* Altri giochi in arrivo...</p>
+        </div>
+
+        <!-- Menu Globale: Temi e Condivisione -->
+        <div id="global-menu" class="retro-card hidden" style="width: 90%; max-width: 650px;">
+            <h1 class="text-4xl font-bold mb-2 tracking-tighter text-[#00ff41]">OPZIONI APP</h1>
+            <p class="mb-6 opacity-70">Personalizza e condividi Vim-y Games</p>
+            
+            <div class="mb-6 text-sm text-left opacity-80 info-box">
+                <p class="info-title">Navigazione</p>
+                <p><span class="key-badge">k</span> / <span class="key-badge">j</span> : Su / Giù</p>
+                <p><span class="key-badge">h</span> / <span class="key-badge">l</span> : Cambia Tema</p>
+                <p><span class="key-badge">Enter</span> : Conferma</p>
+            </div>
+
+            <div id="global-menu-list" class="text-left font-bold text-base md:text-lg flex flex-col gap-1 mb-2 border border-[#00ff41]/30 p-4 rounded bg-black/50">
+                <!-- Popolato da JS -->
+            </div>
         </div>
 
         <!-- Menu Configurazione Gioco -->
@@ -171,7 +238,6 @@
                 <p><span class="key-badge">Enter</span> : Conferma</p>
             </div>
 
-            <!-- Menu Config Generato Dinamicamente -->
             <div id="vim-menu" class="text-left font-bold text-base md:text-lg flex flex-col gap-1 mb-2">
                 <!-- Contenuto popolato dal JS -->
             </div>
@@ -188,18 +254,18 @@
             </div>
         </div>
         
-        <!-- Schermata Fine Partita -->
+        <!-- Schermata Fine Partita (Solo JKMODE) -->
         <div id="game-over" class="retro-card hidden">
             <h2 class="text-5xl font-bold mb-2 text-red-500" style="text-shadow: none;">SEGFAULT!</h2>
             <p id="final-score" class="text-3xl mb-1">Score: 0</p>
             <p id="final-best" class="text-xl mb-6 opacity-80">Best: 0</p>
             <div class="flex flex-col gap-4 items-center">
                 <p class="blink text-lg">Premi 'k' per riavviare</p>
-                <button id="btn-config" class="custom-btn text-sm uppercase tracking-widest mt-2">Torna alla Configurazione (m)</button>
+                <button id="btn-config" class="custom-btn text-sm uppercase tracking-widest mt-2">Torna al Menu (m)</button>
             </div>
         </div>
 
-        <!-- Score HUD -->
+        <!-- Score HUD (Solo JKMODE) -->
         <div id="hud" class="absolute top-8 left-8 flex flex-col hidden tabular-nums">
             <div class="text-2xl md:text-4xl font-bold">SCORE: <span id="current-score">0</span></div>
             <div class="text-sm md:text-lg opacity-80 mt-1">BEST (<span id="hud-mode"></span>): <span id="best-score">0</span></div>
@@ -260,24 +326,34 @@
             hard: { SPEED: 6.5, SPAWN_RATE: 55, GAP: 150, GRAVITY: 0.35 }
         };
 
+        const CSHARP_KEYWORDS = [
+            "public", "private", "protected", "internal", "class", "struct", "interface", "enum", "void", "static", "readonly", "const", "string", "int", "bool", "float", "double", "decimal", "var", "dynamic", "object", "Console.WriteLine", "if", "else", "switch", "case", "break", "continue", "for", "foreach", "while", "do", "return", "new", "namespace", "using", "System", "async", "await", "Task", "IEnumerable", "List<T>", "Dictionary", "try", "catch", "finally", "throw", "override", "virtual", "abstract", "sealed", "base", "this", "null", "true", "false"
+        ];
+
         /**
-         * STRUTTURA DEL MENU PRINCIPALE
+         * STRUTTURE DEI MENU
          */
         const MAIN_MENU_DATA = {
             activeIndex: 0,
             items: [
                 { id: 'game_jkmode', label: '1. Gioca a JKMODE', isAction: true },
-                { id: 'game_tests', label: '2. >>> ESEGUI_TESTS.sh <<<', isAction: true },
-                { id: 'theme', label: 'Tema App', options: ['matrix', 'tokyo', 'material'], idx: 0 },
-                { id: 'share_wa', label: '► Condividi su WhatsApp', isAction: true },
-                { id: 'share_li', label: '► Condividi su LinkedIn', isAction: true },
-                { id: 'share_fb', label: '► Condividi su Facebook', isAction: true }
+                { id: 'game_jump', label: '2. Gioca a /jump (Platformer C#)', isAction: true },
+                { id: 'game_tests', label: '3. >>> ESEGUI_TESTS.sh <<<', isAction: true },
+                { id: 'open_global', label: '4. Opzioni App (Temi/Social) [m]', isAction: true }
             ]
         };
 
-        /**
-         * IMPOSTAZIONI GLOBALI
-         */
+        const GLOBAL_MENU_DATA = {
+            activeIndex: 0,
+            items: [
+                { id: 'theme', label: 'Tema App', options: ['matrix', 'tokyo', 'material'], idx: 0 },
+                { id: 'share_wa', label: '► Condividi su WhatsApp', isAction: true },
+                { id: 'share_li', label: '► Condividi su LinkedIn', isAction: true },
+                { id: 'share_fb', label: '► Condividi su Facebook', isAction: true },
+                { id: 'back', label: '<<< TORNA AI GIOCHI', isAction: true }
+            ]
+        };
+
         const SETTINGS = {
             GAME: 'jkmode', 
             MODE: 'zero-g', 
@@ -297,7 +373,6 @@
                 PIPE_WIDTH: 80
             },
             THEME: { ...THEMES.matrix },
-            // Menu di configurazione (tema rimosso perché gestito dal Main Menu)
             MENU: {
                 activeIndex: 0,
                 items: [
@@ -305,7 +380,7 @@
                     { id: 'obstacle', label: 'Ostacoli', options: ['pipes', 'meteors'], idx: 0 },
                     { id: 'difficulty', label: 'Difficoltà', options: ['easy', 'normal', 'hard'], idx: 1 },
                     { id: 'start', label: '>>> RUN_GAME.sh <<<', isAction: true },
-                    { id: 'back', label: '<<< TORNA AL MENU PRINCIPALE', isAction: true }
+                    { id: 'back', label: '<<< TORNA AI GIOCHI', isAction: true }
                 ]
             }
         };
@@ -323,7 +398,7 @@
 
             _bindEvents() {
                 window.addEventListener('keydown', e => {
-                    this.cb.onKey(e.key);
+                    this.cb.onKey(e.key, e);
 
                     if (e.key === 'k') {
                         if (!this.keys.up) this.cb.onAction('jump');
@@ -408,7 +483,7 @@
         }
 
         /**
-         * ENTITÀ: TUBI
+         * ENTITÀ: TUBI (JKMODE)
          */
         class Pipe {
             constructor(w, h) {
@@ -451,7 +526,7 @@
         }
 
         /**
-         * ENTITÀ: METEORITE
+         * ENTITÀ: METEORITE (JKMODE)
          */
         class Meteor {
             constructor(w, h) {
@@ -599,18 +674,20 @@
             constructor() {
                 this.canvas = document.getElementById('gameCanvas');
                 this.ctx = this.canvas.getContext('2d');
-                this.state = 'MAIN_MENU'; // MAIN_MENU, CONFIG_MENU, PLAYING, GAMEOVER, TESTING
+                // Stati possibili: MAIN_MENU, GLOBAL_MENU, CONFIG_MENU, PLAYING, GAMEOVER, TESTING, AT_DOOR, DOOR_CLOSED
+                this.state = 'MAIN_MENU'; 
                 this.score = 0;
                 this.obstacles = [];
                 this.ticks = 0;
                 this.currentAction = null;
                 this.highScores = { pipes: 0, meteors: 0 };
+                this.hasHiddenInstructions = false;
 
                 this.loadHighScores();
 
                 this.player = new Player(this.canvas.height);
                 this.input = new Controller({
-                    onKey: (k) => this.handleKey(k),
+                    onKey: (k, e) => this.handleKey(k, e),
                     onAction: (act) => this.currentAction = act,
                     getState: () => this.state
                 });
@@ -619,6 +696,7 @@
 
                 this._setupUI();
                 this.renderMainMenu();
+                this.renderGlobalMenu();
                 this.renderConfigMenu();
                 window.addEventListener('resize', () => this.onResize());
                 this.onResize();
@@ -646,21 +724,65 @@
                 document.getElementById('btn-config').addEventListener('click', () => this.goToConfigMenu());
             }
 
-            handleKey(key) {
+            hideInfoBoxes() {
+                if (this.hasHiddenInstructions) return;
+                this.hasHiddenInstructions = true;
+                document.querySelectorAll('.info-box').forEach(box => {
+                    box.classList.add('collapsed');
+                });
+            }
+
+            resetInfoBoxes() {
+                this.hasHiddenInstructions = false;
+                document.querySelectorAll('.info-box').forEach(box => {
+                    box.classList.remove('collapsed');
+                });
+            }
+
+            handleKey(key, e) {
                 if (this.state === 'MAIN_MENU') {
-                    this.handleMainMenuNavigation(key);
+                    if (key === 'm') this.goToGlobalMenu(); // Shortcut
+                    else this.handleMainMenuNavigation(key);
+                } else if (this.state === 'GLOBAL_MENU') {
+                    this.handleGlobalMenuNavigation(key);
                 } else if (this.state === 'CONFIG_MENU') {
                     this.handleConfigMenuNavigation(key);
                 } else if (this.state === 'GAMEOVER') {
-                    if (key === 'm') this.goToConfigMenu();
+                    if (key === 'm') this.goToMainMenu(); // Tornare al Main Menu
                     if (key === 'k' || key === 'Enter') this.start();
                 } else if (this.state === 'TESTING') {
                     if (key === 'm') this.goToMainMenu();
+                }
+
+                // CONTROLLI GIOCO /JUMP
+                if (SETTINGS.GAME === 'jump') {
+                    if (this.state === 'PLAYING') {
+                        if (key === 'm') this.goToMainMenu();
+                        else this.handleJumpInput(key, e);
+                    } else if (this.state === 'AT_DOOR') {
+                        if (key === 'm') this.goToMainMenu();
+                        else if (key === '[' && e.ctrlKey) {
+                            e.preventDefault();
+                            this.jumpLevel++;
+                            this.startJumpMode();
+                        }
+                    } else if (this.state === 'DOOR_CLOSED') {
+                        if (key === 'm') this.goToMainMenu();
+                        else if (key === 'o' && e.ctrlKey) {
+                            e.preventDefault();
+                            this.jumpLevel = Math.max(1, this.jumpLevel - 1);
+                            this.startJumpMode();
+                        }
+                    }
                 }
             }
 
             /* --- MAIN MENU LOGIC --- */
             handleMainMenuNavigation(key) {
+                if (['j', 'k', 'h', 'l', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) {
+                    this.hideInfoBoxes();
+                }
+
                 const menu = MAIN_MENU_DATA;
                 const item = menu.items[menu.activeIndex];
 
@@ -668,66 +790,38 @@
                     menu.activeIndex = (menu.activeIndex + 1) % menu.items.length;
                 } else if (key === 'k' || key === 'ArrowUp') {
                     menu.activeIndex = (menu.activeIndex - 1 + menu.items.length) % menu.items.length;
-                } else if (key === 'h' || key === 'ArrowLeft') {
-                    if (!item.isAction && item.options) {
-                        item.idx = (item.idx - 1 + item.options.length) % item.options.length;
-                        this.applyMainMenuSetting(item);
-                    }
-                } else if (key === 'l' || key === 'ArrowRight') {
-                    if (!item.isAction && item.options) {
-                        item.idx = (item.idx + 1) % item.options.length;
-                        this.applyMainMenuSetting(item);
-                    }
                 } else if (key === 'Enter' || key === ' ') {
                     if (item.isAction) this.executeMainMenuAction(item);
-                    else if (item.options) {
-                        item.idx = (item.idx + 1) % item.options.length;
-                        this.applyMainMenuSetting(item);
-                    }
                 }
                 this.renderMainMenu();
             }
 
             handleMainMenuClick(index) {
+                this.hideInfoBoxes();
                 if (this.state !== 'MAIN_MENU') return;
                 const menu = MAIN_MENU_DATA;
                 
                 if (menu.activeIndex === index) {
                     const item = menu.items[index];
                     if (item.isAction) this.executeMainMenuAction(item);
-                    else if (item.options) {
-                        item.idx = (item.idx + 1) % item.options.length;
-                        this.applyMainMenuSetting(item);
-                    }
                 } else {
                     menu.activeIndex = index;
                 }
                 this.renderMainMenu();
             }
 
-            applyMainMenuSetting(item) {
-                if (item.id === 'theme') {
-                    const val = item.options[item.idx];
-                    this.setTheme(val);
-                }
-            }
-
             executeMainMenuAction(item) {
-                const url = encodeURIComponent("https://github.com/os3albert/vim-y-games");
-                const text = encodeURIComponent("Scopri Vim-y Games, la sala giochi per amanti dei terminali! Gioca a JKMODE: ");
-                
                 if (item.id === 'game_jkmode') {
                     SETTINGS.GAME = 'jkmode';
-                    document.getElementById('config-title').innerText = 'JKMODE';
+                    document.getElementById('config-title').innerText = 'CONFIGURAZIONE - JKMODE';
                     this.goToConfigMenu();
+                } else if (item.id === 'game_jump') {
+                    SETTINGS.GAME = 'jump';
+                    this.start(); // Salta config menu e inizia diretto /jump
                 } else if (item.id === 'game_tests') {
                     this.runUnitTests();
-                } else if (item.id === 'share_wa') {
-                    window.open(`https://api.whatsapp.com/send?text=${text}${url}`, '_blank');
-                } else if (item.id === 'share_li') {
-                    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank');
-                } else if (item.id === 'share_fb') {
-                    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
+                } else if (item.id === 'open_global') {
+                    this.goToGlobalMenu();
                 }
             }
 
@@ -744,11 +838,109 @@
 
                     const cursor = `<span class="menu-cursor">${isActive ? '>' : '&nbsp;'}</span>`;
                     
+                    let valueClass = 'menu-value font-bold';
+                    if (item.id === 'game_tests') valueClass += ' text-yellow-400';
+                    else if (item.id === 'open_global') valueClass += ' opacity-80'; 
+                    
+                    row.innerHTML = `${cursor}<span class="${valueClass}">${item.label}</span>`;
+                    
+                    container.appendChild(row);
+                });
+
+                setTimeout(() => {
+                    const activeRow = container.querySelector('.active');
+                    if (activeRow) activeRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 10);
+            }
+
+            /* --- GLOBAL MENU LOGIC --- */
+            handleGlobalMenuNavigation(key) {
+                if (['j', 'k', 'h', 'l', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) {
+                    this.hideInfoBoxes();
+                }
+
+                const menu = GLOBAL_MENU_DATA;
+                const item = menu.items[menu.activeIndex];
+
+                if (key === 'j' || key === 'ArrowDown') {
+                    menu.activeIndex = (menu.activeIndex + 1) % menu.items.length;
+                } else if (key === 'k' || key === 'ArrowUp') {
+                    menu.activeIndex = (menu.activeIndex - 1 + menu.items.length) % menu.items.length;
+                } else if (key === 'h' || key === 'ArrowLeft') {
+                    if (!item.isAction && item.options) {
+                        item.idx = (item.idx - 1 + item.options.length) % item.options.length;
+                        this.applyGlobalMenuSetting(item);
+                    }
+                } else if (key === 'l' || key === 'ArrowRight') {
+                    if (!item.isAction && item.options) {
+                        item.idx = (item.idx + 1) % item.options.length;
+                        this.applyGlobalMenuSetting(item);
+                    }
+                } else if (key === 'Enter' || key === ' ') {
+                    if (item.isAction) this.executeGlobalMenuAction(item);
+                    else if (item.options) {
+                        item.idx = (item.idx + 1) % item.options.length;
+                        this.applyGlobalMenuSetting(item);
+                    }
+                }
+                this.renderGlobalMenu();
+            }
+
+            handleGlobalMenuClick(index) {
+                this.hideInfoBoxes();
+                if (this.state !== 'GLOBAL_MENU') return;
+                const menu = GLOBAL_MENU_DATA;
+                
+                if (menu.activeIndex === index) {
+                    const item = menu.items[index];
+                    if (item.isAction) this.executeGlobalMenuAction(item);
+                    else if (item.options) {
+                        item.idx = (item.idx + 1) % item.options.length;
+                        this.applyGlobalMenuSetting(item);
+                    }
+                } else {
+                    menu.activeIndex = index;
+                }
+                this.renderGlobalMenu();
+            }
+
+            applyGlobalMenuSetting(item) {
+                if (item.id === 'theme') {
+                    const val = item.options[item.idx];
+                    this.setTheme(val);
+                }
+            }
+
+            executeGlobalMenuAction(item) {
+                const url = encodeURIComponent("https://github.com/os3albert/vim-y-games");
+                const text = encodeURIComponent("Scopri Vim-y Games, la sala giochi per amanti dei terminali!");
+                
+                if (item.id === 'share_wa') {
+                    window.open(`https://api.whatsapp.com/send?text=${text}%20${url}`, '_blank');
+                } else if (item.id === 'share_li') {
+                    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank');
+                } else if (item.id === 'share_fb') {
+                    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
+                } else if (item.id === 'back') {
+                    this.goToMainMenu();
+                }
+            }
+
+            renderGlobalMenu() {
+                const container = document.getElementById('global-menu-list');
+                if (!container) return;
+                container.innerHTML = '';
+                
+                GLOBAL_MENU_DATA.items.forEach((item, index) => {
+                    const isActive = index === GLOBAL_MENU_DATA.activeIndex;
+                    const row = document.createElement('div');
+                    row.className = `menu-row ${isActive ? 'active' : ''}`;
+                    row.onclick = () => this.handleGlobalMenuClick(index);
+
+                    const cursor = `<span class="menu-cursor">${isActive ? '>' : '&nbsp;'}</span>`;
+                    
                     if (item.isAction) {
-                        let valueClass = 'menu-value font-bold';
-                        if (item.id === 'game_tests') valueClass += ' text-yellow-400';
-                        else if (item.id.startsWith('share_')) valueClass += ' opacity-80'; // Colore neutro per renderli diversi dai giochi
-                        
+                        let valueClass = item.id === 'back' ? 'text-red-400 font-bold' : 'menu-value font-bold opacity-80';
                         row.innerHTML = `${cursor}<span class="${valueClass}">${item.label}</span>`;
                     } else if (item.options) {
                         const optsHtml = item.options.map((opt, i) => {
@@ -762,19 +954,39 @@
                     
                     container.appendChild(row);
                 });
+
+                setTimeout(() => {
+                    const activeRow = container.querySelector('.active');
+                    if (activeRow) activeRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 10);
             }
 
             goToMainMenu() {
                 this.state = 'MAIN_MENU';
                 document.getElementById('config-menu').classList.add('hidden');
+                document.getElementById('global-menu').classList.add('hidden');
                 document.getElementById('game-over').classList.add('hidden');
                 document.getElementById('test-runner').classList.add('hidden');
                 document.getElementById('hud').classList.add('hidden');
                 document.getElementById('main-menu').classList.remove('hidden');
                 
+                this.resetInfoBoxes();
                 this.obstacles = [];
                 this.player = new Player(this.canvas.height);
                 this.renderMainMenu();
+            }
+
+            goToGlobalMenu() {
+                this.state = 'GLOBAL_MENU';
+                document.getElementById('main-menu').classList.add('hidden');
+                document.getElementById('config-menu').classList.add('hidden');
+                document.getElementById('game-over').classList.add('hidden');
+                document.getElementById('test-runner').classList.add('hidden');
+                document.getElementById('hud').classList.add('hidden');
+                document.getElementById('global-menu').classList.remove('hidden');
+                
+                this.resetInfoBoxes();
+                this.renderGlobalMenu();
             }
 
             /* --- LOGICA DI TESTING --- */
@@ -794,6 +1006,10 @@
 
             /* --- CONFIG MENU LOGIC --- */
             handleConfigMenuNavigation(key) {
+                if (['j', 'k', 'h', 'l', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) {
+                    this.hideInfoBoxes();
+                }
+
                 const menu = SETTINGS.MENU;
                 const item = menu.items[menu.activeIndex];
 
@@ -824,6 +1040,7 @@
             }
 
             handleConfigMenuClick(index) {
+                this.hideInfoBoxes();
                 if (this.state !== 'CONFIG_MENU') return;
                 const menu = SETTINGS.MENU;
                 
@@ -876,15 +1093,22 @@
                     }
                     container.appendChild(row);
                 });
+
+                setTimeout(() => {
+                    const activeRow = container.querySelector('.active');
+                    if (activeRow) activeRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 10);
             }
 
             goToConfigMenu() {
                 this.state = 'CONFIG_MENU';
                 document.getElementById('main-menu').classList.add('hidden');
+                document.getElementById('global-menu').classList.add('hidden');
                 document.getElementById('game-over').classList.add('hidden');
                 document.getElementById('hud').classList.add('hidden');
                 document.getElementById('config-menu').classList.remove('hidden');
                 
+                this.resetInfoBoxes();
                 this.obstacles = [];
                 this.player = new Player(this.canvas.height);
                 this.renderConfigMenu();
@@ -912,8 +1136,14 @@
                 this.canvas.height = window.innerHeight;
             }
 
-            /* --- CORE GAMEPLAY LOGIC --- */
+            /* --- GESTIONE START GIOCHI --- */
             start() {
+                if (SETTINGS.GAME === 'jump') {
+                    this.startJumpMode();
+                    return;
+                }
+
+                // JKMODE start logic
                 this.state = 'PLAYING';
                 this.score = 0;
                 this.obstacles = [];
@@ -923,6 +1153,7 @@
                 
                 document.getElementById('main-menu').classList.add('hidden');
                 document.getElementById('config-menu').classList.add('hidden');
+                document.getElementById('global-menu').classList.add('hidden');
                 document.getElementById('game-over').classList.add('hidden');
                 document.getElementById('hud').classList.remove('hidden');
                 
@@ -933,6 +1164,181 @@
                 this.syncUI();
             }
 
+            /* --- LOGICA DI /JUMP --- */
+            startJumpMode() {
+                this.state = 'PLAYING';
+                this.jumpLevel = this.jumpLevel || 1;
+                this.jumpNumPlatforms = this.jumpLevel * 10;
+                this.jumpTimeLeft = this.jumpNumPlatforms * 3 * 60; // 3 secondi per piattaforma (a 60 fps)
+                this.jumpBuffer = "";
+                this.jumpPlatforms = [];
+                this.jumpPlayerIdx = -1; // -1 = ground
+                this.cameraY = 0;
+                
+                let groundY = this.canvas.height - 20;
+
+                for (let i = 0; i < this.jumpNumPlatforms; i++) {
+                    const word = CSHARP_KEYWORDS[Math.floor(Math.random() * CSHARP_KEYWORDS.length)];
+                    this.jumpPlatforms.push({
+                        word: word,
+                        y: groundY - ((i + 1) * 120),
+                        x: Math.random() * (this.canvas.width - 250) + 50
+                    });
+                }
+                
+                // La porta in cima si posiziona sull'ultima piattaforma
+                this.jumpDoor = {
+                    y: this.jumpPlatforms[this.jumpNumPlatforms - 1].y - 100,
+                    x: this.jumpPlatforms[this.jumpNumPlatforms - 1].x + 10
+                };
+
+                document.getElementById('main-menu').classList.add('hidden');
+                document.getElementById('config-menu').classList.add('hidden');
+                document.getElementById('global-menu').classList.add('hidden');
+                document.getElementById('game-over').classList.add('hidden');
+                document.getElementById('hud').classList.add('hidden'); // Disegna l'HUD a custom in Canvas
+            }
+
+            handleJumpInput(key, e) {
+                if (key === 'Backspace') {
+                    e.preventDefault();
+                    this.jumpBuffer = this.jumpBuffer.slice(0, -1);
+                } else if (key === 'Escape') {
+                    this.jumpBuffer = "";
+                } else if (key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+                    if (key === '/') e.preventDefault(); // eviti quick search in Firefox
+                    if (key === ' ') e.preventDefault(); // eviti page scroll
+                    
+                    if (this.jumpBuffer === "" && key !== "/") return; 
+                    this.jumpBuffer += key;
+                    
+                    if (this.jumpBuffer.length >= 4) { // "/" + 3 lettere
+                        const searchWord = this.jumpBuffer.substring(1).toLowerCase();
+                        let startIdx = this.jumpPlayerIdx + 1;
+                        let endIdx = Math.min(startIdx + 8, this.jumpPlatforms.length); // Cerca nelle prossime 8 piattaforme
+                        let matchedIdx = -1;
+                        for (let i = startIdx; i < endIdx; i++) {
+                            if (this.jumpPlatforms[i].word.toLowerCase().startsWith(searchWord)) {
+                                matchedIdx = i;
+                                break;
+                            }
+                        }
+                        if (matchedIdx !== -1) {
+                            this.jumpPlayerIdx = matchedIdx;
+                            this.jumpBuffer = "";
+                            if (this.jumpPlayerIdx === this.jumpPlatforms.length - 1) {
+                                this.state = 'AT_DOOR';
+                            }
+                        }
+                    }
+                }
+            }
+
+            updateJumpMode() {
+                if (this.state === 'PLAYING') {
+                    this.jumpTimeLeft--;
+                    if (this.jumpTimeLeft <= 0) {
+                        this.state = 'DOOR_CLOSED';
+                    }
+                }
+
+                let targetY = 0;
+                if (this.jumpPlayerIdx === -1) {
+                    targetY = 0;
+                } else if (this.jumpPlayerIdx === this.jumpPlatforms.length - 1 && this.state !== 'PLAYING') {
+                    targetY = -(this.jumpDoor.y - this.canvas.height * 0.3);
+                } else {
+                    targetY = -(this.jumpPlatforms[this.jumpPlayerIdx].y - this.canvas.height * 0.7);
+                }
+                
+                this.cameraY += (targetY - this.cameraY) * 0.1;
+            }
+
+            renderJumpMode() {
+                const { ctx, canvas } = this;
+                ctx.save();
+                ctx.translate(0, this.cameraY);
+
+                // Disegna Suolo
+                ctx.fillStyle = SETTINGS.THEME['--grid-color'];
+                ctx.fillRect(0, canvas.height - 20, canvas.width, 40);
+
+                // Disegna Piattaforme (Keyword C#)
+                this.jumpPlatforms.forEach((plat, i) => {
+                    ctx.fillStyle = SETTINGS.THEME['--secondary-color'];
+                    ctx.strokeStyle = SETTINGS.THEME['--primary-color'];
+                    ctx.lineWidth = 2;
+                    const platW = Math.max(120, plat.word.length * 12);
+                    ctx.fillRect(plat.x, plat.y, platW, 20);
+                    ctx.strokeRect(plat.x, plat.y, platW, 20);
+                    
+                    ctx.fillStyle = SETTINGS.THEME['--text-color'];
+                    ctx.font = `14px ${SETTINGS.THEME['--font-family']}`;
+                    ctx.fillText(plat.word, plat.x + 10, plat.y + 15);
+                });
+
+                // Disegna Porta
+                ctx.fillStyle = this.state === 'DOOR_CLOSED' ? 'red' : SETTINGS.THEME['--primary-color'];
+                ctx.fillRect(this.jumpDoor.x, this.jumpDoor.y, 120, 100);
+                ctx.fillStyle = SETTINGS.THEME['--bg-color'];
+                ctx.font = `bold 24px ${SETTINGS.THEME['--font-family']}`;
+                ctx.fillText("DOOR", this.jumpDoor.x + 25, this.jumpDoor.y + 55);
+
+                // Disegna Player
+                let px = 100;
+                let py = canvas.height - 20;
+                if (this.jumpPlayerIdx !== -1) {
+                    const plat = this.jumpPlatforms[this.jumpPlayerIdx];
+                    px = plat.x + 20;
+                    py = plat.y;
+                }
+                ctx.fillStyle = SETTINGS.THEME['--primary-color'];
+                ctx.font = `bold 32px ${SETTINGS.THEME['--font-family']}`;
+                ctx.fillText('>', px, py - 5);
+
+                ctx.restore();
+
+                // HUD /JUMP personalizzato
+                ctx.fillStyle = SETTINGS.THEME['--text-color'];
+                ctx.font = `bold 20px ${SETTINGS.THEME['--font-family']}`;
+                ctx.fillText(`Livello: ${this.jumpLevel}`, 20, 40);
+                
+                const timeColor = this.jumpTimeLeft < 180 ? 'red' : SETTINGS.THEME['--text-color'];
+                ctx.fillStyle = timeColor;
+                ctx.fillText(`Tempo: ${Math.max(0, Math.ceil(this.jumpTimeLeft / 60))}s`, 20, 70);
+
+                ctx.fillStyle = SETTINGS.THEME['--text-color'];
+                ctx.fillText(`Cerca: ${this.jumpBuffer}_`, 20, canvas.height - 30);
+                
+                ctx.font = `14px ${SETTINGS.THEME['--font-family']}`;
+                ctx.fillText(`[m] Esci al menu`, canvas.width - 150, 40);
+
+                // Overlays
+                if (this.state === 'AT_DOOR') {
+                    this.drawOverlayBox(ctx, "VIM VITTORIA!", "Premi CTRL+[ per entrare nella porta");
+                } else if (this.state === 'DOOR_CLOSED') {
+                    this.drawOverlayBox(ctx, "PORTA CHIUSA!", "Tempo scaduto. Premi CTRL+o per ritornare indietro");
+                }
+            }
+
+            drawOverlayBox(ctx, title, subtitle) {
+                const cx = this.canvas.width / 2;
+                const cy = this.canvas.height / 2;
+                ctx.fillStyle = 'rgba(0,0,0,0.85)';
+                ctx.fillRect(cx - 250, cy - 80, 500, 160);
+                ctx.strokeStyle = SETTINGS.THEME['--primary-color'];
+                ctx.strokeRect(cx - 250, cy - 80, 500, 160);
+
+                ctx.fillStyle = SETTINGS.THEME['--primary-color'];
+                ctx.textAlign = 'center';
+                ctx.font = `bold 28px ${SETTINGS.THEME['--font-family']}`;
+                ctx.fillText(title, cx, cy - 10);
+                ctx.font = `16px ${SETTINGS.THEME['--font-family']}`;
+                ctx.fillText(subtitle, cx, cy + 30);
+                ctx.textAlign = 'left';
+            }
+
+            /* --- LOGICA JKMODE --- */
             syncUI() {
                 document.getElementById('current-score').innerText = this.score;
             }
@@ -965,6 +1371,13 @@
             }
 
             update() {
+                if (SETTINGS.GAME === 'jump') {
+                    if (this.state === 'PLAYING' || this.state === 'AT_DOOR' || this.state === 'DOOR_CLOSED') {
+                        this.updateJumpMode();
+                    }
+                    return;
+                }
+
                 if (this.state !== 'PLAYING') return;
 
                 if (this.player.update(this.canvas.height, this.input.keys, this.currentAction)) {
@@ -1016,6 +1429,13 @@
                 }
                 for(let y=0; y<canvas.height; y+=60) {
                     ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+                }
+
+                if (SETTINGS.GAME === 'jump') {
+                    if (this.state === 'PLAYING' || this.state === 'AT_DOOR' || this.state === 'DOOR_CLOSED') {
+                        this.renderJumpMode();
+                    }
+                    return;
                 }
 
                 this.obstacles.forEach(o => o.draw(ctx, canvas.height));
