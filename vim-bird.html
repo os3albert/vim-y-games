@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Vim-y Bird - Pro Edition</title>
+    <title>Vim-y Games</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Import Font: Fira Code per TUI, Roboto per Material */
@@ -57,6 +57,8 @@
             border-radius: 8px;
             box-shadow: 0 0 20px var(--shadow-color);
             transition: all 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         /* Stili per i bottoni */
@@ -116,6 +118,10 @@
         .menu-value { color: var(--primary-color); }
         .menu-value-dim { opacity: 0.4; }
 
+        /* Stili output Test */
+        .test-pass { color: #00ff41; }
+        .test-fail { color: #ff3333; font-weight: bold; }
+
         /* Effetto CRT opzionale */
         .crt-overlay::before {
             content: " ";
@@ -133,38 +139,70 @@
 <body class="crt-overlay">
 
     <div class="ui-container">
-        <!-- Menu Principale -->
-        <div id="menu" class="retro-card" style="width: 90%; max-width: 600px;">
-            <h1 class="text-6xl font-bold mb-2 tracking-tighter">VIM-Y BIRD</h1>
-            <p class="mb-4 opacity-70">Sopravvivi al buffer infinito</p>
+        <!-- Main Menu: Selezione Giochi, Tema e Share -->
+        <div id="main-menu" class="retro-card" style="width: 90%; max-width: 650px;">
+            <h1 class="text-6xl font-bold mb-2 tracking-tighter">VIM-Y GAMES</h1>
+            <p class="mb-6 opacity-70">La tua sala giochi da terminale</p>
             
             <div class="mb-6 text-sm text-left opacity-80 info-box">
-                <p class="info-title">Comandi di Navigazione</p>
+                <p class="info-title">Navigazione Generale</p>
                 <p><span class="key-badge">k</span> / <span class="key-badge">j</span> : Su / Giù</p>
-                <p><span class="key-badge">h</span> / <span class="key-badge">l</span> : Cambia Opzione</p>
+                <p><span class="key-badge">h</span> / <span class="key-badge">l</span> : Cambia Valore</p>
                 <p><span class="key-badge">Enter</span> : Seleziona / Avvia</p>
-                <p class="mt-2 text-xs italic opacity-70">(Touch: tocca le righe per cambiare configurazione)</p>
             </div>
 
-            <!-- Menu Vim Generato Dinamicamente -->
+            <!-- Lista Menu Principale -->
+            <div id="main-menu-list" class="text-left font-bold text-base md:text-lg flex flex-col gap-1 mb-6 border border-[#00ff41]/30 p-4 rounded bg-black/50">
+                <!-- Popolato da JS -->
+            </div>
+            
+            <p class="blink text-sm opacity-60 italic mt-4">* Altri giochi in arrivo...</p>
+        </div>
+
+        <!-- Menu Configurazione Gioco -->
+        <div id="config-menu" class="retro-card hidden" style="width: 90%; max-width: 600px;">
+            <h1 id="config-title" class="text-4xl font-bold mb-2 tracking-tighter uppercase text-[#00ff41]">CONFIGURAZIONE</h1>
+            <p class="mb-4 opacity-70">Imposta i parametri della partita</p>
+            
+            <div class="mb-6 text-sm text-left opacity-80 info-box">
+                <p class="info-title">Comandi</p>
+                <p><span class="key-badge">k</span> / <span class="key-badge">j</span> : Su / Giù</p>
+                <p><span class="key-badge">h</span> / <span class="key-badge">l</span> : Cambia Valore</p>
+                <p><span class="key-badge">Enter</span> : Conferma</p>
+            </div>
+
+            <!-- Menu Config Generato Dinamicamente -->
             <div id="vim-menu" class="text-left font-bold text-base md:text-lg flex flex-col gap-1 mb-2">
                 <!-- Contenuto popolato dal JS -->
+            </div>
+        </div>
+
+        <!-- Schermata Runner dei Test -->
+        <div id="test-runner" class="retro-card hidden text-left" style="width: 90%; max-width: 800px;">
+            <h1 class="text-4xl font-bold mb-2 tracking-tighter uppercase border-b border-[#00ff41] pb-2">SUITE TEST DI UNITÀ</h1>
+            <div id="test-output" class="font-mono text-sm mb-4" style="line-height: 1.5;">
+                <!-- Output Test JS -->
+            </div>
+            <div class="text-center mt-6">
+                <p class="blink text-lg">Premi 'm' per tornare al menu</p>
             </div>
         </div>
         
         <!-- Schermata Fine Partita -->
         <div id="game-over" class="retro-card hidden">
             <h2 class="text-5xl font-bold mb-2 text-red-500" style="text-shadow: none;">SEGFAULT!</h2>
-            <p id="final-score" class="text-3xl mb-8">Score: 0</p>
+            <p id="final-score" class="text-3xl mb-1">Score: 0</p>
+            <p id="final-best" class="text-xl mb-6 opacity-80">Best: 0</p>
             <div class="flex flex-col gap-4 items-center">
                 <p class="blink text-lg">Premi 'k' per riavviare</p>
-                <button id="btn-menu" class="custom-btn text-sm uppercase tracking-widest mt-2">Torna al Menu (m)</button>
+                <button id="btn-config" class="custom-btn text-sm uppercase tracking-widest mt-2">Torna alla Configurazione (m)</button>
             </div>
         </div>
 
         <!-- Score HUD -->
-        <div id="hud" class="absolute top-10 left-10 text-4xl font-bold hidden tabular-nums">
-            SCORE: <span id="current-score">0</span>
+        <div id="hud" class="absolute top-8 left-8 flex flex-col hidden tabular-nums">
+            <div class="text-2xl md:text-4xl font-bold">SCORE: <span id="current-score">0</span></div>
+            <div class="text-sm md:text-lg opacity-80 mt-1">BEST (<span id="hud-mode"></span>): <span id="best-score">0</span></div>
         </div>
     </div>
 
@@ -222,15 +260,32 @@
             hard: { SPEED: 6.5, SPAWN_RATE: 55, GAP: 150, GRAVITY: 0.35 }
         };
 
+        /**
+         * STRUTTURA DEL MENU PRINCIPALE
+         */
+        const MAIN_MENU_DATA = {
+            activeIndex: 0,
+            items: [
+                { id: 'game_jkmode', label: '1. Gioca a JKMODE', isAction: true },
+                { id: 'game_tests', label: '2. >>> ESEGUI_TESTS.sh <<<', isAction: true },
+                { id: 'theme', label: 'Tema App', options: ['matrix', 'tokyo', 'material'], idx: 0 },
+                { id: 'share_wa', label: '► Condividi su WhatsApp', isAction: true },
+                { id: 'share_li', label: '► Condividi su LinkedIn', isAction: true },
+                { id: 'share_fb', label: '► Condividi su Facebook', isAction: true }
+            ]
+        };
+
+        /**
+         * IMPOSTAZIONI GLOBALI
+         */
         const SETTINGS = {
-            MODE: 'zero-g', // 'zero-g' o 'gravity'
-            OBSTACLE_TYPE: 'pipes', // 'pipes' o 'meteors'
+            GAME: 'jkmode', 
+            MODE: 'zero-g', 
+            OBSTACLE_TYPE: 'pipes', 
             PHYSICS: {
-                // Zero-G parametri
                 MAX_VELOCITY: 15,
                 ACCEL: 1.5,
                 FRICTION: 0.88,
-                // Gravità parametri (Modalità Classica)
                 GRAVITY: DIFFICULTIES.normal.GRAVITY,
                 JUMP: -6.5,
                 DIVE: 5
@@ -242,21 +297,21 @@
                 PIPE_WIDTH: 80
             },
             THEME: { ...THEMES.matrix },
+            // Menu di configurazione (tema rimosso perché gestito dal Main Menu)
             MENU: {
                 activeIndex: 0,
                 items: [
                     { id: 'mode', label: 'Fisica', options: ['zero-g', 'gravity'], idx: 0 },
                     { id: 'obstacle', label: 'Ostacoli', options: ['pipes', 'meteors'], idx: 0 },
-                    { id: 'theme', label: 'Tema', options: ['matrix', 'tokyo', 'material'], idx: 0 },
                     { id: 'difficulty', label: 'Difficoltà', options: ['easy', 'normal', 'hard'], idx: 1 },
-                    { id: 'start', label: '>>> RUN_GAME.sh <<<', isAction: true }
+                    { id: 'start', label: '>>> RUN_GAME.sh <<<', isAction: true },
+                    { id: 'back', label: '<<< TORNA AL MENU PRINCIPALE', isAction: true }
                 ]
             }
         };
 
         /**
-         * GESTORE INPUT: Traccia se i tasti sono tenuti premuti per il movimento fluido
-         * e invia eventi discreti per il Menu e la modalità Gravità.
+         * GESTORE INPUT
          */
         class Controller {
             constructor(callbacks) {
@@ -268,7 +323,6 @@
 
             _bindEvents() {
                 window.addEventListener('keydown', e => {
-                    // Notifica la pressione del tasto per il menu
                     this.cb.onKey(e.key);
 
                     if (e.key === 'k') {
@@ -287,18 +341,18 @@
                 });
 
                 window.addEventListener('touchstart', e => {
-                    if (e.target.tagName === 'BUTTON' || e.target.closest('.menu-row')) return;
+                    if (e.target.tagName === 'BUTTON' || e.target.closest('.menu-row') || this.cb.getState() === 'TESTING') return;
                     this.startY = e.touches[0].clientY;
                 }, { passive: false });
 
                 window.addEventListener('touchend', e => {
-                    if (e.target.tagName === 'BUTTON' || e.target.closest('.menu-row')) return;
+                    if (e.target.tagName === 'BUTTON' || e.target.closest('.menu-row') || this.cb.getState() === 'TESTING') return;
                     const endY = e.changedTouches[0].clientY;
                     const delta = this.startY - endY;
                     
                     if (delta > 30) this.cb.onAction('swipe-up');
                     else if (delta < -30) this.cb.onAction('swipe-down');
-                    else this.cb.onAction('jump'); // Un tap agisce come salto
+                    else this.cb.onAction('jump');
                 }, { passive: false });
             }
         }
@@ -316,22 +370,18 @@
 
             update(h, inputKeys, actionEvent) {
                 if (SETTINGS.MODE === 'gravity') {
-                    // Modalità GRAVITA': Eventi discreti e caduta costante
                     if (actionEvent === 'jump' || actionEvent === 'swipe-up') this.v = SETTINGS.PHYSICS.JUMP;
                     if (actionEvent === 'dive' || actionEvent === 'swipe-down') this.v += SETTINGS.PHYSICS.DIVE;
 
                     this.v += SETTINGS.PHYSICS.GRAVITY;
-                    
                     if (this.v > SETTINGS.PHYSICS.MAX_VELOCITY) this.v = SETTINGS.PHYSICS.MAX_VELOCITY;
                     this.y += this.v;
                 } else {
-                    // Modalità ZERO-G: Accelerazione continua con attrito
                     if (inputKeys.up) this.v -= SETTINGS.PHYSICS.ACCEL;
                     if (inputKeys.down) this.v += SETTINGS.PHYSICS.ACCEL;
-
                     if (actionEvent === 'swipe-up') this.v -= 12;
                     if (actionEvent === 'swipe-down') this.v += 12;
-                    if (actionEvent === 'jump') this.v -= 5; // Un tap dà una piccola spinta
+                    if (actionEvent === 'jump') this.v -= 5;
 
                     if (this.v > SETTINGS.PHYSICS.MAX_VELOCITY) this.v = SETTINGS.PHYSICS.MAX_VELOCITY;
                     if (this.v < -SETTINGS.PHYSICS.MAX_VELOCITY) this.v = -SETTINGS.PHYSICS.MAX_VELOCITY;
@@ -340,9 +390,7 @@
                     this.y += this.v;
                 }
 
-                // Toccare i bordi è SEGFAULT (Game Over)
-                if (this.y + this.size > h || this.y < 0) return true; 
-                
+                if (this.y + this.size >= h || this.y <= 0) return true; 
                 return false;
             }
 
@@ -351,7 +399,6 @@
                 ctx.fillStyle = SETTINGS.THEME['--primary-color'];
                 ctx.font = `bold ${this.size}px ${SETTINGS.THEME['--font-family']}`;
                 
-                // Effetto scia
                 ctx.globalAlpha = 0.3;
                 ctx.fillText('>', this.x - Math.max(10, Math.abs(this.v)), this.y + this.size);
                 ctx.globalAlpha = 1.0;
@@ -361,7 +408,7 @@
         }
 
         /**
-         * ENTITÀ: OSTACOLO (TUBI)
+         * ENTITÀ: TUBI
          */
         class Pipe {
             constructor(w, h) {
@@ -379,20 +426,17 @@
                 ctx.strokeStyle = SETTINGS.THEME['--primary-color'];
                 ctx.lineWidth = 2;
 
-                // Superiore
                 ctx.fillRect(this.x, 0, this.w, this.top);
                 ctx.strokeRect(this.x, 0, this.w, this.top);
 
-                // Inferiore
                 const bY = this.top + this.gap;
                 const bH = h - bY;
                 ctx.fillRect(this.x, bY, this.w, bH);
                 ctx.strokeRect(this.x, bY, this.w, bH);
 
-                // Decorazione testo sui tubi
                 ctx.fillStyle = SETTINGS.THEME['--text-color'];
                 ctx.font = `10px ${SETTINGS.THEME['--font-family']}`;
-                if (SETTINGS.THEME['--text-color'] !== '#212121') { // Nascondi testo nel material design
+                if (SETTINGS.THEME['--text-color'] !== '#212121') { 
                     ctx.fillText('while(1)', this.x + 10, this.top - 10);
                     ctx.fillText('return 0', this.x + 10, bY + 20);
                 }
@@ -412,11 +456,11 @@
         class Meteor {
             constructor(w, h) {
                 this.x = w;
-                this.y = Math.random() * (h - 60) + 30; // Altezza casuale
-                this.size = 30 + Math.random() * 25; // Dimensione variabile (30 - 55)
-                this.speed = SETTINGS.WORLD.PIPE_SPEED * (1.2 + Math.random() * 0.6); // Più veloci e velocità variabile
+                this.y = Math.random() * (h - 60) + 30; 
+                this.size = 30 + Math.random() * 25; 
+                this.speed = SETTINGS.WORLD.PIPE_SPEED * (1.2 + Math.random() * 0.6); 
                 this.passed = false;
-                this.w = this.size; // usato per capire se è uscito dallo schermo
+                this.w = this.size; 
             }
 
             update() { this.x -= this.speed; }
@@ -443,12 +487,107 @@
             }
 
             collides(p, h) {
-                // Approssimazione di collisione circolare tra il cursore ">" e il meteorite
                 const pCenter = { x: p.x + p.size * 0.4, y: p.y + p.size * 0.6 }; 
                 const dx = pCenter.x - this.x;
                 const dy = pCenter.y - this.y;
                 const dist = Math.sqrt(dx*dx + dy*dy);
                 return dist < (this.size / 2 + p.size * 0.3);
+            }
+        }
+
+        /**
+         * MICRO FRAMEWORK DI TEST (UNIT TESTS)
+         */
+        class TestSuite {
+            constructor() {
+                this.passed = 0;
+                this.failed = 0;
+                this.logs = [];
+            }
+
+            assert(condition, testName) {
+                if (condition) {
+                    this.passed++;
+                    this.logs.push(`<span class="test-pass">[PASS]</span> ${testName}`);
+                } else {
+                    this.failed++;
+                    this.logs.push(`<span class="test-fail">[FAIL]</span> ${testName}`);
+                    console.error(`Test Fallito: ${testName}`);
+                }
+            }
+
+            runTests() {
+                this.passed = 0;
+                this.failed = 0;
+                this.logs = [];
+                this.logs.push("=> Inizio esecuzione suite di test...");
+
+                const backupMode = SETTINGS.MODE;
+                const backupGravity = SETTINGS.PHYSICS.GRAVITY;
+                const backupMaxVel = SETTINGS.PHYSICS.MAX_VELOCITY;
+                const backupAccel = SETTINGS.PHYSICS.ACCEL;
+                const backupFriction = SETTINGS.PHYSICS.FRICTION;
+
+                try {
+                    let p = new Player(500);
+                    this.assert(p.y === 250 && p.v === 0, "Player inizializzato correttamente al centro dello schermo");
+
+                    SETTINGS.MODE = 'gravity';
+                    SETTINGS.PHYSICS.GRAVITY = 1.0;
+                    SETTINGS.PHYSICS.MAX_VELOCITY = 10;
+                    p = new Player(500);
+                    p.update(500, {up:false, down:false}, null);
+                    this.assert(p.v === 1.0 && p.y === 251, "Player cade a causa della gravità");
+
+                    SETTINGS.MODE = 'zero-g';
+                    SETTINGS.PHYSICS.ACCEL = 2.0;
+                    SETTINGS.PHYSICS.FRICTION = 0.5;
+                    p = new Player(500);
+                    p.update(500, {up:true, down:false}, null);
+                    this.assert(p.v === -1.0 && p.y === 249, "Player si muove verso l'alto con input 'up' in Zero-G");
+
+                    p = new Player(500);
+                    p.y = 5;
+                    p.v = -10;
+                    const mortoSoffitto = p.update(500, {up:false, down:false}, null);
+                    this.assert(mortoSoffitto === true, "Player muore se tocca o supera il soffitto (y <= 0)");
+
+                    p = new Player(500);
+                    p.y = 480;
+                    p.v = 10;
+                    p.size = 28;
+                    const mortoPavimento = p.update(500, {up:false, down:false}, null);
+                    this.assert(mortoPavimento === true, "Player muore se tocca o supera il pavimento");
+
+                    p = new Player(500);
+                    p.x = 100; p.y = 150; p.size = 28;
+                    let pipe = new Pipe(100, 500);
+                    pipe.x = 100; pipe.w = 50; pipe.top = 100; pipe.gap = 200; 
+                    this.assert(pipe.collides(p, 500) === false, "Nessuna collisione: Player è passato attraverso il gap del tubo");
+
+                    p.y = 90;
+                    this.assert(pipe.collides(p, 500) === true, "Collisione rilevata: Player tocca il tubo superiore");
+
+                    p = new Player(500);
+                    p.x = 100; p.y = 100; p.size = 20; 
+                    let met = new Meteor(100, 500);
+                    met.x = 110; met.y = 110; met.size = 30; 
+                    this.assert(met.collides(p, 500) === true, "Collisione rilevata: Player è colpito dal meteorite");
+
+                } catch (e) {
+                    this.logs.push(`<span class="test-fail">[ERRORE FATALE]</span> Eccezione durante il test: ${e.message}`);
+                }
+
+                SETTINGS.MODE = backupMode;
+                SETTINGS.PHYSICS.GRAVITY = backupGravity;
+                SETTINGS.PHYSICS.MAX_VELOCITY = backupMaxVel;
+                SETTINGS.PHYSICS.ACCEL = backupAccel;
+                SETTINGS.PHYSICS.FRICTION = backupFriction;
+
+                this.logs.push("----------------------------------------");
+                this.logs.push(`Risultati: <span class="test-pass">${this.passed} PASS</span> | <span class="test-fail">${this.failed} FAIL</span>`);
+                
+                return this.logs;
             }
         }
 
@@ -460,40 +599,201 @@
             constructor() {
                 this.canvas = document.getElementById('gameCanvas');
                 this.ctx = this.canvas.getContext('2d');
-                this.state = 'MENU';
+                this.state = 'MAIN_MENU'; // MAIN_MENU, CONFIG_MENU, PLAYING, GAMEOVER, TESTING
                 this.score = 0;
                 this.obstacles = [];
                 this.ticks = 0;
                 this.currentAction = null;
+                this.highScores = { pipes: 0, meteors: 0 };
+
+                this.loadHighScores();
 
                 this.player = new Player(this.canvas.height);
                 this.input = new Controller({
                     onKey: (k) => this.handleKey(k),
-                    onAction: (act) => this.currentAction = act
+                    onAction: (act) => this.currentAction = act,
+                    getState: () => this.state
                 });
 
+                this.testSuite = new TestSuite();
+
                 this._setupUI();
-                this.renderMenu();
+                this.renderMainMenu();
+                this.renderConfigMenu();
                 window.addEventListener('resize', () => this.onResize());
                 this.onResize();
                 this.run();
             }
 
-            _setupUI() {
-                // Collega solo il pulsante di Game Over
-                document.getElementById('btn-menu').addEventListener('click', () => this.goToMenu());
-            }
-
-            handleKey(key) {
-                if (this.state === 'MENU') {
-                    this.handleMenuNavigation(key);
-                } else if (this.state === 'GAMEOVER') {
-                    if (key === 'm') this.goToMenu();
-                    if (key === 'k' || key === 'Enter') this.start();
+            loadHighScores() {
+                const saved = localStorage.getItem('vimygames_highscores');
+                if (saved) {
+                    try {
+                        this.highScores = JSON.parse(saved);
+                        if (this.highScores.pipes === undefined) this.highScores.pipes = 0;
+                        if (this.highScores.meteors === undefined) this.highScores.meteors = 0;
+                    } catch (e) {
+                        this.highScores = { pipes: 0, meteors: 0 };
+                    }
                 }
             }
 
-            handleMenuNavigation(key) {
+            saveHighScores() {
+                localStorage.setItem('vimygames_highscores', JSON.stringify(this.highScores));
+            }
+
+            _setupUI() {
+                document.getElementById('btn-config').addEventListener('click', () => this.goToConfigMenu());
+            }
+
+            handleKey(key) {
+                if (this.state === 'MAIN_MENU') {
+                    this.handleMainMenuNavigation(key);
+                } else if (this.state === 'CONFIG_MENU') {
+                    this.handleConfigMenuNavigation(key);
+                } else if (this.state === 'GAMEOVER') {
+                    if (key === 'm') this.goToConfigMenu();
+                    if (key === 'k' || key === 'Enter') this.start();
+                } else if (this.state === 'TESTING') {
+                    if (key === 'm') this.goToMainMenu();
+                }
+            }
+
+            /* --- MAIN MENU LOGIC --- */
+            handleMainMenuNavigation(key) {
+                const menu = MAIN_MENU_DATA;
+                const item = menu.items[menu.activeIndex];
+
+                if (key === 'j' || key === 'ArrowDown') {
+                    menu.activeIndex = (menu.activeIndex + 1) % menu.items.length;
+                } else if (key === 'k' || key === 'ArrowUp') {
+                    menu.activeIndex = (menu.activeIndex - 1 + menu.items.length) % menu.items.length;
+                } else if (key === 'h' || key === 'ArrowLeft') {
+                    if (!item.isAction && item.options) {
+                        item.idx = (item.idx - 1 + item.options.length) % item.options.length;
+                        this.applyMainMenuSetting(item);
+                    }
+                } else if (key === 'l' || key === 'ArrowRight') {
+                    if (!item.isAction && item.options) {
+                        item.idx = (item.idx + 1) % item.options.length;
+                        this.applyMainMenuSetting(item);
+                    }
+                } else if (key === 'Enter' || key === ' ') {
+                    if (item.isAction) this.executeMainMenuAction(item);
+                    else if (item.options) {
+                        item.idx = (item.idx + 1) % item.options.length;
+                        this.applyMainMenuSetting(item);
+                    }
+                }
+                this.renderMainMenu();
+            }
+
+            handleMainMenuClick(index) {
+                if (this.state !== 'MAIN_MENU') return;
+                const menu = MAIN_MENU_DATA;
+                
+                if (menu.activeIndex === index) {
+                    const item = menu.items[index];
+                    if (item.isAction) this.executeMainMenuAction(item);
+                    else if (item.options) {
+                        item.idx = (item.idx + 1) % item.options.length;
+                        this.applyMainMenuSetting(item);
+                    }
+                } else {
+                    menu.activeIndex = index;
+                }
+                this.renderMainMenu();
+            }
+
+            applyMainMenuSetting(item) {
+                if (item.id === 'theme') {
+                    const val = item.options[item.idx];
+                    this.setTheme(val);
+                }
+            }
+
+            executeMainMenuAction(item) {
+                const url = encodeURIComponent("https://github.com/os3albert/vim-y-games");
+                const text = encodeURIComponent("Scopri Vim-y Games, la sala giochi per amanti dei terminali! Gioca a JKMODE: ");
+                
+                if (item.id === 'game_jkmode') {
+                    SETTINGS.GAME = 'jkmode';
+                    document.getElementById('config-title').innerText = 'JKMODE';
+                    this.goToConfigMenu();
+                } else if (item.id === 'game_tests') {
+                    this.runUnitTests();
+                } else if (item.id === 'share_wa') {
+                    window.open(`https://api.whatsapp.com/send?text=${text}${url}`, '_blank');
+                } else if (item.id === 'share_li') {
+                    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank');
+                } else if (item.id === 'share_fb') {
+                    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
+                }
+            }
+
+            renderMainMenu() {
+                const container = document.getElementById('main-menu-list');
+                if (!container) return;
+                container.innerHTML = '';
+                
+                MAIN_MENU_DATA.items.forEach((item, index) => {
+                    const isActive = index === MAIN_MENU_DATA.activeIndex;
+                    const row = document.createElement('div');
+                    row.className = `menu-row ${isActive ? 'active' : ''}`;
+                    row.onclick = () => this.handleMainMenuClick(index);
+
+                    const cursor = `<span class="menu-cursor">${isActive ? '>' : '&nbsp;'}</span>`;
+                    
+                    if (item.isAction) {
+                        let valueClass = 'menu-value font-bold';
+                        if (item.id === 'game_tests') valueClass += ' text-yellow-400';
+                        else if (item.id.startsWith('share_')) valueClass += ' opacity-80'; // Colore neutro per renderli diversi dai giochi
+                        
+                        row.innerHTML = `${cursor}<span class="${valueClass}">${item.label}</span>`;
+                    } else if (item.options) {
+                        const optsHtml = item.options.map((opt, i) => {
+                            return i === item.idx 
+                                ? `<span class="menu-value">[${opt.toUpperCase()}]</span>` 
+                                : `<span class="menu-value-dim">${opt}</span>`;
+                        }).join(' &nbsp; ');
+                        
+                        row.innerHTML = `${cursor}<span class="menu-label">${item.label}:</span> ${optsHtml}`;
+                    }
+                    
+                    container.appendChild(row);
+                });
+            }
+
+            goToMainMenu() {
+                this.state = 'MAIN_MENU';
+                document.getElementById('config-menu').classList.add('hidden');
+                document.getElementById('game-over').classList.add('hidden');
+                document.getElementById('test-runner').classList.add('hidden');
+                document.getElementById('hud').classList.add('hidden');
+                document.getElementById('main-menu').classList.remove('hidden');
+                
+                this.obstacles = [];
+                this.player = new Player(this.canvas.height);
+                this.renderMainMenu();
+            }
+
+            /* --- LOGICA DI TESTING --- */
+            runUnitTests() {
+                this.state = 'TESTING';
+                document.getElementById('main-menu').classList.add('hidden');
+                document.getElementById('test-runner').classList.remove('hidden');
+                
+                const outputDiv = document.getElementById('test-output');
+                outputDiv.innerHTML = "Esecuzione in corso...<br>";
+                
+                setTimeout(() => {
+                    const logs = this.testSuite.runTests();
+                    outputDiv.innerHTML = logs.join('<br>');
+                }, 500);
+            }
+
+            /* --- CONFIG MENU LOGIC --- */
+            handleConfigMenuNavigation(key) {
                 const menu = SETTINGS.MENU;
                 const item = menu.items[menu.activeIndex];
 
@@ -512,43 +812,44 @@
                         this.applyMenuSetting(item);
                     }
                 } else if (key === 'Enter' || key === ' ') {
-                    if (item.isAction) this.start();
-                    else {
+                    if (item.isAction) {
+                        if (item.id === 'start') this.start();
+                        else if (item.id === 'back') this.goToMainMenu();
+                    } else {
                         item.idx = (item.idx + 1) % item.options.length;
                         this.applyMenuSetting(item);
                     }
                 }
-                this.renderMenu();
+                this.renderConfigMenu();
             }
 
-            handleMenuClick(index) {
-                if (this.state !== 'MENU') return;
+            handleConfigMenuClick(index) {
+                if (this.state !== 'CONFIG_MENU') return;
                 const menu = SETTINGS.MENU;
                 
                 if (menu.activeIndex === index) {
-                    // Clic su riga già attiva: cicla le opzioni o avvia
                     const item = menu.items[index];
-                    if (item.isAction) this.start();
-                    else {
+                    if (item.isAction) {
+                        if (item.id === 'start') this.start();
+                        else if (item.id === 'back') this.goToMainMenu();
+                    } else {
                         item.idx = (item.idx + 1) % item.options.length;
                         this.applyMenuSetting(item);
                     }
                 } else {
-                    // Seleziona nuova riga
                     menu.activeIndex = index;
                 }
-                this.renderMenu();
+                this.renderConfigMenu();
             }
 
             applyMenuSetting(item) {
                 const val = item.options[item.idx];
                 if (item.id === 'mode') SETTINGS.MODE = val;
                 else if (item.id === 'obstacle') SETTINGS.OBSTACLE_TYPE = val;
-                else if (item.id === 'theme') this.setTheme(val);
                 else if (item.id === 'difficulty') this.setDifficulty(val);
             }
 
-            renderMenu() {
+            renderConfigMenu() {
                 const container = document.getElementById('vim-menu');
                 if(!container) return;
                 container.innerHTML = '';
@@ -557,14 +858,14 @@
                     const isActive = index === SETTINGS.MENU.activeIndex;
                     const row = document.createElement('div');
                     row.className = `menu-row ${isActive ? 'active' : ''}`;
-                    row.onclick = () => this.handleMenuClick(index);
+                    row.onclick = () => this.handleConfigMenuClick(index);
 
                     const cursor = `<span class="menu-cursor">${isActive ? '>' : '&nbsp;'}</span>`;
                     
                     if (item.isAction) {
-                        row.innerHTML = `${cursor}<span class="menu-value font-bold">${item.label}</span>`;
+                        const valueClass = item.id === 'back' ? 'text-red-400 font-bold' : 'menu-value font-bold';
+                        row.innerHTML = `${cursor}<span class="${valueClass}">${item.label}</span>`;
                     } else {
-                        // Evidenzia l'opzione correntemente selezionata con le parentesi
                         const optsHtml = item.options.map((opt, i) => {
                             return i === item.idx 
                                 ? `<span class="menu-value">[${opt.toUpperCase()}]</span>` 
@@ -577,6 +878,18 @@
                 });
             }
 
+            goToConfigMenu() {
+                this.state = 'CONFIG_MENU';
+                document.getElementById('main-menu').classList.add('hidden');
+                document.getElementById('game-over').classList.add('hidden');
+                document.getElementById('hud').classList.add('hidden');
+                document.getElementById('config-menu').classList.remove('hidden');
+                
+                this.obstacles = [];
+                this.player = new Player(this.canvas.height);
+                this.renderConfigMenu();
+            }
+
             setTheme(themeName) {
                 const theme = THEMES[themeName];
                 SETTINGS.THEME = { ...theme };
@@ -586,26 +899,12 @@
                 }
             }
 
-            goToMenu() {
-                if (this.state === 'GAMEOVER') {
-                    this.state = 'MENU';
-                    document.getElementById('game-over').classList.add('hidden');
-                    document.getElementById('hud').classList.add('hidden');
-                    document.getElementById('menu').classList.remove('hidden');
-                    this.obstacles = [];
-                    this.player = new Player(this.canvas.height);
-                }
-            }
-
             setDifficulty(level) {
-                if (this.state === 'PLAYING') return;
                 const diff = DIFFICULTIES[level];
                 SETTINGS.WORLD.PIPE_SPEED = diff.SPEED;
                 SETTINGS.WORLD.PIPE_SPAWN_RATE = diff.SPAWN_RATE;
                 SETTINGS.WORLD.PIPE_GAP = diff.GAP;
                 SETTINGS.PHYSICS.GRAVITY = diff.GRAVITY;
-
-                // RIMOSSO IL CODICE CHE CERCAVA I VECCHI PULSANTI
             }
 
             onResize() {
@@ -613,10 +912,7 @@
                 this.canvas.height = window.innerHeight;
             }
 
-            handleInteraction() {
-                if (this.state !== 'PLAYING') this.start();
-            }
-
+            /* --- CORE GAMEPLAY LOGIC --- */
             start() {
                 this.state = 'PLAYING';
                 this.score = 0;
@@ -625,9 +921,15 @@
                 this.ticks = 0;
                 this.currentAction = null;
                 
-                document.getElementById('menu').classList.add('hidden');
+                document.getElementById('main-menu').classList.add('hidden');
+                document.getElementById('config-menu').classList.add('hidden');
                 document.getElementById('game-over').classList.add('hidden');
                 document.getElementById('hud').classList.remove('hidden');
+                
+                const currentType = SETTINGS.OBSTACLE_TYPE;
+                document.getElementById('hud-mode').innerText = currentType.toUpperCase();
+                document.getElementById('best-score').innerText = this.highScores[currentType];
+                
                 this.syncUI();
             }
 
@@ -637,30 +939,48 @@
 
             die() {
                 this.state = 'GAMEOVER';
+                
+                const currentType = SETTINGS.OBSTACLE_TYPE;
+                let isNewRecord = false;
+                
+                if (this.score > this.highScores[currentType]) {
+                    this.highScores[currentType] = this.score;
+                    this.saveHighScores();
+                    isNewRecord = true;
+                }
+
                 document.getElementById('game-over').classList.remove('hidden');
-                document.getElementById('final-score').innerText = `SCORE: ${this.score}`;
+                document.getElementById('final-score').innerText = `Score: ${this.score}`;
+                
+                const finalBestEl = document.getElementById('final-best');
+                if (isNewRecord) {
+                    finalBestEl.innerText = `NUOVO RECORD: ${this.score}!`;
+                    finalBestEl.style.color = 'yellow';
+                    finalBestEl.classList.add('blink');
+                } else {
+                    finalBestEl.innerText = `Best (${currentType}): ${this.highScores[currentType]}`;
+                    finalBestEl.style.color = '';
+                    finalBestEl.classList.remove('blink');
+                }
             }
 
             update() {
                 if (this.state !== 'PLAYING') return;
 
-                // Passiamo i tasti per Zero-G e l'azione singola (salto/scatto)
                 if (this.player.update(this.canvas.height, this.input.keys, this.currentAction)) {
                     this.die();
                 }
-                this.currentAction = null; // Resetta l'azione dopo il frame
+                this.currentAction = null; 
 
                 if (SETTINGS.OBSTACLE_TYPE === 'pipes') {
                     if (this.ticks % SETTINGS.WORLD.PIPE_SPAWN_RATE === 0) {
                         this.obstacles.push(new Pipe(this.canvas.width, this.canvas.height));
                     }
                 } else {
-                    // Spawn Meteoriti: più frequenti, viaggiano casualmente
                     const meteorSpawnRate = Math.max(20, Math.floor(SETTINGS.WORLD.PIPE_SPAWN_RATE / 2.5));
                     if (this.ticks % meteorSpawnRate === 0) {
-                        const count = Math.random() > 0.7 ? 2 : 1; // 30% di probabilità di spawnare 2 meteoriti assieme
+                        const count = Math.random() > 0.7 ? 2 : 1; 
                         for(let m=0; m<count; m++) {
-                            // Sfasa leggermente l'asse X se ne spawnano multipli per non sovrapporli perfettamente
                             this.obstacles.push(new Meteor(this.canvas.width + (m * Math.random() * 80), this.canvas.height));
                         }
                     }
