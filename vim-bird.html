@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Vim-y Bird</title>
+    <title>Vim-y Bird - Refactored</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap');
@@ -16,15 +16,11 @@
             font-family: 'Fira Code', monospace;
             touch-action: none;
         }
-        canvas {
-            display: block;
-        }
-        #ui-layer {
+        canvas { display: block; }
+        .ui-overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             pointer-events: none;
             display: flex;
             flex-direction: column;
@@ -33,38 +29,42 @@
             color: #00ff41;
             text-shadow: 0 0 5px #00ff41;
         }
-        .retro-box {
-            background: rgba(0, 0, 0, 0.8);
+        .retro-panel {
+            background: rgba(0, 0, 0, 0.9);
             border: 2px solid #00ff41;
-            padding: 20px;
+            padding: 2rem;
             text-align: center;
             pointer-events: auto;
+            border-radius: 4px;
         }
-        .blink { animation: blinker 1s linear infinite; }
+        .blink { animation: blinker 1.5s linear infinite; }
         @keyframes blinker { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
 
-    <div id="ui-layer">
-        <div id="menu" class="retro-box">
-            <h1 class="text-4xl font-bold mb-4">VIM-Y BIRD</h1>
-            <p class="mb-2">Esci dal buffer infinito!</p>
-            <div class="text-left inline-block mb-6">
-                <p>⌨️ <span class="font-bold">k</span>: Salta (Up)</p>
-                <p>⌨️ <span class="font-bold">j</span>: Picchiata (Down)</p>
-                <p>📱 <span class="font-bold">Swipe</span>: Muoviti</p>
+    <div class="ui-overlay">
+        <!-- Menu Iniziale -->
+        <div id="menu" class="retro-panel">
+            <h1 class="text-5xl font-bold mb-4">VIM-Y BIRD</h1>
+            <p class="mb-6 opacity-80">Riesci ad uscire dal buffer?</p>
+            <div class="text-left inline-block mb-8 space-y-2">
+                <p>⌨️ <span class="font-bold">k</span> : Salta (su)</p>
+                <p>⌨️ <span class="font-bold">j</span> : Picchiata (giù)</p>
+                <p>📱 <span class="font-bold">Swipe</span> : Movimento verticale</p>
             </div>
-            <p class="blink">Premi 'k' o tocca per iniziare</p>
+            <p class="blink text-lg">Premi 'k' o tocca per iniziare</p>
         </div>
         
-        <div id="game-over" class="retro-box hidden">
-            <h2 class="text-3xl font-bold mb-2 text-red-500">SEGFAULT!</h2>
-            <p id="final-score" class="text-xl mb-4">Score: 0</p>
+        <!-- Schermata Game Over -->
+        <div id="game-over" class="retro-panel hidden">
+            <h2 class="text-4xl font-bold mb-2 text-red-500">SEGFAULT!</h2>
+            <p id="final-score" class="text-2xl mb-6">Score: 0</p>
             <p class="blink">Premi 'k' per riprovare</p>
         </div>
 
-        <div id="hud" class="absolute top-5 left-5 text-2xl font-bold hidden">
+        <!-- HUD Punteggio -->
+        <div id="hud" class="absolute top-8 left-8 text-3xl font-bold hidden">
             SCORE: <span id="current-score">0</span>
         </div>
     </div>
@@ -72,106 +72,153 @@
     <canvas id="gameCanvas"></canvas>
 
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const menu = document.getElementById('menu');
-        const gameOverScreen = document.getElementById('game-over');
-        const hud = document.getElementById('hud');
-        const currentScoreElement = document.getElementById('current-score');
-        const finalScoreElement = document.getElementById('final-score');
+        /**
+         * CONFIGURAZIONE GLOBALE
+         * Centralizza tutti i parametri per un facile bilanciamento del gioco.
+         */
+        const CONFIG = {
+            GRAVITY: 0.25,
+            JUMP_FORCE: -6,
+            DIVE_FORCE: 4,
+            TERMINAL_VELOCITY: 10,
+            PIPE_SPEED: 3.5,
+            PIPE_SPAWN_RATE: 90, // in frame
+            PIPE_GAP: 190,
+            COLORS: {
+                PRIMARY: '#00ff41',
+                SECONDARY: '#003300',
+                BG: '#0d0d0d',
+                GRID: '#001a00'
+            }
+        };
 
-        // Impostazioni di gioco
-        let gameState = 'MENU'; // MENU, PLAYING, GAMEOVER
-        let score = 0;
-        let pipes = [];
-        let frameCount = 0;
+        /**
+         * GESTORE INPUT
+         * Gestisce tastiera (Vim keys) e touch (Swipe).
+         */
+        class InputHandler {
+            constructor(onUp, onDown, onStart) {
+                this.onUp = onUp;
+                this.onDown = onDown;
+                this.onStart = onStart;
+                this.touchStartY = 0;
+                this.init();
+            }
 
-        const bird = {
-            x: 50,
-            y: 0,
-            width: 30,
-            height: 24,
-            gravity: 0.25,
-            lift: -6,
-            velocity: 0,
-            terminalVelocity: 8,
-            draw() {
-                ctx.fillStyle = '#00ff41';
-                ctx.font = 'bold 24px "Fira Code"';
-                ctx.fillText('>', this.x, this.y + this.height);
-                
-                // Effetto scia
-                ctx.globalAlpha = 0.3;
-                ctx.fillText('>', this.x - 10, this.y + this.height);
-                ctx.globalAlpha = 1.0;
-            },
-            update() {
-                this.velocity += this.gravity;
-                if (this.velocity > this.terminalVelocity) this.velocity = this.terminalVelocity;
+            init() {
+                // Keyboard
+                window.addEventListener('keydown', (e) => {
+                    if (e.key === 'k') this.onUp();
+                    if (e.key === 'j') this.onDown();
+                });
+
+                // Touch
+                window.addEventListener('touchstart', (e) => {
+                    this.touchStartY = e.touches[0].clientY;
+                    this.onStart(); 
+                }, { passive: false });
+
+                window.addEventListener('touchend', (e) => {
+                    const touchEndY = e.changedTouches[0].clientY;
+                    const diff = this.touchStartY - touchEndY;
+                    
+                    if (Math.abs(diff) > 30) {
+                        diff > 0 ? this.onUp() : this.onDown();
+                    } else {
+                        this.onUp(); // Tap semplice = Salto
+                    }
+                }, { passive: false });
+            }
+        }
+
+        /**
+         * CLASSE BIRD (IL CURSORE)
+         */
+        class Bird {
+            constructor(canvasHeight) {
+                this.x = 60;
+                this.y = canvasHeight / 2;
+                this.width = 24;
+                this.height = 24;
+                this.velocity = 0;
+            }
+
+            update(canvasHeight) {
+                this.velocity += CONFIG.GRAVITY;
+                if (this.velocity > CONFIG.TERMINAL_VELOCITY) {
+                    this.velocity = CONFIG.TERMINAL_VELOCITY;
+                }
                 this.y += this.velocity;
 
-                if (this.y + this.height > canvas.height) {
-                    this.y = canvas.height - this.height;
-                    endGame();
+                // Collisione suolo/soffitto
+                if (this.y + this.height > canvasHeight) {
+                    this.y = canvasHeight - this.height;
+                    return true; // Ha colpito il suolo
                 }
                 if (this.y < 0) {
                     this.y = 0;
                     this.velocity = 0;
                 }
-            },
-            jump() {
-                this.velocity = this.lift;
-            },
-            dive() {
-                this.velocity += 4;
+                return false;
             }
-        };
 
+            jump() { this.velocity = CONFIG.JUMP_FORCE; }
+            dive() { this.velocity += CONFIG.DIVE_FORCE; }
+
+            draw(ctx) {
+                ctx.fillStyle = CONFIG.COLORS.PRIMARY;
+                ctx.font = 'bold 28px "Fira Code"';
+                ctx.fillText('>', this.x, this.y + this.height);
+                
+                // Effetto ghost scia
+                ctx.globalAlpha = 0.2;
+                ctx.fillText('>', this.x - 12, this.y + this.height);
+                ctx.globalAlpha = 1.0;
+            }
+        }
+
+        /**
+         * CLASSE PIPE (GLI OSTACOLI)
+         */
         class Pipe {
-            constructor() {
-                this.spacing = 180; // Spazio tra i tubi
-                this.top = Math.random() * (canvas.height / 2) + 50;
-                this.bottom = canvas.height - (this.top + this.spacing);
-                this.x = canvas.width;
-                this.w = 60;
-                this.speed = 3;
+            constructor(canvasWidth, canvasHeight) {
+                this.width = 70;
+                this.x = canvasWidth;
+                this.top = Math.random() * (canvasHeight / 2) + 50;
+                this.bottom = canvasHeight - (this.top + CONFIG.PIPE_GAP);
                 this.passed = false;
             }
 
-            draw() {
-                ctx.fillStyle = '#003300';
-                ctx.strokeStyle = '#00ff41';
-                ctx.lineWidth = 2;
-
-                // Tubo superiore
-                ctx.fillRect(this.x, 0, this.w, this.top);
-                ctx.strokeRect(this.x, 0, this.w, this.top);
-                
-                // Disegna caratteri casuali nel "codice" del tubo
-                ctx.fillStyle = '#00ff41';
-                ctx.font = '12px "Fira Code"';
-                for(let i=20; i < this.top; i+=20) {
-                    ctx.fillText(' {; } ', this.x + 5, i);
-                }
-
-                // Tubo inferiore
-                ctx.fillStyle = '#003300';
-                ctx.fillRect(this.x, canvas.height - this.bottom, this.w, this.bottom);
-                ctx.strokeRect(this.x, canvas.height - this.bottom, this.w, this.bottom);
-                
-                ctx.fillStyle = '#00ff41';
-                for(let i=canvas.height - this.bottom + 20; i < canvas.height; i+=20) {
-                    ctx.fillText(' [ ] ', this.x + 5, i);
-                }
-            }
-
             update() {
-                this.x -= this.speed;
+                this.x -= CONFIG.PIPE_SPEED;
             }
 
-            collide(bird) {
-                if (bird.x + bird.width > this.x && bird.x < this.x + this.w) {
-                    if (bird.y < this.top || bird.y + bird.height > canvas.height - this.bottom) {
+            draw(ctx, canvasHeight) {
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = CONFIG.COLORS.PRIMARY;
+                ctx.fillStyle = CONFIG.COLORS.SECONDARY;
+
+                // Parte superiore
+                ctx.fillRect(this.x, 0, this.width, this.top);
+                ctx.strokeRect(this.x, 0, this.width, this.top);
+
+                // Parte inferiore
+                const bottomY = canvasHeight - this.bottom;
+                ctx.fillRect(this.x, bottomY, this.width, this.bottom);
+                ctx.strokeRect(this.x, bottomY, this.width, this.bottom);
+
+                // Decorazione "Codice"
+                ctx.fillStyle = CONFIG.COLORS.PRIMARY;
+                ctx.font = '10px "Fira Code"';
+                for(let i=20; i<this.top; i+=25) ctx.fillText(' void() ', this.x + 5, i);
+                for(let i=bottomY+25; i<canvasHeight; i+=25) ctx.fillText(' [0xAF] ', this.x + 5, i);
+            }
+
+            isOffscreen() { return this.x + this.width < 0; }
+
+            checkCollision(bird, canvasHeight) {
+                if (bird.x + bird.width > this.x && bird.x < this.x + this.width) {
+                    if (bird.y < this.top || bird.y + bird.height > canvasHeight - this.bottom) {
                         return true;
                     }
                 }
@@ -179,136 +226,143 @@
             }
         }
 
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            bird.y = canvas.height / 2;
-        }
+        /**
+         * CLASSE GAME ENGINE
+         * Gestisce il ciclo vitale del gioco.
+         */
+        class Game {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.state = 'MENU'; // MENU, PLAYING, GAMEOVER
+                this.score = 0;
+                this.pipes = [];
+                this.frameCount = 0;
 
-        function initGame() {
-            score = 0;
-            pipes = [];
-            bird.y = canvas.height / 2;
-            bird.velocity = 0;
-            frameCount = 0;
-            currentScoreElement.innerText = score;
-        }
+                this.bird = new Bird(this.canvas.height);
+                this.input = new InputHandler(
+                    () => this.onUp(),
+                    () => this.onDown(),
+                    () => this.onInteraction()
+                );
 
-        function startGame() {
-            initGame();
-            gameState = 'PLAYING';
-            menu.classList.add('hidden');
-            gameOverScreen.classList.add('hidden');
-            hud.classList.remove('hidden');
-        }
-
-        function endGame() {
-            gameState = 'GAMEOVER';
-            finalScoreElement.innerText = `SCORE: ${score}`;
-            gameOverScreen.classList.remove('hidden');
-        }
-
-        // Input Handling
-        window.addEventListener('keydown', (e) => {
-            if (gameState === 'MENU' || gameState === 'GAMEOVER') {
-                if (e.key === 'k') startGame();
-                return;
+                window.addEventListener('resize', () => this.resize());
+                this.resize();
+                this.loop();
             }
 
-            if (e.key === 'k') bird.jump();
-            if (e.key === 'j') bird.dive();
-        });
-
-        // Touch handling (Swipe)
-        let touchStartY = 0;
-        window.addEventListener('touchstart', (e) => {
-            touchStartY = e.touches[0].clientY;
-            if (gameState === 'MENU' || gameState === 'GAMEOVER') {
-                startGame();
-            }
-        }, { passive: false });
-
-        window.addEventListener('touchend', (e) => {
-            const touchEndY = e.changedTouches[0].clientY;
-            const diff = touchStartY - touchEndY;
-
-            if (gameState === 'PLAYING') {
-                if (diff > 20) { // Swipe Up
-                    bird.jump();
-                } else if (diff < -20) { // Swipe Down
-                    bird.dive();
-                } else {
-                    // Tap semplice -> Salta
-                    bird.jump();
-                }
-            }
-        }, { passive: false });
-
-        function update() {
-            if (gameState !== 'PLAYING') return;
-
-            bird.update();
-
-            if (frameCount % 100 === 0) {
-                pipes.push(new Pipe());
+            resize() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
             }
 
-            for (let i = pipes.length - 1; i >= 0; i--) {
-                pipes[i].update();
+            onInteraction() {
+                if (this.state !== 'PLAYING') this.start();
+            }
 
-                if (pipes[i].collide(bird)) {
-                    endGame();
+            onUp() {
+                if (this.state === 'PLAYING') this.bird.jump();
+                else this.start();
+            }
+
+            onDown() {
+                if (this.state === 'PLAYING') this.bird.dive();
+            }
+
+            start() {
+                this.state = 'PLAYING';
+                this.score = 0;
+                this.pipes = [];
+                this.bird = new Bird(this.canvas.height);
+                this.frameCount = 0;
+                
+                // UI
+                document.getElementById('menu').classList.add('hidden');
+                document.getElementById('game-over').classList.add('hidden');
+                document.getElementById('hud').classList.remove('hidden');
+                this.updateScoreUI();
+            }
+
+            gameOver() {
+                this.state = 'GAMEOVER';
+                document.getElementById('game-over').classList.remove('hidden');
+                document.getElementById('final-score').innerText = `SCORE: ${this.score}`;
+            }
+
+            updateScoreUI() {
+                document.getElementById('current-score').innerText = this.score;
+            }
+
+            update() {
+                if (this.state !== 'PLAYING') return;
+
+                if (this.bird.update(this.canvas.height)) {
+                    this.gameOver();
                 }
 
-                if (!pipes[i].passed && pipes[i].x + pipes[i].w < bird.x) {
-                    score++;
-                    pipes[i].passed = true;
-                    currentScoreElement.innerText = score;
+                // Generazione ostacoli
+                if (this.frameCount % CONFIG.PIPE_SPAWN_RATE === 0) {
+                    this.pipes.push(new Pipe(this.canvas.width, this.canvas.height));
                 }
 
-                if (pipes[i].x + pipes[i].w < 0) {
-                    pipes.splice(i, 1);
+                for (let i = this.pipes.length - 1; i >= 0; i--) {
+                    const p = this.pipes[i];
+                    p.update();
+
+                    if (p.checkCollision(this.bird, this.canvas.height)) {
+                        this.gameOver();
+                    }
+
+                    if (!p.passed && p.x + p.width < this.bird.x) {
+                        p.passed = true;
+                        this.score++;
+                        this.updateScoreUI();
+                    }
+
+                    if (p.isOffscreen()) this.pipes.splice(i, 1);
+                }
+
+                this.frameCount++;
+            }
+
+            drawBackground() {
+                this.ctx.fillStyle = CONFIG.COLORS.BG;
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Griglia Terminale
+                this.ctx.strokeStyle = CONFIG.COLORS.GRID;
+                this.ctx.lineWidth = 1;
+                for(let x=0; x<this.canvas.width; x+=50) {
+                    this.ctx.beginPath(); this.ctx.moveTo(x, 0); this.ctx.lineTo(x, this.canvas.height); this.ctx.stroke();
+                }
+                for(let y=0; y<this.canvas.height; y+=50) {
+                    this.ctx.beginPath(); this.ctx.moveTo(0, y); this.ctx.lineTo(this.canvas.width, y); this.ctx.stroke();
                 }
             }
 
-            frameCount++;
-        }
+            draw() {
+                this.drawBackground();
+                this.pipes.forEach(p => p.draw(this.ctx, this.canvas.height));
+                this.bird.draw(this.ctx);
 
-        function draw() {
-            // Sfondo con griglia retro
-            ctx.fillStyle = '#0d0d0d';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            ctx.strokeStyle = '#001a00';
-            ctx.lineWidth = 1;
-            for(let x=0; x<canvas.width; x+=40) {
-                ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x, canvas.height); ctx.stroke();
-            }
-            for(let y=0; y<canvas.height; y+=40) {
-                ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width, y); ctx.stroke();
-            }
-
-            pipes.forEach(pipe => pipe.draw());
-            bird.draw();
-
-            if (gameState === 'PLAYING') {
-                // Effetto scanline
-                ctx.fillStyle = 'rgba(0, 255, 65, 0.03)';
-                for(let i=0; i<canvas.height; i+=4) {
-                    ctx.fillRect(0, i, canvas.width, 1);
+                // Effetto CRT scanlines
+                if (this.state === 'PLAYING') {
+                    this.ctx.fillStyle = 'rgba(0, 255, 65, 0.05)';
+                    for(let i=0; i<this.canvas.height; i+=4) {
+                        this.ctx.fillRect(0, i, this.canvas.width, 1);
+                    }
                 }
             }
+
+            loop() {
+                this.update();
+                this.draw();
+                requestAnimationFrame(() => this.loop());
+            }
         }
 
-        function gameLoop() {
-            update();
-            draw();
-            requestAnimationFrame(gameLoop);
-        }
-
-        window.addEventListener('resize', resize);
-        resize();
-        gameLoop();
+        // Inizializzazione al caricamento
+        window.onload = () => new Game();
     </script>
 </body>
 </html>
