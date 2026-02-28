@@ -6,21 +6,32 @@
     <title>Vim-y Bird - Pro Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap');
+        /* Import Font: Fira Code per TUI, Roboto per Material */
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Roboto:wght@400;700&display=swap');
         
         :root {
-            --matrix-green: #00ff41;
-            --matrix-dark: #003300;
-            --matrix-bg: #0d0d0d;
+            --bg-color: #0d0d0d;
+            --primary-color: #00ff41;
+            --secondary-color: #003300;
+            --grid-color: #001a00;
+            --card-bg: rgba(0, 0, 0, 0.9);
+            --text-color: #00ff41;
+            --font-family: 'Fira Code', monospace;
+            --crt-display: block;
+            --border-color: #00ff41;
+            --shadow-color: rgba(0, 255, 65, 0.2);
+            --text-shadow: 0 0 5px var(--primary-color);
         }
 
         body {
             margin: 0;
             padding: 0;
             overflow: hidden;
-            background-color: var(--matrix-bg);
-            font-family: 'Fira Code', monospace;
-            touch-action: none; /* Impedisce lo scroll del browser su mobile */
+            background-color: var(--bg-color);
+            font-family: var(--font-family);
+            color: var(--text-color);
+            touch-action: none;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         canvas { display: block; }
@@ -34,18 +45,56 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            color: var(--matrix-green);
-            text-shadow: 0 0 5px var(--matrix-green);
+            text-shadow: var(--text-shadow);
         }
 
         .retro-card {
-            background: rgba(0, 0, 0, 0.9);
-            border: 2px solid var(--matrix-green);
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
             padding: 2.5rem;
             text-align: center;
             pointer-events: auto;
             border-radius: 8px;
-            box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
+            box-shadow: 0 0 20px var(--shadow-color);
+            transition: all 0.3s ease;
+        }
+
+        /* Stili per i bottoni */
+        .custom-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.25rem;
+            color: var(--text-color);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            background: transparent;
+        }
+        .custom-btn:hover { background: var(--secondary-color); }
+        .custom-btn.active { 
+            background: var(--primary-color); 
+            color: var(--bg-color); 
+            text-shadow: none;
+        }
+        
+        /* Contenitori informativi */
+        .info-box {
+            border: 1px solid var(--border-color);
+            padding: 0.75rem;
+            border-radius: 0.25rem;
+            background: rgba(0,0,0,0.1);
+        }
+        .info-title {
+            font-weight: bold;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.25rem;
+        }
+        .key-badge {
+            background: var(--primary-color);
+            color: var(--bg-color);
+            padding: 0 0.25rem;
+            font-weight: bold;
+            text-shadow: none;
         }
 
         .blink { animation: blinker 1.5s linear infinite; }
@@ -54,7 +103,7 @@
         /* Effetto CRT opzionale */
         .crt-overlay::before {
             content: " ";
-            display: block;
+            display: var(--crt-display);
             position: absolute;
             top: 0; left: 0; bottom: 0; right: 0;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
@@ -71,41 +120,51 @@
         <!-- Menu Principale -->
         <div id="menu" class="retro-card">
             <h1 class="text-6xl font-bold mb-2 tracking-tighter">VIM-Y BIRD</h1>
-            <p class="mb-8 opacity-70">Esci dal buffer infinito</p>
+            <p class="mb-6 opacity-70">Senza gravità: muoviti liberamente!</p>
             
-            <div class="grid grid-cols-2 gap-4 text-left mb-10 text-sm md:text-base">
-                <div class="border border-[#00ff41]/30 p-3 rounded">
-                    <p class="font-bold border-b border-[#00ff41]/30 mb-2">Comandi</p>
-                    <p>⌨️ <span class="bg-[#00ff41] text-black px-1 font-bold">k</span> : Salta</p>
-                    <p>⌨️ <span class="bg-[#00ff41] text-black px-1 font-bold">j</span> : Picchiata</p>
+            <div class="grid grid-cols-2 gap-4 text-left mb-6 text-sm md:text-base">
+                <div class="info-box">
+                    <p class="info-title">Comandi</p>
+                    <p>⌨️ <span class="key-badge">k</span> : Muovi Su</p>
+                    <p>⌨️ <span class="key-badge">j</span> : Muovi Giù</p>
                 </div>
-                <div class="border border-[#00ff41]/30 p-3 rounded">
-                    <p class="font-bold border-b border-[#00ff41]/30 mb-2">Mobile</p>
-                    <p>📱 Swipe Su/Giu</p>
-                    <p>📱 Tap per Salto</p>
+                <div class="info-box">
+                    <p class="info-title">Mobile</p>
+                    <p>📱 Swipe Su: Scatto Su</p>
+                    <p>📱 Swipe Giu: Scatto Giù</p>
+                </div>
+            </div>
+
+            <!-- Selezione Tema -->
+            <div class="mb-6">
+                <p class="font-bold mb-2 text-sm uppercase tracking-widest opacity-80">Tema</p>
+                <div class="flex justify-center space-x-4 text-sm font-bold">
+                    <button id="btn-theme-matrix" class="custom-btn active" onclick="game.setTheme('matrix')">Matrix</button>
+                    <button id="btn-theme-tokyo" class="custom-btn" onclick="game.setTheme('tokyo')">Tokyo</button>
+                    <button id="btn-theme-material" class="custom-btn" onclick="game.setTheme('material')">Material</button>
                 </div>
             </div>
 
             <!-- Selezione Difficoltà -->
-            <div class="mb-8">
-                <p class="font-bold mb-3 text-sm uppercase tracking-widest text-[#00ff41]/80">Difficoltà (Premi 1, 2, 3)</p>
+            <div class="mb-6">
+                <p class="font-bold mb-2 text-sm uppercase tracking-widest opacity-80">Difficoltà</p>
                 <div class="flex justify-center space-x-4 text-sm font-bold">
-                    <button id="btn-easy" class="px-4 py-2 border border-[#00ff41] rounded transition-colors hover:bg-[#00ff41]/20 focus:outline-none">1. N00b</button>
-                    <button id="btn-normal" class="px-4 py-2 border border-[#00ff41] bg-[#00ff41] text-black rounded transition-colors focus:outline-none">2. Hacker</button>
-                    <button id="btn-hard" class="px-4 py-2 border border-[#00ff41] rounded transition-colors hover:bg-[#00ff41]/20 focus:outline-none">3. Guru</button>
+                    <button id="btn-easy" class="custom-btn">1. N00b</button>
+                    <button id="btn-normal" class="custom-btn active">2. Hacker</button>
+                    <button id="btn-hard" class="custom-btn">3. Guru</button>
                 </div>
             </div>
 
-            <p class="blink text-xl uppercase font-bold tracking-widest">Premi 'k' per iniziare</p>
+            <p class="blink text-xl uppercase font-bold tracking-widest mt-4">Premi 'k' o 'j' per iniziare</p>
         </div>
         
         <!-- Schermata Fine Partita -->
         <div id="game-over" class="retro-card hidden">
-            <h2 class="text-5xl font-bold mb-2 text-red-600">SEGFAULT!</h2>
+            <h2 class="text-5xl font-bold mb-2 text-red-500" style="text-shadow: none;">SEGFAULT!</h2>
             <p id="final-score" class="text-3xl mb-8">Score: 0</p>
             <div class="flex flex-col gap-4 items-center">
                 <p class="blink text-lg">Premi 'k' per riavviare</p>
-                <button id="btn-menu" class="px-6 py-2 border border-[#00ff41] rounded transition-colors hover:bg-[#00ff41]/20 focus:outline-none text-sm uppercase tracking-widest mt-2">Torna al Menu (m)</button>
+                <button id="btn-menu" class="custom-btn text-sm uppercase tracking-widest mt-2">Torna al Menu (m)</button>
             </div>
         </div>
 
@@ -119,20 +178,61 @@
 
     <script>
         /**
-         * COSTANTI DI SISTEMA E DIFFICOLTÀ
+         * DIZIONARIO TEMI
          */
+        const THEMES = {
+            matrix: {
+                '--bg-color': '#0d0d0d',
+                '--primary-color': '#00ff41',
+                '--secondary-color': '#003300',
+                '--grid-color': '#001a00',
+                '--card-bg': 'rgba(0, 0, 0, 0.9)',
+                '--text-color': '#00ff41',
+                '--font-family': '"Fira Code", monospace',
+                '--crt-display': 'block',
+                '--border-color': '#00ff41',
+                '--shadow-color': 'rgba(0, 255, 65, 0.2)',
+                '--text-shadow': '0 0 5px var(--primary-color)'
+            },
+            tokyo: {
+                '--bg-color': '#1a1b26',
+                '--primary-color': '#7aa2f7',
+                '--secondary-color': '#24283b',
+                '--grid-color': '#414868',
+                '--card-bg': 'rgba(26, 27, 38, 0.95)',
+                '--text-color': '#c0caf5',
+                '--font-family': '"Fira Code", monospace',
+                '--crt-display': 'none',
+                '--border-color': '#7aa2f7',
+                '--shadow-color': 'rgba(122, 162, 247, 0.2)',
+                '--text-shadow': 'none'
+            },
+            material: {
+                '--bg-color': '#fafafa',
+                '--primary-color': '#6200ea',
+                '--secondary-color': '#e0e0e0',
+                '--grid-color': '#eeeeee',
+                '--card-bg': '#ffffff',
+                '--text-color': '#212121',
+                '--font-family': '"Roboto", sans-serif',
+                '--crt-display': 'none',
+                '--border-color': '#e0e0e0',
+                '--shadow-color': 'rgba(0, 0, 0, 0.15)',
+                '--text-shadow': 'none'
+            }
+        };
+
         const DIFFICULTIES = {
-            easy: { SPEED: 2.5, SPAWN_RATE: 110, GAP: 260, GRAVITY: 0.22 },
-            normal: { SPEED: 4, SPAWN_RATE: 85, GAP: 200, GRAVITY: 0.28 },
-            hard: { SPEED: 6, SPAWN_RATE: 60, GAP: 150, GRAVITY: 0.35 }
+            easy: { SPEED: 2.5, SPAWN_RATE: 110, GAP: 280 },
+            normal: { SPEED: 4.5, SPAWN_RATE: 80, GAP: 200 },
+            hard: { SPEED: 6.5, SPAWN_RATE: 55, GAP: 150 }
         };
 
         const SETTINGS = {
             PHYSICS: {
-                GRAVITY: DIFFICULTIES.normal.GRAVITY,
-                JUMP: -6.5,
-                DIVE: 5,
-                MAX_VELOCITY: 12
+                MAX_VELOCITY: 15,
+                ACCEL: 1.5,
+                FRICTION: 0.88 // Senza gravità, usiamo l'attrito per fermare dolcemente
             },
             WORLD: {
                 PIPE_SPEED: DIFFICULTIES.normal.SPEED,
@@ -140,36 +240,41 @@
                 PIPE_GAP: DIFFICULTIES.normal.GAP,
                 PIPE_WIDTH: 80
             },
-            THEME: {
-                PRIMARY: '#00ff41',
-                SECONDARY: '#003300',
-                BG: '#0d0d0d',
-                GRID: '#001a00'
-            }
+            THEME: { ...THEMES.matrix } // Inizializzato con i colori Matrix
         };
 
         /**
-         * GESTORE INPUT (Tastiera + Touch)
+         * GESTORE INPUT: Traccia se i tasti sono tenuti premuti per il movimento fluido
          */
         class Controller {
             constructor(callbacks) {
                 this.cb = callbacks;
+                this.keys = { up: false, down: false };
                 this.startY = 0;
                 this._bindEvents();
             }
 
             _bindEvents() {
                 window.addEventListener('keydown', e => {
-                    if (e.key === 'k') this.cb.onUp();
-                    if (e.key === 'j') this.cb.onDown();
+                    if (e.key === 'k') this.keys.up = true;
+                    if (e.key === 'j') this.keys.down = true;
+                    
                     if (e.key === '1') this.cb.onDiff('easy');
                     if (e.key === '2') this.cb.onDiff('normal');
                     if (e.key === '3') this.cb.onDiff('hard');
                     if (e.key === 'm') this.cb.onMenu();
+                    
+                    // Avvia il gioco se premiamo i controlli di movimento
+                    if (e.key === 'k' || e.key === 'j') this.cb.onAny(); 
+                });
+
+                window.addEventListener('keyup', e => {
+                    if (e.key === 'k') this.keys.up = false;
+                    if (e.key === 'j') this.keys.down = false;
                 });
 
                 window.addEventListener('touchstart', e => {
-                    if (e.target.tagName === 'BUTTON') return; // Ignora i tocchi sui bottoni della UI
+                    if (e.target.tagName === 'BUTTON') return;
                     this.startY = e.touches[0].clientY;
                     this.cb.onAny();
                 }, { passive: false });
@@ -179,17 +284,14 @@
                     const endY = e.changedTouches[0].clientY;
                     const delta = this.startY - endY;
                     
-                    if (Math.abs(delta) > 30) {
-                        delta > 0 ? this.cb.onUp() : this.cb.onDown();
-                    } else {
-                        this.cb.onUp(); // Tap = Salto
-                    }
+                    if (delta > 30) this.cb.onSwipe('up');
+                    else if (delta < -30) this.cb.onSwipe('down');
                 }, { passive: false });
             }
         }
 
         /**
-         * ENTITÀ: GIOCATORE (Vim Cursor)
+         * ENTITÀ: GIOCATORE
          */
         class Player {
             constructor(h) {
@@ -199,24 +301,37 @@
                 this.size = 28;
             }
 
-            update(h) {
-                this.v += SETTINGS.PHYSICS.GRAVITY;
+            update(h, inputKeys, swipeEvent) {
+                // Accelerazione basata sulla pressione dei tasti
+                if (inputKeys.up) this.v -= SETTINGS.PHYSICS.ACCEL;
+                if (inputKeys.down) this.v += SETTINGS.PHYSICS.ACCEL;
+
+                // Gestione impulsi da Swipe (Mobile)
+                if (swipeEvent === 'up') this.v -= 12;
+                if (swipeEvent === 'down') this.v += 12;
+
+                // Limita velocità massima
                 if (this.v > SETTINGS.PHYSICS.MAX_VELOCITY) this.v = SETTINGS.PHYSICS.MAX_VELOCITY;
+                if (this.v < -SETTINGS.PHYSICS.MAX_VELOCITY) this.v = -SETTINGS.PHYSICS.MAX_VELOCITY;
+
+                // Applica Attrito e muovi
+                this.v *= SETTINGS.PHYSICS.FRICTION;
                 this.y += this.v;
 
-                if (this.y + this.size > h) return true; // Collisione suolo
-                if (this.y < 0) { this.y = 0; this.v = 0; }
+                // Toccare i bordi è SEGFAULT (Game Over)
+                if (this.y + this.size > h || this.y < 0) return true; 
+                
                 return false;
             }
 
             draw(ctx) {
                 ctx.save();
-                ctx.fillStyle = SETTINGS.THEME.PRIMARY;
-                ctx.font = `bold ${this.size}px "Fira Code"`;
+                ctx.fillStyle = SETTINGS.THEME['--primary-color'];
+                ctx.font = `bold ${this.size}px ${SETTINGS.THEME['--font-family']}`;
                 
                 // Effetto scia
                 ctx.globalAlpha = 0.3;
-                ctx.fillText('>', this.x - 10, this.y + this.size);
+                ctx.fillText('>', this.x - Math.max(10, Math.abs(this.v)), this.y + this.size);
                 ctx.globalAlpha = 1.0;
                 ctx.fillText('>', this.x, this.y + this.size);
                 ctx.restore();
@@ -224,7 +339,7 @@
         }
 
         /**
-         * ENTITÀ: OSTACOLO (Code Block)
+         * ENTITÀ: OSTACOLO
          */
         class Obstacle {
             constructor(w, h) {
@@ -238,8 +353,8 @@
             update() { this.x -= SETTINGS.WORLD.PIPE_SPEED; }
 
             draw(ctx, h) {
-                ctx.fillStyle = SETTINGS.THEME.SECONDARY;
-                ctx.strokeStyle = SETTINGS.THEME.PRIMARY;
+                ctx.fillStyle = SETTINGS.THEME['--secondary-color'];
+                ctx.strokeStyle = SETTINGS.THEME['--primary-color'];
                 ctx.lineWidth = 2;
 
                 // Superiore
@@ -252,11 +367,13 @@
                 ctx.fillRect(this.x, bY, this.w, bH);
                 ctx.strokeRect(this.x, bY, this.w, bH);
 
-                // Decorazione
-                ctx.fillStyle = SETTINGS.THEME.PRIMARY;
-                ctx.font = '10px "Fira Code"';
-                ctx.fillText('while(1)', this.x + 10, this.top - 10);
-                ctx.fillText('return 0', this.x + 10, bY + 20);
+                // Decorazione testo sui tubi
+                ctx.fillStyle = SETTINGS.THEME['--text-color'];
+                ctx.font = `10px ${SETTINGS.THEME['--font-family']}`;
+                if (SETTINGS.THEME['--text-color'] !== '#212121') { // Nascondi testo nel material design
+                    ctx.fillText('while(1)', this.x + 10, this.top - 10);
+                    ctx.fillText('return 0', this.x + 10, bY + 20);
+                }
             }
 
             collides(p, h) {
@@ -270,6 +387,7 @@
         /**
          * CORE ENGINE
          */
+        let game;
         class GameEngine {
             constructor() {
                 this.canvas = document.getElementById('gameCanvas');
@@ -278,14 +396,14 @@
                 this.score = 0;
                 this.obstacles = [];
                 this.ticks = 0;
+                this.currentSwipe = null;
 
                 this.player = new Player(this.canvas.height);
                 this.input = new Controller({
-                    onUp: () => this.jump(),
-                    onDown: () => this.dive(),
                     onAny: () => this.handleInteraction(),
                     onDiff: (level) => this.setDifficulty(level),
-                    onMenu: () => this.goToMenu()
+                    onMenu: () => this.goToMenu(),
+                    onSwipe: (dir) => this.currentSwipe = dir
                 });
 
                 this._setupUI();
@@ -295,48 +413,50 @@
             }
 
             _setupUI() {
-                // Collega i bottoni del menu alla funzione di cambio difficoltà
                 document.getElementById('btn-easy').addEventListener('click', () => this.setDifficulty('easy'));
                 document.getElementById('btn-normal').addEventListener('click', () => this.setDifficulty('normal'));
                 document.getElementById('btn-hard').addEventListener('click', () => this.setDifficulty('hard'));
-                
-                // Bottone per tornare al menu dal game over
                 document.getElementById('btn-menu').addEventListener('click', () => this.goToMenu());
+            }
+
+            setTheme(themeName) {
+                const theme = THEMES[themeName];
+                SETTINGS.THEME = { ...theme };
+                
+                // Aggiorna variabili CSS globali
+                for (let key in theme) {
+                    document.documentElement.style.setProperty(key, theme[key]);
+                }
+
+                // Aggiorna UI Bottoni
+                ['matrix', 'tokyo', 'material'].forEach(t => {
+                    document.getElementById(`btn-theme-${t}`).classList.remove('active');
+                });
+                document.getElementById(`btn-theme-${themeName}`).classList.add('active');
             }
 
             goToMenu() {
                 if (this.state === 'GAMEOVER') {
                     this.state = 'MENU';
-                    
-                    // Cambia la visibilità dei pannelli UI
                     document.getElementById('game-over').classList.add('hidden');
                     document.getElementById('hud').classList.add('hidden');
                     document.getElementById('menu').classList.remove('hidden');
-                    
-                    // Resetta la schermata di sfondo ripulendola dagli ostacoli
                     this.obstacles = [];
                     this.player = new Player(this.canvas.height);
-                    this.render();
                 }
             }
 
             setDifficulty(level) {
-                if (this.state === 'PLAYING') return; // Evita cambi di livello accidentali a partita in corso
-                
-                // Aggiorna la fisica del mondo in base al livello selezionato
+                if (this.state === 'PLAYING') return;
                 const diff = DIFFICULTIES[level];
-                SETTINGS.PHYSICS.GRAVITY = diff.GRAVITY;
                 SETTINGS.WORLD.PIPE_SPEED = diff.SPEED;
                 SETTINGS.WORLD.PIPE_SPAWN_RATE = diff.SPAWN_RATE;
                 SETTINGS.WORLD.PIPE_GAP = diff.GAP;
 
-                // Aggiorna lo stile dei bottoni
-                const activeClass = "px-4 py-2 border border-[#00ff41] bg-[#00ff41] text-black rounded transition-colors focus:outline-none";
-                const inactiveClass = "px-4 py-2 border border-[#00ff41] rounded transition-colors hover:bg-[#00ff41]/20 focus:outline-none";
-                
-                document.getElementById('btn-easy').className = level === 'easy' ? activeClass : inactiveClass;
-                document.getElementById('btn-normal').className = level === 'normal' ? activeClass : inactiveClass;
-                document.getElementById('btn-hard').className = level === 'hard' ? activeClass : inactiveClass;
+                ['easy', 'normal', 'hard'].forEach(l => {
+                    document.getElementById(`btn-${l}`).classList.remove('active');
+                });
+                document.getElementById(`btn-${level}`).classList.add('active');
             }
 
             onResize() {
@@ -348,21 +468,13 @@
                 if (this.state !== 'PLAYING') this.start();
             }
 
-            jump() {
-                if (this.state === 'PLAYING') this.player.v = SETTINGS.PHYSICS.JUMP;
-                else this.start();
-            }
-
-            dive() {
-                if (this.state === 'PLAYING') this.player.v += SETTINGS.PHYSICS.DIVE;
-            }
-
             start() {
                 this.state = 'PLAYING';
                 this.score = 0;
                 this.obstacles = [];
                 this.player = new Player(this.canvas.height);
                 this.ticks = 0;
+                this.currentSwipe = null;
                 
                 document.getElementById('menu').classList.add('hidden');
                 document.getElementById('game-over').classList.add('hidden');
@@ -383,7 +495,11 @@
             update() {
                 if (this.state !== 'PLAYING') return;
 
-                if (this.player.update(this.canvas.height)) this.die();
+                // Passiamo le key attuali e gli eventi swipe consumabili
+                if (this.player.update(this.canvas.height, this.input.keys, this.currentSwipe)) {
+                    this.die(); // Muore se tocca bordi
+                }
+                this.currentSwipe = null; // Resetta lo swipe dopo averlo usato
 
                 if (this.ticks % SETTINGS.WORLD.PIPE_SPAWN_RATE === 0) {
                     this.obstacles.push(new Obstacle(this.canvas.width, this.canvas.height));
@@ -409,12 +525,10 @@
             render() {
                 const { ctx, canvas } = this;
                 
-                // Background
-                ctx.fillStyle = SETTINGS.THEME.BG;
+                ctx.fillStyle = SETTINGS.THEME['--bg-color'];
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                // Grid
-                ctx.strokeStyle = SETTINGS.THEME.GRID;
+                ctx.strokeStyle = SETTINGS.THEME['--grid-color'];
                 ctx.lineWidth = 1;
                 for(let x=0; x<canvas.width; x+=60) {
                     ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
@@ -434,8 +548,9 @@
             }
         }
 
-        // Lancio del gioco
-        window.addEventListener('load', () => new GameEngine());
+        window.addEventListener('load', () => {
+            game = new GameEngine();
+        });
     </script>
 </body>
 </html>
