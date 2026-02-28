@@ -2,41 +2,24 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vim Bird - Swipe Edition</title>
-    <!-- Tailwind CSS per il layout di base -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vim-y Bird</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap');
-
+        
         body {
-            background-color: #1e1e1e;
-            color: #d4d4d4;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #0d0d0d;
             font-family: 'Fira Code', monospace;
-            overflow: hidden; /* Previene lo scroll */
-            user-select: none;
-            touch-action: none; /* Disabilita lo scroll nativo del browser */
+            touch-action: none;
         }
-
-        #game-container {
-            position: relative;
-            width: 100%;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #111;
-        }
-
         canvas {
-            background-color: #1e1e1e;
-            border: 2px solid #569cd6; 
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-            max-width: 100%;
-            max-height: 100%;
+            display: block;
         }
-
-        .ui-layer {
+        #ui-layer {
             position: absolute;
             top: 0;
             left: 0;
@@ -45,410 +28,287 @@
             pointer-events: none;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            justify-content: center;
+            align-items: center;
+            color: #00ff41;
+            text-shadow: 0 0 5px #00ff41;
+        }
+        .retro-box {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff41;
             padding: 20px;
-        }
-
-        .status-line {
-            background-color: #569cd6;
-            color: #1e1e1e;
-            padding: 5px 10px;
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
-            font-size: 14px;
-        }
-
-        .center-msg {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
             text-align: center;
-            background: rgba(30, 30, 30, 0.95);
-            padding: 30px;
-            border: 1px solid #d4d4d4;
-            display: none;
-            z-index: 10;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            min-width: 300px;
+            pointer-events: auto;
         }
-        
-        .cursor-blink { animation: blink 1s step-end infinite; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-
-        .key-hint {
-            border: 1px solid #666;
-            padding: 2px 6px;
-            border-radius: 4px;
-            background: #333;
-            font-size: 0.8em;
-            color: #fff;
-            font-weight: bold;
-            display: inline-block;
-            margin: 0 2px;
-        }
-        
-        .gesture-icon {
-            font-size: 1.2em;
-            vertical-align: middle;
-        }
+        .blink { animation: blinker 1s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
 
-<div id="game-container">
-    <canvas id="gameCanvas"></canvas>
-
-    <div class="ui-layer">
-        <div class="status-line">
-            <span id="mode-indicator">-- NORMAL --</span>
-            <span id="file-info">vim_bird.js [RO]</span>
-            <span id="score-display">Ln 0, Col 1</span>
+    <div id="ui-layer">
+        <div id="menu" class="retro-box">
+            <h1 class="text-4xl font-bold mb-4">VIM-Y BIRD</h1>
+            <p class="mb-2">Esci dal buffer infinito!</p>
+            <div class="text-left inline-block mb-6">
+                <p>⌨️ <span class="font-bold">k</span>: Salta (Up)</p>
+                <p>⌨️ <span class="font-bold">j</span>: Picchiata (Down)</p>
+                <p>📱 <span class="font-bold">Swipe</span>: Muoviti</p>
+            </div>
+            <p class="blink">Premi 'k' o tocca per iniziare</p>
         </div>
         
-        <!-- START SCREEN -->
-        <div id="start-screen" class="center-msg" style="display: block;">
-            <h1 class="text-3xl mb-4 text-green-400 font-bold">VIM BIRD<span class="cursor-blink">_</span></h1>
-            <p class="mb-4 text-gray-300">Evita i Segmentation Faults</p>
-            
-            <div class="bg-black/40 p-4 rounded mb-6 text-sm text-left grid grid-cols-2 gap-4">
-                <div class="col-span-2 text-center text-blue-300 font-bold mb-1">CONTROLLI</div>
-                
-                <!-- Desktop -->
-                <div><span class="key-hint">k</span> / <span class="key-hint">↑</span></div>
-                <div class="text-right">Sali</div>
-                
-                <div><span class="key-hint">j</span> / <span class="key-hint">↓</span></div>
-                <div class="text-right">Scendi</div>
-
-                <!-- Mobile -->
-                <div class="col-span-2 border-t border-gray-600 my-1"></div>
-                
-                <div><span class="gesture-icon">👆</span> Swipe Su</div>
-                <div class="text-right">Sali</div>
-                
-                <div><span class="gesture-icon">👇</span> Swipe Giù</div>
-                <div class="text-right">Scendi</div>
-            </div>
-
-            <p class="text-xs text-gray-400 mt-4 animate-pulse">Premi <span class="key-hint">SPAZIO</span> o TOCCA per iniziare</p>
+        <div id="game-over" class="retro-box hidden">
+            <h2 class="text-3xl font-bold mb-2 text-red-500">SEGFAULT!</h2>
+            <p id="final-score" class="text-xl mb-4">Score: 0</p>
+            <p class="blink">Premi 'k' per riprovare</p>
         </div>
 
-        <!-- GAME OVER SCREEN -->
-        <div id="game-over-screen" class="center-msg">
-            <h1 class="text-4xl mb-2 text-red-500 font-bold">GAME OVER</h1>
-            <p class="text-red-400 text-sm mb-6 font-mono">Process terminated with exit code 1</p>
-            
-            <div class="mb-6">
-                <p class="text-sm text-gray-400">Codice Raggiunto</p>
-                <p class="text-3xl text-white font-bold"><span id="final-score">0</span> lines</p>
-            </div>
-
-            <div class="border-t border-gray-600 pt-4 mt-4">
-                <p class="text-xs text-gray-300">Premi <span class="key-hint">SPAZIO</span> o <span class="key-hint">R</span></p>
-                <p class="text-xs text-gray-400 mt-1">o TOCCA per riavviare</p>
-            </div>
+        <div id="hud" class="absolute top-5 left-5 text-2xl font-bold hidden">
+            SCORE: <span id="current-score">0</span>
         </div>
     </div>
-</div>
 
-<script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    
-    // UI Elements
-    const startScreen = document.getElementById('start-screen');
-    const gameOverScreen = document.getElementById('game-over-screen');
-    const scoreDisplay = document.getElementById('score-display');
-    const modeIndicator = document.getElementById('mode-indicator');
-    const finalScoreDisplay = document.getElementById('final-score');
+    <canvas id="gameCanvas"></canvas>
 
-    // Game Variables
-    let frames = 0;
-    let score = 0;
-    let highScore = 0;
-    
-    try {
-        highScore = localStorage.getItem('vimBirdHighScore') || 0;
-    } catch(e) {}
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const menu = document.getElementById('menu');
+        const gameOverScreen = document.getElementById('game-over');
+        const hud = document.getElementById('hud');
+        const currentScoreElement = document.getElementById('current-score');
+        const finalScoreElement = document.getElementById('final-score');
 
-    let gameState = 'START'; 
-    let gameSpeed = 2.5; 
-    const gravity = 0.20; 
+        // Impostazioni di gioco
+        let gameState = 'MENU'; // MENU, PLAYING, GAMEOVER
+        let score = 0;
+        let pipes = [];
+        let frameCount = 0;
 
-    // Configurazione del "Bird"
-    const bird = {
-        x: 50,
-        y: 150,
-        w: 20,
-        h: 20,
-        velocity: 0,
-        jumpStrength: 5.5,
-        diveStrength: 4,
-        color: '#4ec9b0', 
-        
-        draw: function() {
-            ctx.fillStyle = this.color;
-            ctx.fillRect(this.x, this.y, this.w, this.h);
-            ctx.fillStyle = 'rgba(78, 201, 176, 0.2)';
-            ctx.fillRect(this.x - 5, this.y + (this.velocity * 2), this.w, this.h);
-        },
-        
-        update: function() {
-            this.velocity += gravity;
-            this.y += this.velocity;
-
-            if (this.y < 0) {
-                this.y = 0;
-                this.velocity = 0;
-            }
-
-            if (this.y + this.h >= canvas.height) {
-                gameOver();
-            }
-        },
-        
-        flap: function() {
-            this.velocity = -this.jumpStrength;
-        },
-
-        dive: function() {
-            this.velocity = this.diveStrength;
-        }
-    };
-
-    // Gestione Tubi
-    const pipes = {
-        position: [],
-        w: 50,
-        h: 150,
-        gap: 150, // Gap leggermente aumentato per mobile
-        dx: 2.5,
-        
-        draw: function() {
-            for(let i = 0; i < this.position.length; i++) {
-                let p = this.position[i];
-                let topY = p.y;
-                let bottomY = p.y + this.h + this.gap;
+        const bird = {
+            x: 50,
+            y: 0,
+            width: 30,
+            height: 24,
+            gravity: 0.25,
+            lift: -6,
+            velocity: 0,
+            terminalVelocity: 8,
+            draw() {
+                ctx.fillStyle = '#00ff41';
+                ctx.font = 'bold 24px "Fira Code"';
+                ctx.fillText('>', this.x, this.y + this.height);
                 
-                ctx.fillStyle = '#6a9955'; 
-                ctx.fillRect(p.x, 0, this.w, topY);
-                ctx.strokeStyle = '#3c3c3c';
+                // Effetto scia
+                ctx.globalAlpha = 0.3;
+                ctx.fillText('>', this.x - 10, this.y + this.height);
+                ctx.globalAlpha = 1.0;
+            },
+            update() {
+                this.velocity += this.gravity;
+                if (this.velocity > this.terminalVelocity) this.velocity = this.terminalVelocity;
+                this.y += this.velocity;
+
+                if (this.y + this.height > canvas.height) {
+                    this.y = canvas.height - this.height;
+                    endGame();
+                }
+                if (this.y < 0) {
+                    this.y = 0;
+                    this.velocity = 0;
+                }
+            },
+            jump() {
+                this.velocity = this.lift;
+            },
+            dive() {
+                this.velocity += 4;
+            }
+        };
+
+        class Pipe {
+            constructor() {
+                this.spacing = 180; // Spazio tra i tubi
+                this.top = Math.random() * (canvas.height / 2) + 50;
+                this.bottom = canvas.height - (this.top + this.spacing);
+                this.x = canvas.width;
+                this.w = 60;
+                this.speed = 3;
+                this.passed = false;
+            }
+
+            draw() {
+                ctx.fillStyle = '#003300';
+                ctx.strokeStyle = '#00ff41';
                 ctx.lineWidth = 2;
-                ctx.strokeRect(p.x, 0, this.w, topY);
 
-                ctx.fillStyle = '#6a9955';
-                ctx.fillRect(p.x, bottomY, this.w, canvas.height - bottomY);
-                ctx.strokeRect(p.x, bottomY, this.w, canvas.height - bottomY);
+                // Tubo superiore
+                ctx.fillRect(this.x, 0, this.w, this.top);
+                ctx.strokeRect(this.x, 0, this.w, this.top);
                 
-                ctx.fillStyle = '#1e1e1e';
-                ctx.font = '10px monospace';
-                ctx.fillText("/* ERR */", p.x + 5, topY - 10);
-                ctx.fillText("/* BUG */", p.x + 5, bottomY + 20);
-            }
-        },
-        
-        update: function() {
-            if(frames % 120 === 0) {
-                let maxPos = canvas.height - this.gap - 50; 
-                let maxY = Math.floor(Math.random() * (maxPos - 50 + 1) + 50);
-                this.position.push({ x: canvas.width, y: maxY });
-            }
-            
-            for(let i = 0; i < this.position.length; i++) {
-                let p = this.position[i];
-                p.x -= this.dx; 
+                // Disegna caratteri casuali nel "codice" del tubo
+                ctx.fillStyle = '#00ff41';
+                ctx.font = '12px "Fira Code"';
+                for(let i=20; i < this.top; i+=20) {
+                    ctx.fillText(' {; } ', this.x + 5, i);
+                }
+
+                // Tubo inferiore
+                ctx.fillStyle = '#003300';
+                ctx.fillRect(this.x, canvas.height - this.bottom, this.w, this.bottom);
+                ctx.strokeRect(this.x, canvas.height - this.bottom, this.w, this.bottom);
                 
-                // Collisioni
-                const padding = 5; // Hitbox ancora più gentile
-                if(bird.x + bird.w - padding > p.x && bird.x + padding < p.x + this.w) {
-                    if(bird.y + padding < p.y || bird.y + bird.h - padding > p.y + this.gap) {
-                        gameOver();
+                ctx.fillStyle = '#00ff41';
+                for(let i=canvas.height - this.bottom + 20; i < canvas.height; i+=20) {
+                    ctx.fillText(' [ ] ', this.x + 5, i);
+                }
+            }
+
+            update() {
+                this.x -= this.speed;
+            }
+
+            collide(bird) {
+                if (bird.x + bird.width > this.x && bird.x < this.x + this.w) {
+                    if (bird.y < this.top || bird.y + bird.height > canvas.height - this.bottom) {
+                        return true;
                     }
                 }
-                
-                if(p.x + this.w < bird.x && !p.passed) {
+                return false;
+            }
+        }
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            bird.y = canvas.height / 2;
+        }
+
+        function initGame() {
+            score = 0;
+            pipes = [];
+            bird.y = canvas.height / 2;
+            bird.velocity = 0;
+            frameCount = 0;
+            currentScoreElement.innerText = score;
+        }
+
+        function startGame() {
+            initGame();
+            gameState = 'PLAYING';
+            menu.classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
+            hud.classList.remove('hidden');
+        }
+
+        function endGame() {
+            gameState = 'GAMEOVER';
+            finalScoreElement.innerText = `SCORE: ${score}`;
+            gameOverScreen.classList.remove('hidden');
+        }
+
+        // Input Handling
+        window.addEventListener('keydown', (e) => {
+            if (gameState === 'MENU' || gameState === 'GAMEOVER') {
+                if (e.key === 'k') startGame();
+                return;
+            }
+
+            if (e.key === 'k') bird.jump();
+            if (e.key === 'j') bird.dive();
+        });
+
+        // Touch handling (Swipe)
+        let touchStartY = 0;
+        window.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+            if (gameState === 'MENU' || gameState === 'GAMEOVER') {
+                startGame();
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchend', (e) => {
+            const touchEndY = e.changedTouches[0].clientY;
+            const diff = touchStartY - touchEndY;
+
+            if (gameState === 'PLAYING') {
+                if (diff > 20) { // Swipe Up
+                    bird.jump();
+                } else if (diff < -20) { // Swipe Down
+                    bird.dive();
+                } else {
+                    // Tap semplice -> Salta
+                    bird.jump();
+                }
+            }
+        }, { passive: false });
+
+        function update() {
+            if (gameState !== 'PLAYING') return;
+
+            bird.update();
+
+            if (frameCount % 100 === 0) {
+                pipes.push(new Pipe());
+            }
+
+            for (let i = pipes.length - 1; i >= 0; i--) {
+                pipes[i].update();
+
+                if (pipes[i].collide(bird)) {
+                    endGame();
+                }
+
+                if (!pipes[i].passed && pipes[i].x + pipes[i].w < bird.x) {
                     score++;
-                    p.passed = true;
-                    scoreDisplay.innerText = `Ln ${score}, Col 1`;
-                    if(score % 5 === 0) this.dx += 0.2;
+                    pipes[i].passed = true;
+                    currentScoreElement.innerText = score;
                 }
-                
-                if(p.x + this.w <= 0) {
-                    this.position.shift();
-                    i--; 
+
+                if (pipes[i].x + pipes[i].w < 0) {
+                    pipes.splice(i, 1);
                 }
             }
-        },
-        
-        reset: function() {
-            this.position = [];
-            this.dx = 2.5;
-        }
-    };
 
-    const bg = {
-        draw: function() {
-            ctx.fillStyle = '#252526';
-            ctx.font = '12px "Fira Code", monospace';
-            ctx.fillStyle = '#858585'; 
+            frameCount++;
+        }
+
+        function draw() {
+            // Sfondo con griglia retro
+            ctx.fillStyle = '#0d0d0d';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            for(let i = 0; i < canvas.height; i += 20) {
-                let lineNum = Math.floor(i / 20) + 1 + Math.floor(frames/10);
-                ctx.fillText(lineNum, 5, i + 15);
-                ctx.strokeStyle = '#333';
-                ctx.beginPath();
-                ctx.moveTo(30, i);
-                ctx.lineTo(canvas.width, i);
-                ctx.stroke();
+            ctx.strokeStyle = '#001a00';
+            ctx.lineWidth = 1;
+            for(let x=0; x<canvas.width; x+=40) {
+                ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x, canvas.height); ctx.stroke();
+            }
+            for(let y=0; y<canvas.height; y+=40) {
+                ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width, y); ctx.stroke();
+            }
+
+            pipes.forEach(pipe => pipe.draw());
+            bird.draw();
+
+            if (gameState === 'PLAYING') {
+                // Effetto scanline
+                ctx.fillStyle = 'rgba(0, 255, 65, 0.03)';
+                for(let i=0; i<canvas.height; i+=4) {
+                    ctx.fillRect(0, i, canvas.width, 1);
+                }
             }
         }
-    }
 
-    function init() {
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-        loop();
-    }
-
-    function resizeCanvas() {
-        const container = document.getElementById('game-container');
-        let w = container.clientWidth;
-        let h = container.clientHeight;
-        if (w > 600) w = 600;
-        if (h > 800) h = 800;
-        canvas.width = w;
-        canvas.height = h;
-    }
-
-    function resetGame() {
-        bird.y = canvas.height / 2;
-        bird.velocity = 0;
-        pipes.reset();
-        score = 0;
-        frames = 0;
-        gameState = 'PLAYING';
-        startScreen.style.display = 'none';
-        gameOverScreen.style.display = 'none';
-        modeIndicator.innerText = "-- INSERT --";
-        modeIndicator.style.backgroundColor = "#c586c0";
-        modeIndicator.style.color = "#fff";
-        scoreDisplay.innerText = "Ln 0, Col 1";
-    }
-
-    function gameOver() {
-        if (gameState === 'GAMEOVER') return;
-        gameState = 'GAMEOVER';
-        modeIndicator.innerText = "-- VISUAL BLOCK --";
-        modeIndicator.style.backgroundColor = "#f44747";
-        try {
-            if(score > highScore) {
-                highScore = score;
-                localStorage.setItem('vimBirdHighScore', highScore);
-            }
-        } catch(e) {}
-        finalScoreDisplay.innerText = score;
-        gameOverScreen.style.display = 'block';
-    }
-
-    function update() {
-        bird.update();
-        pipes.update();
-    }
-
-    function draw() {
-        ctx.fillStyle = '#1e1e1e';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        bg.draw();
-        pipes.draw();
-        bird.draw();
-    }
-
-    function loop() {
-        if(gameState === 'PLAYING') {
+        function gameLoop() {
             update();
-            frames++;
-        }
-        draw();
-        requestAnimationFrame(loop);
-    }
-
-    // --- INPUT HANDLING ---
-    
-    // 1. Keyboard
-    window.addEventListener('keydown', function(e) {
-        const key = e.key.toLowerCase();
-        if (gameState === 'PLAYING') {
-            if (key === 'k' || key === 'arrowup') bird.flap();
-            if (key === 'j' || key === 'arrowdown') bird.dive();
-        }
-        if ((key === ' ' || key === 'enter') && gameState !== 'PLAYING') resetGame();
-        if (gameState === 'GAMEOVER' && key === 'r') resetGame();
-    });
-
-    // 2. Touch & Swipe Logic
-    let touchStartY = 0;
-    let isSwiping = false;
-
-    // A. Start Touch
-    canvas.addEventListener('touchstart', function(e) {
-        e.preventDefault(); // Niente zoom/scroll
-        
-        // Riavvio rapido se non stiamo giocando
-        if(gameState !== 'PLAYING') {
-            resetGame();
-            return;
+            draw();
+            requestAnimationFrame(gameLoop);
         }
 
-        touchStartY = e.changedTouches[0].screenY;
-        isSwiping = false; // Reset stato swipe
-    }, {passive: false});
-
-    // B. Move (Gestisce lo Swipe in tempo reale)
-    canvas.addEventListener('touchmove', function(e) {
-        e.preventDefault();
-        if(gameState !== 'PLAYING') return;
-
-        let currentY = e.changedTouches[0].screenY;
-        let diff = currentY - touchStartY;
-        const SWIPE_THRESHOLD = 25; // Sensibilità swipe
-
-        if (Math.abs(diff) > SWIPE_THRESHOLD) {
-            isSwiping = true; // Abbiamo rilevato un movimento intenzionale
-            
-            if (diff < 0) {
-                bird.flap(); // Swipe SU -> Sali
-            } else {
-                bird.dive(); // Swipe GIÙ -> Scendi
-            }
-            
-            // Aggiorna il punto di start per permettere swipe multipli continui
-            touchStartY = currentY; 
-        }
-    }, {passive: false});
-
-    // C. End (Gestisce il Tap se non c'è stato swipe)
-    canvas.addEventListener('touchend', function(e) {
-        e.preventDefault();
-        if(gameState !== 'PLAYING') return;
-
-        // Se non abbiamo swipato, trattalo come un TAP a zone
-        if (!isSwiping) {
-            const rect = canvas.getBoundingClientRect();
-            let touchRelativeY = e.changedTouches[0].clientY - rect.top;
-            
-            // Zona Alta = Sali, Zona Bassa = Scendi
-            if (touchRelativeY < canvas.height / 2) {
-                bird.flap();
-            } else {
-                bird.dive();
-            }
-        }
-    }, {passive: false});
-
-    init();
-
-</script>
+        window.addEventListener('resize', resize);
+        resize();
+        gameLoop();
+    </script>
 </body>
 </html>
