@@ -3,68 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Vim-y Bird - Refactored</title>
+    <title>Vim-y Bird - Pro Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap');
         
+        :root {
+            --matrix-green: #00ff41;
+            --matrix-dark: #003300;
+            --matrix-bg: #0d0d0d;
+        }
+
         body {
             margin: 0;
             padding: 0;
             overflow: hidden;
-            background-color: #0d0d0d;
+            background-color: var(--matrix-bg);
             font-family: 'Fira Code', monospace;
-            touch-action: none;
+            touch-action: none; /* Impedisce lo scroll del browser su mobile */
         }
+
         canvas { display: block; }
-        .ui-overlay {
+
+        /* UI Overlay Layer */
+        .ui-container {
             position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
+            inset: 0;
             pointer-events: none;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            color: #00ff41;
-            text-shadow: 0 0 5px #00ff41;
+            color: var(--matrix-green);
+            text-shadow: 0 0 5px var(--matrix-green);
         }
-        .retro-panel {
+
+        .retro-card {
             background: rgba(0, 0, 0, 0.9);
-            border: 2px solid #00ff41;
-            padding: 2rem;
+            border: 2px solid var(--matrix-green);
+            padding: 2.5rem;
             text-align: center;
             pointer-events: auto;
-            border-radius: 4px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
         }
+
         .blink { animation: blinker 1.5s linear infinite; }
         @keyframes blinker { 50% { opacity: 0; } }
+
+        /* Effetto CRT opzionale */
+        .crt-overlay::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 10;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
     </style>
 </head>
-<body>
+<body class="crt-overlay">
 
-    <div class="ui-overlay">
-        <!-- Menu Iniziale -->
-        <div id="menu" class="retro-panel">
-            <h1 class="text-5xl font-bold mb-4">VIM-Y BIRD</h1>
-            <p class="mb-6 opacity-80">Riesci ad uscire dal buffer?</p>
-            <div class="text-left inline-block mb-8 space-y-2">
-                <p>⌨️ <span class="font-bold">k</span> : Salta (su)</p>
-                <p>⌨️ <span class="font-bold">j</span> : Picchiata (giù)</p>
-                <p>📱 <span class="font-bold">Swipe</span> : Movimento verticale</p>
+    <div class="ui-container">
+        <!-- Menu Principale -->
+        <div id="menu" class="retro-card">
+            <h1 class="text-6xl font-bold mb-2 tracking-tighter">VIM-Y BIRD</h1>
+            <p class="mb-8 opacity-70">Esci dal buffer infinito</p>
+            
+            <div class="grid grid-cols-2 gap-4 text-left mb-10 text-sm md:text-base">
+                <div class="border border-[#00ff41]/30 p-3 rounded">
+                    <p class="font-bold border-b border-[#00ff41]/30 mb-2">Comandi</p>
+                    <p>⌨️ <span class="bg-[#00ff41] text-black px-1 font-bold">k</span> : Salta</p>
+                    <p>⌨️ <span class="bg-[#00ff41] text-black px-1 font-bold">j</span> : Picchiata</p>
+                </div>
+                <div class="border border-[#00ff41]/30 p-3 rounded">
+                    <p class="font-bold border-b border-[#00ff41]/30 mb-2">Mobile</p>
+                    <p>📱 Swipe Su/Giu</p>
+                    <p>📱 Tap per Salto</p>
+                </div>
             </div>
-            <p class="blink text-lg">Premi 'k' o tocca per iniziare</p>
+
+            <!-- Selezione Difficoltà -->
+            <div class="mb-8">
+                <p class="font-bold mb-3 text-sm uppercase tracking-widest text-[#00ff41]/80">Difficoltà (Premi 1, 2, 3)</p>
+                <div class="flex justify-center space-x-4 text-sm font-bold">
+                    <button id="btn-easy" class="px-4 py-2 border border-[#00ff41] rounded transition-colors hover:bg-[#00ff41]/20 focus:outline-none">1. N00b</button>
+                    <button id="btn-normal" class="px-4 py-2 border border-[#00ff41] bg-[#00ff41] text-black rounded transition-colors focus:outline-none">2. Hacker</button>
+                    <button id="btn-hard" class="px-4 py-2 border border-[#00ff41] rounded transition-colors hover:bg-[#00ff41]/20 focus:outline-none">3. Guru</button>
+                </div>
+            </div>
+
+            <p class="blink text-xl uppercase font-bold tracking-widest">Premi 'k' per iniziare</p>
         </div>
         
-        <!-- Schermata Game Over -->
-        <div id="game-over" class="retro-panel hidden">
-            <h2 class="text-4xl font-bold mb-2 text-red-500">SEGFAULT!</h2>
-            <p id="final-score" class="text-2xl mb-6">Score: 0</p>
-            <p class="blink">Premi 'k' per riprovare</p>
+        <!-- Schermata Fine Partita -->
+        <div id="game-over" class="retro-card hidden">
+            <h2 class="text-5xl font-bold mb-2 text-red-600">SEGFAULT!</h2>
+            <p id="final-score" class="text-3xl mb-8">Score: 0</p>
+            <div class="flex flex-col gap-4 items-center">
+                <p class="blink text-lg">Premi 'k' per riavviare</p>
+                <button id="btn-menu" class="px-6 py-2 border border-[#00ff41] rounded transition-colors hover:bg-[#00ff41]/20 focus:outline-none text-sm uppercase tracking-widest mt-2">Torna al Menu (m)</button>
+            </div>
         </div>
 
-        <!-- HUD Punteggio -->
-        <div id="hud" class="absolute top-8 left-8 text-3xl font-bold hidden">
+        <!-- Score HUD -->
+        <div id="hud" class="absolute top-10 left-10 text-4xl font-bold hidden tabular-nums">
             SCORE: <span id="current-score">0</span>
         </div>
     </div>
@@ -73,18 +119,28 @@
 
     <script>
         /**
-         * CONFIGURAZIONE GLOBALE
-         * Centralizza tutti i parametri per un facile bilanciamento del gioco.
+         * COSTANTI DI SISTEMA E DIFFICOLTÀ
          */
-        const CONFIG = {
-            GRAVITY: 0.25,
-            JUMP_FORCE: -6,
-            DIVE_FORCE: 4,
-            TERMINAL_VELOCITY: 10,
-            PIPE_SPEED: 3.5,
-            PIPE_SPAWN_RATE: 90, // in frame
-            PIPE_GAP: 190,
-            COLORS: {
+        const DIFFICULTIES = {
+            easy: { SPEED: 2.5, SPAWN_RATE: 110, GAP: 260, GRAVITY: 0.22 },
+            normal: { SPEED: 4, SPAWN_RATE: 85, GAP: 200, GRAVITY: 0.28 },
+            hard: { SPEED: 6, SPAWN_RATE: 60, GAP: 150, GRAVITY: 0.35 }
+        };
+
+        const SETTINGS = {
+            PHYSICS: {
+                GRAVITY: DIFFICULTIES.normal.GRAVITY,
+                JUMP: -6.5,
+                DIVE: 5,
+                MAX_VELOCITY: 12
+            },
+            WORLD: {
+                PIPE_SPEED: DIFFICULTIES.normal.SPEED,
+                PIPE_SPAWN_RATE: DIFFICULTIES.normal.SPAWN_RATE,
+                PIPE_GAP: DIFFICULTIES.normal.GAP,
+                PIPE_WIDTH: 80
+            },
+            THEME: {
                 PRIMARY: '#00ff41',
                 SECONDARY: '#003300',
                 BG: '#0d0d0d',
@@ -93,276 +149,293 @@
         };
 
         /**
-         * GESTORE INPUT
-         * Gestisce tastiera (Vim keys) e touch (Swipe).
+         * GESTORE INPUT (Tastiera + Touch)
          */
-        class InputHandler {
-            constructor(onUp, onDown, onStart) {
-                this.onUp = onUp;
-                this.onDown = onDown;
-                this.onStart = onStart;
-                this.touchStartY = 0;
-                this.init();
+        class Controller {
+            constructor(callbacks) {
+                this.cb = callbacks;
+                this.startY = 0;
+                this._bindEvents();
             }
 
-            init() {
-                // Keyboard
-                window.addEventListener('keydown', (e) => {
-                    if (e.key === 'k') this.onUp();
-                    if (e.key === 'j') this.onDown();
+            _bindEvents() {
+                window.addEventListener('keydown', e => {
+                    if (e.key === 'k') this.cb.onUp();
+                    if (e.key === 'j') this.cb.onDown();
+                    if (e.key === '1') this.cb.onDiff('easy');
+                    if (e.key === '2') this.cb.onDiff('normal');
+                    if (e.key === '3') this.cb.onDiff('hard');
+                    if (e.key === 'm') this.cb.onMenu();
                 });
 
-                // Touch
-                window.addEventListener('touchstart', (e) => {
-                    this.touchStartY = e.touches[0].clientY;
-                    this.onStart(); 
+                window.addEventListener('touchstart', e => {
+                    if (e.target.tagName === 'BUTTON') return; // Ignora i tocchi sui bottoni della UI
+                    this.startY = e.touches[0].clientY;
+                    this.cb.onAny();
                 }, { passive: false });
 
-                window.addEventListener('touchend', (e) => {
-                    const touchEndY = e.changedTouches[0].clientY;
-                    const diff = this.touchStartY - touchEndY;
+                window.addEventListener('touchend', e => {
+                    if (e.target.tagName === 'BUTTON') return;
+                    const endY = e.changedTouches[0].clientY;
+                    const delta = this.startY - endY;
                     
-                    if (Math.abs(diff) > 30) {
-                        diff > 0 ? this.onUp() : this.onDown();
+                    if (Math.abs(delta) > 30) {
+                        delta > 0 ? this.cb.onUp() : this.cb.onDown();
                     } else {
-                        this.onUp(); // Tap semplice = Salto
+                        this.cb.onUp(); // Tap = Salto
                     }
                 }, { passive: false });
             }
         }
 
         /**
-         * CLASSE BIRD (IL CURSORE)
+         * ENTITÀ: GIOCATORE (Vim Cursor)
          */
-        class Bird {
-            constructor(canvasHeight) {
-                this.x = 60;
-                this.y = canvasHeight / 2;
-                this.width = 24;
-                this.height = 24;
-                this.velocity = 0;
+        class Player {
+            constructor(h) {
+                this.x = 80;
+                this.y = h / 2;
+                this.v = 0;
+                this.size = 28;
             }
 
-            update(canvasHeight) {
-                this.velocity += CONFIG.GRAVITY;
-                if (this.velocity > CONFIG.TERMINAL_VELOCITY) {
-                    this.velocity = CONFIG.TERMINAL_VELOCITY;
-                }
-                this.y += this.velocity;
+            update(h) {
+                this.v += SETTINGS.PHYSICS.GRAVITY;
+                if (this.v > SETTINGS.PHYSICS.MAX_VELOCITY) this.v = SETTINGS.PHYSICS.MAX_VELOCITY;
+                this.y += this.v;
 
-                // Collisione suolo/soffitto
-                if (this.y + this.height > canvasHeight) {
-                    this.y = canvasHeight - this.height;
-                    return true; // Ha colpito il suolo
-                }
-                if (this.y < 0) {
-                    this.y = 0;
-                    this.velocity = 0;
-                }
+                if (this.y + this.size > h) return true; // Collisione suolo
+                if (this.y < 0) { this.y = 0; this.v = 0; }
                 return false;
             }
 
-            jump() { this.velocity = CONFIG.JUMP_FORCE; }
-            dive() { this.velocity += CONFIG.DIVE_FORCE; }
-
             draw(ctx) {
-                ctx.fillStyle = CONFIG.COLORS.PRIMARY;
-                ctx.font = 'bold 28px "Fira Code"';
-                ctx.fillText('>', this.x, this.y + this.height);
+                ctx.save();
+                ctx.fillStyle = SETTINGS.THEME.PRIMARY;
+                ctx.font = `bold ${this.size}px "Fira Code"`;
                 
-                // Effetto ghost scia
-                ctx.globalAlpha = 0.2;
-                ctx.fillText('>', this.x - 12, this.y + this.height);
+                // Effetto scia
+                ctx.globalAlpha = 0.3;
+                ctx.fillText('>', this.x - 10, this.y + this.size);
                 ctx.globalAlpha = 1.0;
+                ctx.fillText('>', this.x, this.y + this.size);
+                ctx.restore();
             }
         }
 
         /**
-         * CLASSE PIPE (GLI OSTACOLI)
+         * ENTITÀ: OSTACOLO (Code Block)
          */
-        class Pipe {
-            constructor(canvasWidth, canvasHeight) {
-                this.width = 70;
-                this.x = canvasWidth;
-                this.top = Math.random() * (canvasHeight / 2) + 50;
-                this.bottom = canvasHeight - (this.top + CONFIG.PIPE_GAP);
+        class Obstacle {
+            constructor(w, h) {
+                this.x = w;
+                this.w = SETTINGS.WORLD.PIPE_WIDTH;
+                this.top = Math.random() * (h / 2) + 60;
+                this.gap = SETTINGS.WORLD.PIPE_GAP;
                 this.passed = false;
             }
 
-            update() {
-                this.x -= CONFIG.PIPE_SPEED;
-            }
+            update() { this.x -= SETTINGS.WORLD.PIPE_SPEED; }
 
-            draw(ctx, canvasHeight) {
+            draw(ctx, h) {
+                ctx.fillStyle = SETTINGS.THEME.SECONDARY;
+                ctx.strokeStyle = SETTINGS.THEME.PRIMARY;
                 ctx.lineWidth = 2;
-                ctx.strokeStyle = CONFIG.COLORS.PRIMARY;
-                ctx.fillStyle = CONFIG.COLORS.SECONDARY;
 
-                // Parte superiore
-                ctx.fillRect(this.x, 0, this.width, this.top);
-                ctx.strokeRect(this.x, 0, this.width, this.top);
+                // Superiore
+                ctx.fillRect(this.x, 0, this.w, this.top);
+                ctx.strokeRect(this.x, 0, this.w, this.top);
 
-                // Parte inferiore
-                const bottomY = canvasHeight - this.bottom;
-                ctx.fillRect(this.x, bottomY, this.width, this.bottom);
-                ctx.strokeRect(this.x, bottomY, this.width, this.bottom);
+                // Inferiore
+                const bY = this.top + this.gap;
+                const bH = h - bY;
+                ctx.fillRect(this.x, bY, this.w, bH);
+                ctx.strokeRect(this.x, bY, this.w, bH);
 
-                // Decorazione "Codice"
-                ctx.fillStyle = CONFIG.COLORS.PRIMARY;
+                // Decorazione
+                ctx.fillStyle = SETTINGS.THEME.PRIMARY;
                 ctx.font = '10px "Fira Code"';
-                for(let i=20; i<this.top; i+=25) ctx.fillText(' void() ', this.x + 5, i);
-                for(let i=bottomY+25; i<canvasHeight; i+=25) ctx.fillText(' [0xAF] ', this.x + 5, i);
+                ctx.fillText('while(1)', this.x + 10, this.top - 10);
+                ctx.fillText('return 0', this.x + 10, bY + 20);
             }
 
-            isOffscreen() { return this.x + this.width < 0; }
-
-            checkCollision(bird, canvasHeight) {
-                if (bird.x + bird.width > this.x && bird.x < this.x + this.width) {
-                    if (bird.y < this.top || bird.y + bird.height > canvasHeight - this.bottom) {
-                        return true;
-                    }
+            collides(p, h) {
+                if (p.x + p.size > this.x && p.x < this.x + this.w) {
+                    if (p.y < this.top || p.y + p.size > this.top + this.gap) return true;
                 }
                 return false;
             }
         }
 
         /**
-         * CLASSE GAME ENGINE
-         * Gestisce il ciclo vitale del gioco.
+         * CORE ENGINE
          */
-        class Game {
+        class GameEngine {
             constructor() {
                 this.canvas = document.getElementById('gameCanvas');
                 this.ctx = this.canvas.getContext('2d');
-                this.state = 'MENU'; // MENU, PLAYING, GAMEOVER
+                this.state = 'MENU';
                 this.score = 0;
-                this.pipes = [];
-                this.frameCount = 0;
+                this.obstacles = [];
+                this.ticks = 0;
 
-                this.bird = new Bird(this.canvas.height);
-                this.input = new InputHandler(
-                    () => this.onUp(),
-                    () => this.onDown(),
-                    () => this.onInteraction()
-                );
+                this.player = new Player(this.canvas.height);
+                this.input = new Controller({
+                    onUp: () => this.jump(),
+                    onDown: () => this.dive(),
+                    onAny: () => this.handleInteraction(),
+                    onDiff: (level) => this.setDifficulty(level),
+                    onMenu: () => this.goToMenu()
+                });
 
-                window.addEventListener('resize', () => this.resize());
-                this.resize();
-                this.loop();
+                this._setupUI();
+                window.addEventListener('resize', () => this.onResize());
+                this.onResize();
+                this.run();
             }
 
-            resize() {
+            _setupUI() {
+                // Collega i bottoni del menu alla funzione di cambio difficoltà
+                document.getElementById('btn-easy').addEventListener('click', () => this.setDifficulty('easy'));
+                document.getElementById('btn-normal').addEventListener('click', () => this.setDifficulty('normal'));
+                document.getElementById('btn-hard').addEventListener('click', () => this.setDifficulty('hard'));
+                
+                // Bottone per tornare al menu dal game over
+                document.getElementById('btn-menu').addEventListener('click', () => this.goToMenu());
+            }
+
+            goToMenu() {
+                if (this.state === 'GAMEOVER') {
+                    this.state = 'MENU';
+                    
+                    // Cambia la visibilità dei pannelli UI
+                    document.getElementById('game-over').classList.add('hidden');
+                    document.getElementById('hud').classList.add('hidden');
+                    document.getElementById('menu').classList.remove('hidden');
+                    
+                    // Resetta la schermata di sfondo ripulendola dagli ostacoli
+                    this.obstacles = [];
+                    this.player = new Player(this.canvas.height);
+                    this.render();
+                }
+            }
+
+            setDifficulty(level) {
+                if (this.state === 'PLAYING') return; // Evita cambi di livello accidentali a partita in corso
+                
+                // Aggiorna la fisica del mondo in base al livello selezionato
+                const diff = DIFFICULTIES[level];
+                SETTINGS.PHYSICS.GRAVITY = diff.GRAVITY;
+                SETTINGS.WORLD.PIPE_SPEED = diff.SPEED;
+                SETTINGS.WORLD.PIPE_SPAWN_RATE = diff.SPAWN_RATE;
+                SETTINGS.WORLD.PIPE_GAP = diff.GAP;
+
+                // Aggiorna lo stile dei bottoni
+                const activeClass = "px-4 py-2 border border-[#00ff41] bg-[#00ff41] text-black rounded transition-colors focus:outline-none";
+                const inactiveClass = "px-4 py-2 border border-[#00ff41] rounded transition-colors hover:bg-[#00ff41]/20 focus:outline-none";
+                
+                document.getElementById('btn-easy').className = level === 'easy' ? activeClass : inactiveClass;
+                document.getElementById('btn-normal').className = level === 'normal' ? activeClass : inactiveClass;
+                document.getElementById('btn-hard').className = level === 'hard' ? activeClass : inactiveClass;
+            }
+
+            onResize() {
                 this.canvas.width = window.innerWidth;
                 this.canvas.height = window.innerHeight;
             }
 
-            onInteraction() {
+            handleInteraction() {
                 if (this.state !== 'PLAYING') this.start();
             }
 
-            onUp() {
-                if (this.state === 'PLAYING') this.bird.jump();
+            jump() {
+                if (this.state === 'PLAYING') this.player.v = SETTINGS.PHYSICS.JUMP;
                 else this.start();
             }
 
-            onDown() {
-                if (this.state === 'PLAYING') this.bird.dive();
+            dive() {
+                if (this.state === 'PLAYING') this.player.v += SETTINGS.PHYSICS.DIVE;
             }
 
             start() {
                 this.state = 'PLAYING';
                 this.score = 0;
-                this.pipes = [];
-                this.bird = new Bird(this.canvas.height);
-                this.frameCount = 0;
+                this.obstacles = [];
+                this.player = new Player(this.canvas.height);
+                this.ticks = 0;
                 
-                // UI
                 document.getElementById('menu').classList.add('hidden');
                 document.getElementById('game-over').classList.add('hidden');
                 document.getElementById('hud').classList.remove('hidden');
-                this.updateScoreUI();
+                this.syncUI();
             }
 
-            gameOver() {
+            syncUI() {
+                document.getElementById('current-score').innerText = this.score;
+            }
+
+            die() {
                 this.state = 'GAMEOVER';
                 document.getElementById('game-over').classList.remove('hidden');
                 document.getElementById('final-score').innerText = `SCORE: ${this.score}`;
             }
 
-            updateScoreUI() {
-                document.getElementById('current-score').innerText = this.score;
-            }
-
             update() {
                 if (this.state !== 'PLAYING') return;
 
-                if (this.bird.update(this.canvas.height)) {
-                    this.gameOver();
+                if (this.player.update(this.canvas.height)) this.die();
+
+                if (this.ticks % SETTINGS.WORLD.PIPE_SPAWN_RATE === 0) {
+                    this.obstacles.push(new Obstacle(this.canvas.width, this.canvas.height));
                 }
 
-                // Generazione ostacoli
-                if (this.frameCount % CONFIG.PIPE_SPAWN_RATE === 0) {
-                    this.pipes.push(new Pipe(this.canvas.width, this.canvas.height));
-                }
+                for (let i = this.obstacles.length - 1; i >= 0; i--) {
+                    const o = this.obstacles[i];
+                    o.update();
 
-                for (let i = this.pipes.length - 1; i >= 0; i--) {
-                    const p = this.pipes[i];
-                    p.update();
+                    if (o.collides(this.player, this.canvas.height)) this.die();
 
-                    if (p.checkCollision(this.bird, this.canvas.height)) {
-                        this.gameOver();
-                    }
-
-                    if (!p.passed && p.x + p.width < this.bird.x) {
-                        p.passed = true;
+                    if (!o.passed && o.x + o.w < this.player.x) {
+                        o.passed = true;
                         this.score++;
-                        this.updateScoreUI();
+                        this.syncUI();
                     }
 
-                    if (p.isOffscreen()) this.pipes.splice(i, 1);
+                    if (o.x + o.w < 0) this.obstacles.splice(i, 1);
                 }
-
-                this.frameCount++;
+                this.ticks++;
             }
 
-            drawBackground() {
-                this.ctx.fillStyle = CONFIG.COLORS.BG;
-                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            render() {
+                const { ctx, canvas } = this;
+                
+                // Background
+                ctx.fillStyle = SETTINGS.THEME.BG;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                // Griglia Terminale
-                this.ctx.strokeStyle = CONFIG.COLORS.GRID;
-                this.ctx.lineWidth = 1;
-                for(let x=0; x<this.canvas.width; x+=50) {
-                    this.ctx.beginPath(); this.ctx.moveTo(x, 0); this.ctx.lineTo(x, this.canvas.height); this.ctx.stroke();
+                // Grid
+                ctx.strokeStyle = SETTINGS.THEME.GRID;
+                ctx.lineWidth = 1;
+                for(let x=0; x<canvas.width; x+=60) {
+                    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
                 }
-                for(let y=0; y<this.canvas.height; y+=50) {
-                    this.ctx.beginPath(); this.ctx.moveTo(0, y); this.ctx.lineTo(this.canvas.width, y); this.ctx.stroke();
+                for(let y=0; y<canvas.height; y+=60) {
+                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
                 }
+
+                this.obstacles.forEach(o => o.draw(ctx, canvas.height));
+                this.player.draw(ctx);
             }
 
-            draw() {
-                this.drawBackground();
-                this.pipes.forEach(p => p.draw(this.ctx, this.canvas.height));
-                this.bird.draw(this.ctx);
-
-                // Effetto CRT scanlines
-                if (this.state === 'PLAYING') {
-                    this.ctx.fillStyle = 'rgba(0, 255, 65, 0.05)';
-                    for(let i=0; i<this.canvas.height; i+=4) {
-                        this.ctx.fillRect(0, i, this.canvas.width, 1);
-                    }
-                }
-            }
-
-            loop() {
+            run() {
                 this.update();
-                this.draw();
-                requestAnimationFrame(() => this.loop());
+                this.render();
+                requestAnimationFrame(() => this.run());
             }
         }
 
-        // Inizializzazione al caricamento
-        window.onload = () => new Game();
+        // Lancio del gioco
+        window.addEventListener('load', () => new GameEngine());
     </script>
 </body>
 </html>
