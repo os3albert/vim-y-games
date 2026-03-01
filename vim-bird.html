@@ -42,8 +42,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 9999; /* Spostato in primo piano, sopra il menu e il gioco */
-            pointer-events: none; /* Mantiene la possibilità di cliccare gli elementi sottostanti */
+            z-index: -2; /* Spostato in secondo piano, dietro il menu */
+            pointer-events: none; 
         }
 
         /* UI Overlay Layer */
@@ -76,12 +76,31 @@
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
+        /* Modificatore per il terminale in-game per renderlo a tutto schermo */
+        .game-window {
+            max-width: none !important;
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            margin: auto;
+            border-radius: 12px;
+        }
+
+        @media (min-width: 768px) {
+            .game-window {
+                height: calc(100% - 4rem);
+                width: calc(100% - 4rem);
+            }
+        }
+
         .terminal-header {
             background: rgba(255, 255, 255, 0.03);
             padding: 12px 16px;
             display: flex;
             align-items: center;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            flex-shrink: 0;
         }
 
         .window-controls {
@@ -99,6 +118,9 @@
             font-size: 0.85rem;
             color: rgba(255, 255, 255, 0.5);
             margin-right: 44px; /* Bilancia i dot per centrare */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .terminal-body {
@@ -114,12 +136,15 @@
             font-size: 0.75rem;
             font-weight: 500;
             border-top: 1px solid rgba(255, 255, 255, 0.05);
+            flex-shrink: 0;
+            overflow: hidden;
         }
         .status-mode {
             background: var(--primary-color);
             color: var(--bg-color);
             padding: 4px 12px;
             font-weight: bold;
+            white-space: nowrap;
         }
         .status-info {
             padding: 4px 12px;
@@ -127,11 +152,15 @@
             display: flex;
             gap: 16px;
             flex-grow: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .status-right {
             padding: 4px 12px;
             background: rgba(255, 255, 255, 0.1);
             color: var(--text-color);
+            white-space: nowrap;
         }
 
         /* Menu Rows OhMyPosh style */
@@ -212,7 +241,7 @@
 
     <div id="three-container"></div>
 
-    <div class="ui-container">
+    <div class="ui-container p-4 md:p-8">
         
         <!-- Main Menu -->
         <div id="main-menu" class="terminal-window">
@@ -328,16 +357,42 @@
             </div>
 
             <div class="status-bar">
-                <div class="status-mode" style="background:#ff5f56; color:#fff;">TESTING</div>
-                <div class="status-info">
-                    <span>In esecuzione...</span>
+                <div id="test-status-mode" class="status-mode" style="background:#ffbd2e; color:#000;">TESTING</div>
+                <div id="test-status-info" class="status-info">
+                    <span>Inizializzazione ambiente di test...</span>
                 </div>
                 <div class="status-right">[:m] Esci</div>
             </div>
         </div>
+
+        <!-- Finestra Terminale per il GIOCO -->
+        <div id="game-terminal" class="terminal-window game-window hidden">
+            <div class="terminal-header">
+                <div class="window-controls">
+                    <div class="window-dot dot-red"></div>
+                    <div class="window-dot dot-yellow"></div>
+                    <div class="window-dot dot-green"></div>
+                </div>
+                <div id="game-terminal-title" class="terminal-title">~/vim-y-games/run</div>
+            </div>
+            
+            <!-- Contenitore del Canvas -->
+            <div id="game-container" class="terminal-body p-0 relative overflow-hidden flex-grow" style="background: rgba(10,15,10,0.6);">
+                <canvas id="gameCanvas" class="absolute inset-0 w-full h-full"></canvas>
+            </div>
+
+            <!-- Status Bar In-Game -->
+            <div class="status-bar">
+                <div class="status-mode" id="game-status-mode" style="background:#7aa2f7; color:#000;">PLAYING</div>
+                <div class="status-info" id="game-status-info">
+                    <span>Avvio modulo di simulazione in corso...</span>
+                </div>
+                <div class="status-right font-bold" id="game-status-right">Score: 0 | Best: 0</div>
+            </div>
+        </div>
         
-        <!-- Schermata Fine Partita -->
-        <div id="game-over" class="terminal-window hidden" style="max-width: 400px; text-align: center;">
+        <!-- Schermata Fine Partita (Overlay modale) -->
+        <div id="game-over" class="terminal-window hidden absolute z-50" style="max-width: 400px; text-align: center; top: 50%; left: 50%; transform: translate(-50%, -50%);">
             <div class="terminal-header">
                 <div class="window-controls">
                     <div class="window-dot dot-red"></div>
@@ -367,18 +422,7 @@
             </div>
         </div>
 
-        <!-- Score HUD in-game -->
-        <div id="hud" class="absolute top-6 left-6 flex flex-col hidden tabular-nums drop-shadow-md z-10">
-            <div class="text-xl font-bold px-3 py-1 rounded border" style="background: rgba(var(--term-bg-rgb), var(--term-bg-alpha)); border-color: rgba(255,255,255,0.1); backdrop-filter: blur(12px);">
-                <span class="text-[var(--primary-color)]">SCORE</span> <span id="current-score">0</span>
-            </div>
-            <div class="text-xs opacity-80 mt-2 px-3">
-                BEST (<span id="hud-mode"></span>): <span id="best-score">0</span>
-            </div>
-        </div>
     </div>
-
-    <canvas id="gameCanvas" style="position: relative; z-index: 0;"></canvas>
 
     <script>
         /**
@@ -802,7 +846,7 @@
                     this.y += this.v;
                 } else {
                     if (inputKeys.up) this.v -= SETTINGS.JKMODE.PHYSICS.ACCEL;
-                    if (inputKeys.down) this.v += SETTINGS.JKMODE.PHYSICS.ACCEL;
+                    if (inputKeys.down) this.v -= SETTINGS.JKMODE.PHYSICS.ACCEL;
                     if (actionEvent === 'swipe-up') this.v -= 12;
                     if (actionEvent === 'swipe-down') this.v += 12;
                     if (actionEvent === 'jump') this.v -= 5;
@@ -935,7 +979,7 @@
                 this.passed = 0;
                 this.failed = 0;
                 this.logs = [];
-                this.logs.push("=> Inizio esecuzione suite di test...");
+                this.logs.push("=> Inizio esecuzione suite di test completa...");
 
                 const backupMode = SETTINGS.JKMODE.MODE;
                 const backupGravity = SETTINGS.JKMODE.PHYSICS.GRAVITY;
@@ -944,36 +988,63 @@
                 const backupFriction = SETTINGS.JKMODE.PHYSICS.FRICTION;
 
                 try {
-                    this.logs.push("<div class='test-group'>=== TEST JKMODE ===</div>");
+                    this.logs.push("<div class='test-group'>=== TEST JKMODE (Fisica e Ostacoli) ===</div>");
+                    
                     let p = new Player(500);
-                    this.assert(p.y === 250 && p.v === 0, "Player inizializzato al centro");
+                    this.assert(p.y === 250 && p.v === 0, "Player inizializzato correttamente al centro.");
 
                     SETTINGS.JKMODE.MODE = 'gravity';
                     SETTINGS.JKMODE.PHYSICS.GRAVITY = 1.0;
                     p = new Player(500);
                     p.update(500, {up:false, down:false}, null);
-                    this.assert(p.v === 1.0 && p.y === 251, "Caduta libera con gravità");
+                    this.assert(p.v === 1.0 && p.y === 251, "Fisica: Caduta libera con gravità funzionante.");
 
                     SETTINGS.JKMODE.MODE = 'zero-g';
                     SETTINGS.JKMODE.PHYSICS.ACCEL = 2.0;
                     SETTINGS.JKMODE.PHYSICS.FRICTION = 0.5;
                     p = new Player(500);
                     p.update(500, {up:true, down:false}, null);
-                    this.assert(p.v === -1.0 && p.y === 249, "Movimento in Zero-G");
+                    this.assert(p.v === -1.0 && p.y === 249, "Fisica: Movimento in Zero-G funzionante.");
 
                     p = new Player(500); p.y = 5; p.v = -10;
-                    this.assert(p.update(500, {up:false, down:false}, null) === true, "Collisione col Soffitto");
+                    this.assert(p.update(500, {up:false, down:false}, null) === true, "Collisioni: Toccando il soffitto restituisce True.");
 
-                    this.logs.push("<div class='test-group'>=== TEST /JUMP ===</div>");
+                    p = new Player(500); p.y = 480; p.v = 10; p.size = 28;
+                    this.assert(p.update(500, {up:false, down:false}, null) === true, "Collisioni: Toccando il pavimento restituisce True.");
+
+                    p = new Player(500); p.x = 100; p.y = 150; p.size = 28;
+                    let pipe = new Pipe(100, 500);
+                    pipe.x = 100; pipe.w = 50; pipe.top = 100; pipe.gap = 200; 
+                    this.assert(pipe.collides(p, 500) === false, "Collisioni: Passaggio attraverso il gap del tubo (Safe).");
+
+                    p.y = 90;
+                    this.assert(pipe.collides(p, 500) === true, "Collisioni: Impatto con il tubo superiore rilevato.");
+
+                    p = new Player(500); p.x = 100; p.y = 100; p.size = 20; 
+                    let met = new Meteor(100, 500); met.x = 110; met.y = 110; met.size = 30; 
+                    this.assert(met.collides(p, 500) === true, "Collisioni: Impatto circolare con il Meteorite rilevato.");
+
+
+                    this.logs.push("<div class='test-group'>=== TEST /JUMP (Meccaniche e Ricerca) ===</div>");
+                    
                     let mockPlatforms = [
                         { targetWord: "public", y: 400 },
                         { targetWord: "if", y: 300 },
-                        { targetWord: "return", y: 200 }
+                        { targetWord: "return", y: 200 },
+                        { targetWord: "WriteLine", y: 100 },
+                        { targetWord: "class", y: -100 }
                     ];
+                    let mockCameraY = 0;
+                    let mockCanvasHeight = 500;
 
                     let performSearch = (buffer, currentIndex) => {
                         let searchWord = buffer.substring(1).toLowerCase();
                         for (let i = currentIndex + 1; i < mockPlatforms.length; i++) {
+                            let screenY = mockPlatforms[i].y + mockCameraY;
+                            if (screenY < -30 || screenY > mockCanvasHeight + 30) {
+                                if (screenY < -30) break;
+                                continue;
+                            }
                             const platWord = mockPlatforms[i].targetWord.toLowerCase();
                             if (platWord === searchWord || (searchWord.length >= 3 && platWord.startsWith(searchWord))) {
                                 return i;
@@ -982,12 +1053,44 @@
                         return -1;
                     };
 
-                    this.assert(performSearch("/pub", -1) === 0, "Match corretto keyword: '/pub' -> 'public'");
-                    this.assert(performSearch("/i", 0) === -1, "Nessun salto anticipato per parole corte");
-                    this.assert(performSearch("/if", 0) === 1, "Match esatto per parole corte funzionante: '/if' -> 'if'");
+                    this.assert(performSearch("/pub", -1) === 0, "Ricerca: Match corretto sulle prime 3 lettere ('/pub' -> 'public').");
+                    this.assert(performSearch("/i", 0) === -1, "Ricerca: Nessun salto prematuro per parole corte ('/i' ignora 'if').");
+                    this.assert(performSearch("/if", 0) === 1, "Ricerca: Match esatto per parole corte funzionante ('/if' -> 'if').");
+                    this.assert(performSearch("/ret", 1) === 2, "Ricerca: Corretto salto della piattaforma successiva ('/ret' -> 'return').");
+                    this.assert(performSearch("/wri", 2) === 3, "Ricerca: Ricerca mirata su Snippets ('/wri' -> 'WriteLine').");
+                    this.assert(performSearch("/xyz", 1) === -1, "Ricerca: Error handling per match non trovati ('/xyz').");
+                    this.assert(performSearch("/cla", 3) === -1, "Camera: Piattaforma fuori dallo schermo visibile ignorata ('/cla' -> 'class').");
+
+                    let jumpTime = 60;
+                    jumpTime--;
+                    this.assert(jumpTime === 59, "Timer: Il timer del livello diminuisce regolarmente a ogni frame.");
+
+
+                    this.logs.push("<div class='test-group'>=== TEST CASI LIMITE (Edge Cases) ===</div>");
+                    
+                    // Limiti Velocità
+                    SETTINGS.JKMODE.PHYSICS.MAX_VELOCITY = 15;
+                    p = new Player(500);
+                    p.v = 100; // Imposta velocità artificialmente altissima
+                    p.update(500, {up:false, down:false}, null);
+                    this.assert(p.v === 15, "Fisica: Clamp velocità massima positiva (terminal velocity).");
+                    
+                    p.v = -100;
+                    p.update(500, {up:false, down:false}, null);
+                    this.assert(p.v === -15, "Fisica: Clamp velocità massima negativa (boost cap).");
+
+                    // Out of Bounds estremi
+                    p.y = -5000;
+                    this.assert(p.update(500, {up:false, down:false}, null) === true, "Sicurezza: Uscita mappa estrema superiore gestita (SEGFAULT).");
+                    p.y = 5000;
+                    this.assert(p.update(500, {up:false, down:false}, null) === true, "Sicurezza: Uscita mappa estrema inferiore gestita (SEGFAULT).");
+
+                    // Test Buffer Jump
+                    this.assert(performSearch("/", 0) === -1, "Sicurezza /Jump: Buffer vuoto ignorato ('/').");
+                    this.assert(performSearch("/ReT", 1) === 2, "Sicurezza /Jump: Case-insensitivity garantita su input misti ('/ReT').");
 
                 } catch (e) {
-                    this.logs.push(`<span class="test-fail">[ERRORE FATALE]</span> Eccezione: ${e.message}`);
+                    this.logs.push(`<span class="test-fail">[ERRORE FATALE]</span> Eccezione durante i test: ${e.message}`);
                 }
 
                 SETTINGS.JKMODE.MODE = backupMode;
@@ -999,7 +1102,11 @@
                 this.logs.push("<br>----------------------------------------");
                 this.logs.push(`Risultati: <span class="test-pass">${this.passed} PASS</span> | <span class="test-fail">${this.failed} FAIL</span>`);
                 
-                return this.logs;
+                return {
+                    logs: this.logs,
+                    passed: this.passed,
+                    failed: this.failed
+                };
             }
         }
 
@@ -1033,8 +1140,9 @@
                 this._setupUI();
                 this.renderMainMenu();
                 this.renderGlobalMenu();
+                
                 window.addEventListener('resize', () => this.onResize());
-                this.onResize();
+                
                 this.run();
             }
 
@@ -1276,11 +1384,10 @@
                 document.getElementById('global-menu').classList.add('hidden');
                 document.getElementById('game-over').classList.add('hidden');
                 document.getElementById('test-runner').classList.add('hidden');
-                document.getElementById('hud').classList.add('hidden');
+                document.getElementById('game-terminal').classList.add('hidden');
                 document.getElementById('main-menu').classList.remove('hidden');
                 
                 this.obstacles = [];
-                this.player = new Player(this.canvas.height);
                 this.renderMainMenu();
             }
 
@@ -1292,7 +1399,7 @@
                 document.getElementById('config-menu').classList.add('hidden');
                 document.getElementById('game-over').classList.add('hidden');
                 document.getElementById('test-runner').classList.add('hidden');
-                document.getElementById('hud').classList.add('hidden');
+                document.getElementById('game-terminal').classList.add('hidden');
                 document.getElementById('global-menu').classList.remove('hidden');
                 
                 this.renderGlobalMenu();
@@ -1307,11 +1414,32 @@
                 document.getElementById('test-runner').classList.remove('hidden');
                 
                 const outputDiv = document.getElementById('test-output');
-                outputDiv.innerHTML = "Esecuzione in corso...<br>";
+                const statusMode = document.getElementById('test-status-mode');
+                const statusInfo = document.querySelector('#test-status-info span');
+
+                // UI Status: TESTING in corso
+                outputDiv.innerHTML = "Avvio modulo di test integrato...<br>";
+                statusMode.innerText = 'TESTING';
+                statusMode.style.background = '#ffbd2e'; // Giallo testing
+                statusMode.style.color = '#000';
+                statusInfo.innerText = 'Esecuzione unit test in corso...';
                 
                 setTimeout(() => {
-                    const logs = this.testSuite.runTests();
-                    outputDiv.innerHTML = logs.join('<br>');
+                    const results = this.testSuite.runTests();
+                    outputDiv.innerHTML = results.logs.join('<br>');
+
+                    // Aggiornamento Dinamico della UI Status Bar
+                    if (results.failed === 0) {
+                        statusMode.innerText = 'SUCCESS';
+                        statusMode.style.background = '#27c93f'; // Verde successo
+                        statusMode.style.color = '#000';
+                        statusInfo.innerText = `Tutti i ${results.passed} test sono passati.`;
+                    } else {
+                        statusMode.innerText = 'FAIL';
+                        statusMode.style.background = '#ff5f56'; // Rosso fallimento
+                        statusMode.style.color = '#fff';
+                        statusInfo.innerText = `Rilevati ${results.failed} errori critici.`;
+                    }
                 }, 500);
             }
 
@@ -1402,11 +1530,10 @@
                 document.getElementById('main-menu').classList.add('hidden');
                 document.getElementById('global-menu').classList.add('hidden');
                 document.getElementById('game-over').classList.add('hidden');
-                document.getElementById('hud').classList.add('hidden');
+                document.getElementById('game-terminal').classList.add('hidden');
                 document.getElementById('config-menu').classList.remove('hidden');
                 
                 this.obstacles = [];
-                this.player = new Player(this.canvas.height);
                 this.renderConfigMenu();
             }
 
@@ -1429,13 +1556,31 @@
             }
 
             onResize() {
-                this.canvas.width = window.innerWidth;
-                this.canvas.height = window.innerHeight;
+                const gameContainer = document.getElementById('game-container');
+                if (gameContainer && !document.getElementById('game-terminal').classList.contains('hidden')) {
+                    this.canvas.width = gameContainer.clientWidth;
+                    this.canvas.height = gameContainer.clientHeight;
+                } else {
+                    this.canvas.width = window.innerWidth;
+                    this.canvas.height = window.innerHeight;
+                }
             }
 
             /* --- GESTIONE START GIOCHI --- */
             start() {
                 if (window.threeBg) window.threeBg.zoomTo(30); 
+
+                // Mostra Finestra Terminale del Gioco
+                document.getElementById('main-menu').classList.add('hidden');
+                document.getElementById('config-menu').classList.add('hidden');
+                document.getElementById('global-menu').classList.add('hidden');
+                document.getElementById('game-over').classList.add('hidden');
+                
+                const termWindow = document.getElementById('game-terminal');
+                termWindow.classList.remove('hidden');
+                
+                // Forza un resize del canvas basato sulle dimensioni attuali del terminal window in-game
+                this.onResize();
 
                 if (SETTINGS.GAME === 'jump') {
                     this.startJumpMode();
@@ -1450,15 +1595,11 @@
                 this.ticks = 0;
                 this.currentAction = null;
                 
-                document.getElementById('main-menu').classList.add('hidden');
-                document.getElementById('config-menu').classList.add('hidden');
-                document.getElementById('global-menu').classList.add('hidden');
-                document.getElementById('game-over').classList.add('hidden');
-                document.getElementById('hud').classList.remove('hidden');
-                
-                const currentType = SETTINGS.JKMODE.OBSTACLE_TYPE;
-                document.getElementById('hud-mode').innerText = currentType.toUpperCase();
-                document.getElementById('best-score').innerText = this.highScores[currentType];
+                document.getElementById('game-terminal-title').innerText = '~/vim-y-games/run_jkmode';
+                document.getElementById('game-status-mode').innerText = 'NORMAL';
+                document.getElementById('game-status-mode').style.background = '#00ff41';
+                document.getElementById('game-status-mode').style.color = '#000';
+                document.getElementById('game-status-info').innerText = '[k] Jump / [j] Dive';
                 
                 this.syncUI();
             }
@@ -1517,11 +1658,25 @@
                     x: this.jumpPlatforms[this.jumpNumPlatforms - 1].x + 10
                 };
 
-                document.getElementById('main-menu').classList.add('hidden');
-                document.getElementById('config-menu').classList.add('hidden');
-                document.getElementById('global-menu').classList.add('hidden');
-                document.getElementById('game-over').classList.add('hidden');
-                document.getElementById('hud').classList.add('hidden'); 
+                document.getElementById('game-terminal-title').innerText = `~/vim-y-games/run_jump --lang=${langId}`;
+                document.getElementById('game-status-mode').innerText = 'SEARCH';
+                document.getElementById('game-status-mode').style.background = '#ffbd2e';
+                document.getElementById('game-status-mode').style.color = '#000';
+                
+                this.updateJumpStatus();
+            }
+
+            updateJumpStatus() {
+                if (this.state === 'PLAYING') {
+                    document.getElementById('game-status-info').innerText = `Cerca: ${this.jumpBuffer}_`;
+                } else if (this.state === 'AT_DOOR') {
+                    document.getElementById('game-status-info').innerText = `Azione richiesta.`;
+                } else if (this.state === 'DOOR_CLOSED') {
+                    document.getElementById('game-status-info').innerText = `Timeout.`;
+                }
+                
+                const timeSec = Math.max(0, Math.ceil(this.jumpTimeLeft / 60));
+                document.getElementById('game-status-right').innerText = `Liv: ${this.jumpLevel} | Tempo: ${timeSec}s`;
             }
 
             handleJumpInput(key, e) {
@@ -1566,13 +1721,17 @@
                         }
                     }
                 }
+                this.updateJumpStatus();
             }
 
             updateJumpMode() {
                 if (this.state === 'PLAYING') {
                     this.jumpTimeLeft--;
+                    if (this.jumpTimeLeft % 60 === 0) this.updateJumpStatus(); // Aggiorna HUD ogni secondo
+
                     if (this.jumpTimeLeft <= 0) {
                         this.state = 'DOOR_CLOSED';
+                        this.updateJumpStatus();
                     }
                 }
 
@@ -1646,46 +1805,42 @@
 
                 ctx.restore();
 
-                // Custom HUD per Jump
-                ctx.fillStyle = SETTINGS.THEME['--text-color'];
-                ctx.font = `bold 20px ${SETTINGS.THEME['--font-family']}`;
-                ctx.fillText(`Livello: ${this.jumpLevel}`, 20, 40);
-                
-                const timeColor = this.jumpTimeLeft < 180 ? '#ff5f56' : SETTINGS.THEME['--text-color'];
-                ctx.fillStyle = timeColor;
-                ctx.fillText(`Tempo: ${Math.max(0, Math.ceil(this.jumpTimeLeft / 60))}s`, 20, 70);
-
-                ctx.fillStyle = SETTINGS.THEME['--text-color'];
-                ctx.fillText(`Cerca: ${this.jumpBuffer}_`, 20, canvas.height - 30);
-
                 if (this.state === 'AT_DOOR') {
-                    this.drawOverlayBox(ctx, "VIM VITTORIA!", "Premi CTRL+[ per entrare nella porta");
+                    this.drawOverlayBox(ctx, "VIM VITTORIA!", "Premi CTRL+[ per entrare");
                 } else if (this.state === 'DOOR_CLOSED') {
-                    this.drawOverlayBox(ctx, "PORTA CHIUSA!", "Tempo scaduto. Premi CTRL+o per ritornare indietro");
+                    this.drawOverlayBox(ctx, "PORTA CHIUSA!", "Tempo scaduto. Premi CTRL+o per ritornare");
                 }
             }
 
             drawOverlayBox(ctx, title, subtitle) {
                 const cx = this.canvas.width / 2;
                 const cy = this.canvas.height / 2;
-                ctx.fillStyle = 'rgba(10,15,10,0.85)';
-                ctx.fillRect(cx - 250, cy - 80, 500, 160);
+                const boxWidth = Math.min(500, this.canvas.width * 0.9);
+                const boxHeight = 140;
+
+                ctx.fillStyle = 'rgba(10,15,10,0.95)';
+                ctx.fillRect(cx - boxWidth/2, cy - boxHeight/2, boxWidth, boxHeight);
                 ctx.strokeStyle = SETTINGS.THEME['--primary-color'];
-                ctx.strokeRect(cx - 250, cy - 80, 500, 160);
+                ctx.strokeRect(cx - boxWidth/2, cy - boxHeight/2, boxWidth, boxHeight);
 
                 ctx.fillStyle = SETTINGS.THEME['--primary-color'];
                 ctx.textAlign = 'center';
-                ctx.font = `bold 28px ${SETTINGS.THEME['--font-family']}`;
+                
+                const titleSize = this.canvas.width < 500 ? 20 : 28;
+                const subSize = this.canvas.width < 500 ? 12 : 16;
+
+                ctx.font = `bold ${titleSize}px ${SETTINGS.THEME['--font-family']}`;
                 ctx.fillText(title, cx, cy - 10);
                 ctx.fillStyle = SETTINGS.THEME['--text-color'];
-                ctx.font = `16px ${SETTINGS.THEME['--font-family']}`;
+                ctx.font = `${subSize}px ${SETTINGS.THEME['--font-family']}`;
                 ctx.fillText(subtitle, cx, cy + 30);
                 ctx.textAlign = 'left';
             }
 
             /* --- LOGICA JKMODE --- */
             syncUI() {
-                document.getElementById('current-score').innerText = this.score;
+                const currentType = SETTINGS.JKMODE.OBSTACLE_TYPE;
+                document.getElementById('game-status-right').innerText = `Score: ${this.score} | Best (${currentType.toUpperCase()}): ${this.highScores[currentType]}`;
             }
 
             die() {
@@ -1770,8 +1925,8 @@
                     return; 
                 }
                 
-                ctx.fillStyle = 'rgba(10, 15, 10, 0.75)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                // Clear con trasparenza per far emergere i pixel sotto il canvas del terminale
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
 
                 ctx.strokeStyle = SETTINGS.THEME['--grid-color'];
                 ctx.lineWidth = 1;
