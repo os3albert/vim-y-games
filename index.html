@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Vim-y Games | L'Ecosistema Arcade da Terminale</title>
     
-    <!-- Favicon SVG: Terminale con dettagli Viola Pastello -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='5' y='15' width='90' height='70' rx='12' fill='%231e1e24' stroke='%23bd93f9' stroke-width='6'/><path d='M 20 35 L 35 50 L 20 65' fill='none' stroke='%23bd93f9' stroke-width='8' stroke-linecap='round' stroke-linejoin='round'/><line x1='45' y1='65' x2='75' y2='65' stroke='%23bd93f9' stroke-width='8' stroke-linecap='round'/></svg>">
+    <!-- Favicon SVG: Terminale con dettagli Verde Pastello -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='5' y='15' width='90' height='70' rx='12' fill='%231e1e24' stroke='%23a8e6cf' stroke-width='6'/><path d='M 20 35 L 35 50 L 20 65' fill='none' stroke='%23a8e6cf' stroke-width='8' stroke-linecap='round' stroke-linejoin='round'/><line x1='45' y1='65' x2='75' y2='65' stroke='%23a8e6cf' stroke-width='8' stroke-linecap='round'/></svg>">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        /* Import Font: Fira Code per TUI e codice */
-        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&display=swap');
+        /* Import Font: Fira Code per codice e Inter per interfaccia moderna */
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Inter:wght@400;500;700;800&display=swap');
         
         :root {
             --bg-color: #000000;
@@ -22,7 +22,8 @@
             --term-bg-rgb: 10, 15, 10;
             --term-bg-alpha: 0.15; /* Ultra Glassmorphism */
             --text-color: #ffffff;
-            --font-family: 'Fira Code', monospace;
+            --font-family: 'Inter', sans-serif;
+            --font-mono: 'Fira Code', monospace;
             --border-color: rgba(255, 255, 255, 0.1);
             --highlight-color: #fffb00;
         }
@@ -36,6 +37,10 @@
             color: var(--text-color);
             touch-action: none;
             transition: background-color 0.5s ease, color 0.5s ease;
+        }
+
+        .font-mono {
+            font-family: var(--font-mono) !important;
         }
 
         canvas { display: block; }
@@ -154,6 +159,7 @@
             text-overflow: ellipsis;
             font-weight: 500;
             letter-spacing: 0.5px;
+            font-family: var(--font-mono);
         }
 
         .terminal-body {
@@ -242,10 +248,11 @@
             display: inline-block;
             min-width: 50px;
             text-align: center;
+            font-family: var(--font-family);
         }
 
-        .menu-label { width: 160px; display: inline-block; }
-        .menu-value { color: var(--primary-color); font-weight: bold; }
+        .menu-label { width: 160px; display: inline-block; font-family: var(--font-family); }
+        .menu-value { color: var(--primary-color); font-weight: bold; font-family: var(--font-family); }
         .menu-value-dim { opacity: 0.4; font-weight: normal; }
 
         * { scrollbar-width: thin; scrollbar-color: var(--primary-color) transparent; }
@@ -269,6 +276,7 @@
             cursor: pointer;
             background: rgba(128,128,128,0.1);
             font-weight: bold;
+            font-family: var(--font-family);
         }
         .custom-btn:hover { background: var(--secondary-color); border-color: var(--primary-color); transform: translateY(-2px); }
     </style>
@@ -295,7 +303,7 @@
             </div>
             
             <div class="terminal-body">
-                <div class="mb-8 text-sm">
+                <div class="mb-8 text-sm font-mono">
                     <span class="text-[var(--primary-color)] font-bold">os3albert@linux</span><span>:</span><span class="font-bold" style="color:#4299e1;">~/vim-y-games</span>$ ./start.sh<br>
                     <span class="opacity-60 italic mt-2 inline-block">Connessione alla rete dati stabilita. Seleziona modulo:</span>
                 </div>
@@ -309,7 +317,7 @@
                     <span>[j/k] Naviga</span>
                     <span>[Enter] Esegui</span>
                 </div>
-                <div class="status-right">utf-8</div>
+                <div class="status-right font-mono">utf-8</div>
             </div>
         </div>
 
@@ -325,7 +333,7 @@
             </div>
             
             <div class="terminal-body">
-                <div class="mb-8 text-sm">
+                <div class="mb-8 text-sm font-mono">
                     <span class="text-[var(--primary-color)] font-bold">os3albert@linux</span><span>:</span><span class="font-bold" style="color:#4299e1;">~/config</span>$ nano settings.conf
                 </div>
                 
@@ -339,7 +347,7 @@
                     <span>[h/l] Modifica</span>
                     <span>[Enter] Azione</span>
                 </div>
-                <div class="status-right">settings.conf</div>
+                <div class="status-right font-mono">settings.conf</div>
             </div>
         </div>
 
@@ -355,7 +363,7 @@
             </div>
             
             <div class="terminal-body">
-                <div class="mb-8 text-sm">
+                <div class="mb-8 text-sm font-mono">
                     <span class="opacity-60 italic">// Configurazione parametri di istanziazione</span>
                 </div>
                 
@@ -369,7 +377,7 @@
                     <span>[h/l] Modifica</span>
                     <span>[Enter] Conferma</span>
                 </div>
-                <div class="status-right">env.json</div>
+                <div class="status-right font-mono">env.json</div>
             </div>
         </div>
 
@@ -393,7 +401,7 @@
                 <div id="test-status-info" class="status-info">
                     <span>Inizializzazione ambiente di test...</span>
                 </div>
-                <div class="status-right">[:m] Esci</div>
+                <div class="status-right font-mono">[:m] Esci</div>
             </div>
         </div>
 
@@ -463,10 +471,10 @@
         };
 
         const THEMES = {
-            matrix: { isLight: false, '--bg-color': '#000000', '--primary-color': '#00ff41', '--secondary-color': 'rgba(0, 255, 65, 0.2)', '--grid-color': 'rgba(0, 255, 65, 0.05)', '--term-bg-rgb': '0, 10, 0', '--text-color': '#ffffff', '--border-color': 'rgba(0, 255, 65, 0.3)', '--highlight-color': '#fffb00' },
-            tokyo: { isLight: false, '--bg-color': '#0f0f14', '--primary-color': '#7aa2f7', '--secondary-color': 'rgba(122, 162, 247, 0.2)', '--grid-color': 'rgba(122, 162, 247, 0.05)', '--term-bg-rgb': '15, 15, 20', '--text-color': '#ffffff', '--border-color': 'rgba(122, 162, 247, 0.3)', '--highlight-color': '#f7768e' },
-            dracula: { isLight: false, '--bg-color': '#1e1e24', '--primary-color': '#ff79c6', '--secondary-color': 'rgba(255, 121, 198, 0.2)', '--grid-color': 'rgba(255, 121, 198, 0.05)', '--term-bg-rgb': '20, 20, 25', '--text-color': '#f8f8f2', '--border-color': 'rgba(255, 121, 198, 0.3)', '--highlight-color': '#50fa7b' },
-            pastel: { isLight: true, '--bg-color': '#f4f5f7', '--primary-color': '#ff79c6', '--secondary-color': 'rgba(255, 121, 198, 0.2)', '--grid-color': 'rgba(0, 0, 0, 0.05)', '--term-bg-rgb': '255, 255, 255', '--text-color': '#2d3436', '--border-color': 'rgba(0, 0, 0, 0.1)', '--highlight-color': '#ff5555' }
+            matrix: { isLight: false, '--bg-color': '#000000', '--primary-color': '#00ff41', '--secondary-color': 'rgba(0, 255, 65, 0.2)', '--grid-color': 'rgba(0, 255, 65, 0.05)', '--term-bg-rgb': '0, 10, 0', '--text-color': '#ffffff', '--border-color': 'rgba(0, 255, 65, 0.3)', '--highlight-color': '#fffb00', '--font-family': '"Inter", sans-serif', '--font-mono': '"Fira Code", monospace' },
+            tokyo: { isLight: false, '--bg-color': '#0f0f14', '--primary-color': '#7aa2f7', '--secondary-color': 'rgba(122, 162, 247, 0.2)', '--grid-color': 'rgba(122, 162, 247, 0.05)', '--term-bg-rgb': '15, 15, 20', '--text-color': '#ffffff', '--border-color': 'rgba(122, 162, 247, 0.3)', '--highlight-color': '#f7768e', '--font-family': '"Inter", sans-serif', '--font-mono': '"Fira Code", monospace' },
+            dracula: { isLight: false, '--bg-color': '#1e1e24', '--primary-color': '#ff79c6', '--secondary-color': 'rgba(255, 121, 198, 0.2)', '--grid-color': 'rgba(255, 121, 198, 0.05)', '--term-bg-rgb': '20, 20, 25', '--text-color': '#f8f8f2', '--border-color': 'rgba(255, 121, 198, 0.3)', '--highlight-color': '#50fa7b', '--font-family': '"Inter", sans-serif', '--font-mono': '"Fira Code", monospace' },
+            pastel: { isLight: true, '--bg-color': '#f4f5f7', '--primary-color': '#ff79c6', '--secondary-color': 'rgba(255, 121, 198, 0.2)', '--grid-color': 'rgba(0, 0, 0, 0.05)', '--term-bg-rgb': '255, 255, 255', '--text-color': '#2d3436', '--border-color': 'rgba(0, 0, 0, 0.1)', '--highlight-color': '#ff5555', '--font-family': '"Inter", sans-serif', '--font-mono': '"Fira Code", monospace' }
         };
 
         const DIFFICULTIES = {
@@ -888,7 +896,7 @@
                 ctx.strokeRect(this.x, bY, this.w, bH);
 
                 ctx.fillStyle = SETTINGS.THEME['--text-color'];
-                ctx.font = `10px ${SETTINGS.THEME['--font-family']}`;
+                ctx.font = `10px ${SETTINGS.THEME['--font-mono']}`;
                 if (SETTINGS.THEME['--text-color'] !== '#212121') { 
                     ctx.fillText('while(1)', this.x + 10, this.top - 10);
                     ctx.fillText('return 0', this.x + 10, bY + 20);
@@ -1828,7 +1836,7 @@
                     ctx.strokeRect(plat.x, plat.y, platW, 20);
                     
                     const fontSize = plat.word.length > 15 ? 12 : 14;
-                    ctx.font = `${fontSize}px ${SETTINGS.THEME['--font-family']}`;
+                    ctx.font = `${fontSize}px ${SETTINGS.THEME['--font-mono']}`;
                     
                     if (SETTINGS.JUMP.CONTENT === 'snippets' && plat.parts && plat.parts.prefix !== undefined) {
                         let currentX = plat.x + 10;
