@@ -62,12 +62,12 @@
         .section {
             min-height: 100vh;
             display: flex;
-            align-items: center;
+            flex-direction: column;
+            justify-content: center;
             opacity: 0.1;
             transform: translateY(30px);
             transition: all 1s ease-out;
-            padding: 2rem;
-            /* Evita che l'header copra l'inizio della sezione durante lo scroll */
+            padding: 4rem 2rem;
             scroll-margin-top: 80px; 
         }
         .section.is-visible {
@@ -75,9 +75,31 @@
             transform: translateY(0);
         }
         
-        /* Aggiunta padding alla hero per evitare sovrapposizione header */
         #home {
             padding-top: 100px;
+        }
+
+        .portfolio-card:hover .project-overlay {
+            opacity: 1;
+        }
+        .project-overlay {
+            transition: opacity 0.4s ease;
+        }
+
+        /* Language Switcher Styling */
+        .lang-select {
+            background: transparent;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            outline: none;
+            cursor: pointer;
+        }
+        .lang-select option {
+            background: #0a0a0c;
+            color: white;
         }
     </style>
 </head>
@@ -90,13 +112,24 @@
         <div class="text-xl font-bold tracking-tighter cursor-pointer" onclick="navigateTo('home')">
             <span class="text-indigo-500">Global</span>Link.
         </div>
-        <div class="hidden md:flex gap-8 text-sm uppercase tracking-widest font-semibold">
-            <a onclick="navigateTo('home')" class="nav-link active-link" id="nav-home">Home</a>
-            <a onclick="navigateTo('about')" class="nav-link" id="nav-about">Chi Sono</a>
-            <a onclick="navigateTo('services')" class="nav-link" id="nav-services">Servizi</a>
-            <a onclick="navigateTo('contact')" class="nav-link" id="nav-contact">Contatti</a>
+        
+        <div class="hidden lg:flex gap-8 text-sm uppercase tracking-widest font-semibold items-center">
+            <a onclick="navigateTo('home')" class="nav-link active-link" id="nav-home" data-i18n="nav_home">Home</a>
+            <a onclick="navigateTo('about')" class="nav-link" id="nav-about" data-i18n="nav_about">Chi Sono</a>
+            <a onclick="navigateTo('services')" class="nav-link" id="nav-services" data-i18n="nav_services">Servizi</a>
+            <a onclick="navigateTo('portfolio')" class="nav-link" id="nav-portfolio" data-i18n="nav_portfolio">Portfolio</a>
+            <a onclick="navigateTo('contact')" class="nav-link" id="nav-contact" data-i18n="nav_contact">Contatti</a>
+            
+            <!-- Language Switcher -->
+            <select class="lang-select ml-4" id="langSwitcher" onchange="changeLanguage(this.value)">
+                <option value="it">IT</option>
+                <option value="en">EN</option>
+                <option value="fr">FR</option>
+                <option value="es">ES</option>
+            </select>
         </div>
-        <button onclick="navigateTo('contact')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-full text-sm font-bold transition interactive">
+
+        <button onclick="navigateTo('contact')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-full text-sm font-bold transition interactive" data-i18n="nav_cta">
             Lavoriamo Insieme
         </button>
     </nav>
@@ -107,13 +140,13 @@
         <!-- Home Section -->
         <section id="home" class="section is-visible px-8 md:px-24">
             <div class="max-w-2xl">
-                <h1 class="text-6xl md:text-8xl mb-6 leading-tight">Ponti di parole, <br><span class="italic text-indigo-400">senza confini.</span></h1>
-                <p class="text-lg text-slate-400 mb-8 leading-relaxed">
+                <h1 class="text-6xl md:text-8xl mb-6 leading-tight" data-i18n="home_title">Ponti di parole, <br><span class="italic text-indigo-400">senza confini.</span></h1>
+                <p class="text-lg text-slate-400 mb-8 leading-relaxed" data-i18n="home_desc">
                     Traduzione professionale e localizzazione di alta qualità. Trasformo le tue idee in messaggi globali, mantenendo intatte le sfumature culturali e il tono originale.
                 </p>
                 <div class="flex gap-4 interactive">
-                    <button onclick="navigateTo('services')" class="bg-white text-black px-8 py-4 rounded-lg font-bold hover:bg-indigo-500 hover:text-white transition">Esplora i Servizi</button>
-                    <button class="border border-white/20 px-8 py-4 rounded-lg font-bold hover:bg-white/10 transition">Portfolio</button>
+                    <button onclick="navigateTo('services')" class="bg-white text-black px-8 py-4 rounded-lg font-bold hover:bg-indigo-500 hover:text-white transition" data-i18n="btn_services">Esplora i Servizi</button>
+                    <button onclick="navigateTo('portfolio')" class="border border-white/20 px-8 py-4 rounded-lg font-bold hover:bg-white/10 transition" data-i18n="btn_portfolio">Portfolio</button>
                 </div>
             </div>
         </section>
@@ -122,18 +155,15 @@
         <section id="about" class="section px-8 md:px-24">
             <div class="grid md:grid-cols-2 gap-12 items-center">
                 <div class="glass p-8 rounded-3xl interactive">
-                    <h2 class="text-4xl mb-6">Precisione Linguistica</h2>
-                    <p class="text-slate-300 mb-4">
+                    <h2 class="text-4xl mb-6" data-i18n="about_title">Precisione Linguistica</h2>
+                    <p class="text-slate-300 mb-4" data-i18n="about_desc">
                         Con oltre 10 anni di esperienza nel settore della traduzione tecnica e creativa, aiuto aziende e privati a comunicare con efficacia nei mercati internazionali.
                     </p>
                     <ul class="space-y-3 text-indigo-300 font-medium">
-                        <li>• Traduttrice Certificata (EN, FR, ES > IT)</li>
-                        <li>• Specialista in Localizzazione Software</li>
-                        <li>• Consulente Culturale</li>
+                        <li data-i18n="about_li1">• Traduttrice Certificata (EN, FR, ES > IT)</li>
+                        <li data-i18n="about_li2">• Specialista in Localizzazione Software</li>
+                        <li data-i18n="about_li3">• Consulente Culturale</li>
                     </ul>
-                </div>
-                <div class="hidden md:block">
-                    <!-- Spazio lasciato libero per l'interazione 3D -->
                 </div>
             </div>
         </section>
@@ -141,7 +171,7 @@
         <!-- Services Section -->
         <section id="services" class="section px-8 md:px-24">
             <div class="w-full">
-                <h2 class="text-5xl mb-12 text-center">I Miei Servizi</h2>
+                <h2 class="text-5xl mb-12 text-center" data-i18n="services_main_title">I Miei Servizi</h2>
                 <div class="grid md:grid-cols-3 gap-6 interactive">
                     <div class="glass p-8 rounded-2xl hover:border-indigo-500 transition cursor-default">
                         <div class="text-indigo-500 mb-4">
@@ -149,8 +179,8 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
                             </svg>
                         </div>
-                        <h3 class="text-xl font-bold mb-3">Traduzione Tecnica</h3>
-                        <p class="text-sm text-slate-400 leading-relaxed">Manuali, documentazione scientifica e testi legali tradotti con precisione terminologica assoluta.</p>
+                        <h3 class="text-xl font-bold mb-3" data-i18n="service1_title">Traduzione Tecnica</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed" data-i18n="service1_desc">Manuali, documentazione scientifica e testi legali tradotti con precisione terminologica assoluta.</p>
                     </div>
                     <div class="glass p-8 rounded-2xl hover:border-indigo-500 transition cursor-default">
                         <div class="text-indigo-500 mb-4">
@@ -158,8 +188,8 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9-9c1.657 0 3 4.03 3 9s-1.343 9-3 9m0-18c-1.657 0-3 4.03-3 9s1.343 9 3 9m-9-9h18" />
                             </svg>
                         </div>
-                        <h3 class="text-xl font-bold mb-3">Localizzazione Web</h3>
-                        <p class="text-sm text-slate-400 leading-relaxed">Adattamento di siti web e app per mercati specifici, ottimizzando la User Experience e la SEO locale.</p>
+                        <h3 class="text-xl font-bold mb-3" data-i18n="service2_title">Localizzazione Web</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed" data-i18n="service2_desc">Adattamento di siti web e app per mercati specifici, ottimizzando la User Experience e la SEO locale.</p>
                     </div>
                     <div class="glass p-8 rounded-2xl hover:border-indigo-500 transition cursor-default">
                         <div class="text-indigo-500 mb-4">
@@ -167,8 +197,64 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                             </svg>
                         </div>
-                        <h3 class="text-xl font-bold mb-3">Transcreation</h3>
-                        <p class="text-sm text-slate-400 leading-relaxed">Traduzione creativa per marketing e pubblicità che risuona con il cuore del tuo pubblico target.</p>
+                        <h3 class="text-xl font-bold mb-3" data-i18n="service3_title">Transcreation</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed" data-i18n="service3_desc">Traduzione creativa per marketing e pubblicità che risuona con il cuore del tuo pubblico target.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Portfolio Section -->
+        <section id="portfolio" class="section px-8 md:px-24">
+            <h2 class="text-5xl mb-12 text-center" data-i18n="portfolio_main_title">Portfolio Progetti</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 interactive">
+                <!-- Project 1 -->
+                <div class="group portfolio-card relative h-64 overflow-hidden rounded-2xl glass">
+                    <div class="absolute inset-0 bg-indigo-900/30 flex items-center justify-center">
+                         <span class="text-4xl">🌐</span>
+                    </div>
+                    <div class="project-overlay absolute inset-0 bg-indigo-600/90 opacity-0 p-6 flex flex-col justify-end">
+                        <h4 class="text-white font-bold text-lg" data-i18n="p1_title">Localizzazione App Tech</h4>
+                        <p class="text-white/80 text-sm" data-i18n="p1_desc">Adattamento UI/UX dall'Inglese all'Italiano per una startup Fintech leader a Londra.</p>
+                    </div>
+                </div>
+                <!-- Project 2 -->
+                <div class="group portfolio-card relative h-64 overflow-hidden rounded-2xl glass">
+                    <div class="absolute inset-0 bg-slate-800/30 flex items-center justify-center">
+                         <span class="text-4xl">📚</span>
+                    </div>
+                    <div class="project-overlay absolute inset-0 bg-indigo-600/90 opacity-0 p-6 flex flex-col justify-end">
+                        <h4 class="text-white font-bold text-lg" data-i18n="p2_title">Traduzione Editoriale</h4>
+                        <p class="text-white/80 text-sm" data-i18n="p2_desc">Traduzione integrale di un saggio accademico sulle scienze del linguaggio per Mondadori.</p>
+                    </div>
+                </div>
+                <!-- Project 3 -->
+                <div class="group portfolio-card relative h-64 overflow-hidden rounded-2xl glass">
+                    <div class="absolute inset-0 bg-blue-900/30 flex items-center justify-center">
+                         <span class="text-4xl">🛠️</span>
+                    </div>
+                    <div class="project-overlay absolute inset-0 bg-indigo-600/90 opacity-0 p-6 flex flex-col justify-end">
+                        <h4 class="text-white font-bold text-lg" data-i18n="p3_title">Manualistica Industriale</h4>
+                        <p class="text-white/80 text-sm" data-i18n="p3_desc">Oltre 50.000 parole tradotte per manuali d'uso di macchinari agricoli tedeschi.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Client Logos -->
+            <div class="mt-20">
+                <p class="text-center text-xs uppercase tracking-[0.3em] text-slate-500 mb-8" data-i18n="clients_label">Hanno scelto i miei servizi</p>
+                <div class="flex flex-wrap justify-center gap-12 opacity-40 grayscale hover:grayscale-0 transition-all duration-700 interactive">
+                    <div class="flex items-center gap-2 font-bold text-xl">
+                        <span class="text-indigo-500">◆</span> TECHCORP
+                    </div>
+                    <div class="flex items-center gap-2 font-bold text-xl">
+                        <span class="text-indigo-500">◆</span> LINGUA.EU
+                    </div>
+                    <div class="flex items-center gap-2 font-bold text-xl">
+                        <span class="text-indigo-500">◆</span> NEXUS LAB
+                    </div>
+                    <div class="flex items-center gap-2 font-bold text-xl">
+                        <span class="text-indigo-500">◆</span> GLOBAL PUBLISHING
                     </div>
                 </div>
             </div>
@@ -176,22 +262,22 @@
 
         <!-- Contact Section -->
         <section id="contact" class="section px-8 md:px-24">
-            <div class="max-w-xl glass p-10 rounded-3xl interactive">
-                <h2 class="text-4xl mb-8">Inizia un progetto</h2>
+            <div class="max-w-xl glass p-10 rounded-3xl interactive mx-auto md:mx-0">
+                <h2 class="text-4xl mb-8" data-i18n="contact_title">Inizia un progetto</h2>
                 <form class="space-y-4">
                     <div>
-                        <label class="block text-xs uppercase tracking-widest text-slate-500 mb-2">Nome</label>
+                        <label class="block text-xs uppercase tracking-widest text-slate-500 mb-2" data-i18n="form_name">Nome</label>
                         <input type="text" class="w-full bg-white/5 border border-white/10 p-3 rounded-lg focus:border-indigo-500 outline-none transition">
                     </div>
                     <div>
-                        <label class="block text-xs uppercase tracking-widest text-slate-500 mb-2">Email</label>
+                        <label class="block text-xs uppercase tracking-widest text-slate-500 mb-2" data-i18n="form_email">Email</label>
                         <input type="email" class="w-full bg-white/5 border border-white/10 p-3 rounded-lg focus:border-indigo-500 outline-none transition">
                     </div>
                     <div>
-                        <label class="block text-xs uppercase tracking-widest text-slate-500 mb-2">Messaggio</label>
+                        <label class="block text-xs uppercase tracking-widest text-slate-500 mb-2" data-i18n="form_msg">Messaggio</label>
                         <textarea class="w-full bg-white/5 border border-white/10 p-3 rounded-lg focus:border-indigo-500 outline-none transition h-32"></textarea>
                     </div>
-                    <button type="button" class="w-full bg-indigo-600 p-4 rounded-lg font-bold hover:bg-indigo-700 transition">Invia Richiesta</button>
+                    <button type="button" class="w-full bg-indigo-600 p-4 rounded-lg font-bold hover:bg-indigo-700 transition" data-i18n="form_btn">Invia Richiesta</button>
                 </form>
             </div>
         </section>
@@ -199,6 +285,110 @@
     </main>
 
     <script>
+        // --- TRANSLATIONS DATA ---
+        const translations = {
+            it: {
+                nav_home: "Home", nav_about: "Chi Sono", nav_services: "Servizi", nav_portfolio: "Portfolio", nav_contact: "Contatti", nav_cta: "Lavoriamo Insieme",
+                home_title: 'Ponti di parole, <br><span class="italic text-indigo-400">senza confini.</span>',
+                home_desc: "Traduzione professionale e localizzazione di alta qualità. Trasformo le tue idee in messaggi globali, mantenendo intatte le sfumature culturali e il tono originale.",
+                btn_services: "Esplora i Servizi", btn_portfolio: "Portfolio",
+                about_title: "Precisione Linguistica",
+                about_desc: "Con oltre 10 anni di esperienza nel settore della traduzione tecnica e creativa, aiuto aziende e privati a comunicare con efficacia nei mercati internazionali.",
+                about_li1: "• Traduttrice Certificata (EN, FR, ES > IT)", about_li2: "• Specialista in Localizzazione Software", about_li3: "• Consulente Culturale",
+                services_main_title: "I Miei Servizi",
+                service1_title: "Traduzione Tecnica", service1_desc: "Manuali, documentazione scientifica e testi legali tradotti con precisione terminologica assoluta.",
+                service2_title: "Localizzazione Web", service2_desc: "Adattamento di siti web e app per mercati specifici, ottimizzando la User Experience e la SEO locale.",
+                service3_title: "Transcreation", service3_desc: "Traduzione creativa per marketing e pubblicità che risuona con il cuore del tuo pubblico target.",
+                portfolio_main_title: "Portfolio Progetti",
+                p1_title: "Localizzazione App Tech", p1_desc: "Adattamento UI/UX dall'Inglese all'Italiano per una startup Fintech leader a Londra.",
+                p2_title: "Traduzione Editoriale", p2_desc: "Traduzione integrale di un saggio accademico sulle scienze del linguaggio per Mondadori.",
+                p3_title: "Manualistica Industriale", p3_desc: "Oltre 50.000 parole tradotte per manuali d'uso di macchinari agricoli tedeschi.",
+                clients_label: "Hanno scelto i miei servizi",
+                contact_title: "Inizia un progetto", form_name: "Nome", form_email: "Email", form_msg: "Messaggio", form_btn: "Invia Richiesta"
+            },
+            en: {
+                nav_home: "Home", nav_about: "About Me", nav_services: "Services", nav_portfolio: "Portfolio", nav_contact: "Contact", nav_cta: "Let's Work Together",
+                home_title: 'Bridging words, <br><span class="italic text-indigo-400">without borders.</span>',
+                home_desc: "Professional translation and high-quality localization. I transform your ideas into global messages, keeping cultural nuances and the original tone intact.",
+                btn_services: "Explore Services", btn_portfolio: "Portfolio",
+                about_title: "Linguistic Precision",
+                about_desc: "With over 10 years of experience in technical and creative translation, I help companies and individuals communicate effectively in international markets.",
+                about_li1: "• Certified Translator (EN, FR, ES > IT)", about_li2: "• Software Localization Specialist", about_li3: "• Cultural Consultant",
+                services_main_title: "My Services",
+                service1_title: "Technical Translation", service1_desc: "Manuals, scientific documentation, and legal texts translated with absolute terminological precision.",
+                service2_title: "Web Localization", service2_desc: "Adapting websites and apps for specific markets, optimizing User Experience and local SEO.",
+                service3_title: "Transcreation", service3_desc: "Creative translation for marketing and advertising that resonates with your target audience's heart.",
+                portfolio_main_title: "Project Portfolio",
+                p1_title: "Tech App Localization", p1_desc: "UI/UX adaptation from English to Italian for a leading Fintech startup in London.",
+                p2_title: "Editorial Translation", p2_desc: "Full translation of an academic essay on language sciences for Mondadori.",
+                p3_title: "Industrial Manuals", p3_desc: "Over 50,000 words translated for user manuals of German agricultural machinery.",
+                clients_label: "Trusted by Global Brands",
+                contact_title: "Start a Project", form_name: "Name", form_email: "Email", form_msg: "Message", form_btn: "Send Request"
+            },
+            fr: {
+                nav_home: "Accueil", nav_about: "À Propos", nav_services: "Services", nav_portfolio: "Portfolio", nav_contact: "Contact", nav_cta: "Travaillons Ensemble",
+                home_title: 'Des ponts de mots, <br><span class="italic text-indigo-400">sans frontières.</span>',
+                home_desc: "Traduction professionnelle et localisation de haute qualité. Je transforme vos idées en messages globaux, en préservant les nuances culturelles et le ton original.",
+                btn_services: "Explorer les Services", btn_portfolio: "Portfolio",
+                about_title: "Précision Linguistique",
+                about_desc: "Avec plus de 10 ans d'expérience dans la traduction technique et créative, j'aide les entreprises à communiquer efficacement sur les marchés internationaux.",
+                about_li1: "• Traductrice Certifiée (EN, FR, ES > IT)", about_li2: "• Spécialiste en Localisation de Logiciels", about_li3: "• Consultante Culturelle",
+                services_main_title: "Mes Services",
+                service1_title: "Traduction Technique", service1_desc: "Manuels, documentation scientifique et textes juridiques traduits avec une précision terminologique absolue.",
+                service2_title: "Localisation Web", service2_desc: "Adaptation de sites web et d'applications pour des marchés spécifiques, en optimisant l'expérience utilisateur.",
+                service3_title: "Transcréation", service3_desc: "Traduction créative pour le marketing et la publicité qui résonne auprès de votre public cible.",
+                portfolio_main_title: "Portfolio de Projets",
+                p1_title: "Localisation d'App Tech", p1_desc: "Adaptation UI/UX de l'anglais vers l'italien pour une startup Fintech à Londres.",
+                p2_title: "Traduction Éditoriale", p2_desc: "Traduction intégrale d'un essai académique sur les sciences du langage pour Mondadori.",
+                p3_title: "Manuels Industriels", p3_desc: "Plus de 50 000 mots traduits pour des manuels d'utilisation de machines agricoles allemandes.",
+                clients_label: "Ils me font confiance",
+                contact_title: "Démarrer un Projet", form_name: "Nom", form_email: "E-mail", form_msg: "Message", form_btn: "Envoyer la Demande"
+            },
+            es: {
+                nav_home: "Inicio", nav_about: "Sobre Mí", nav_services: "Servicios", nav_portfolio: "Portfolio", nav_contact: "Contacto", nav_cta: "Trabajemos Juntos",
+                home_title: 'Puentes de palabras, <br><span class="italic text-indigo-400">sin fronteras.</span>',
+                home_desc: "Traducción profesional y localización de alta calidad. Transformo tus ideas en mensajes globales, manteniendo intactos los matices culturales y el tono original.",
+                btn_services: "Explorar Servicios", btn_portfolio: "Portfolio",
+                about_title: "Precisión Lingüística",
+                about_desc: "Con más de 10 años de experiencia en traducción técnica y creativa, ayudo a empresas a comunicarse con eficacia en mercados internacionales.",
+                about_li1: "• Traductora Certificada (EN, FR, ES > IT)", about_li2: "• Especialista en Localización de Software", about_li3: "• Consultora Cultural",
+                services_main_title: "Mis Servicios",
+                service1_title: "Traducción Técnica", service1_desc: "Manuales, documentación científica y textos legales traducidos con absoluta precisión terminológica.",
+                service2_title: "Localización Web", service2_desc: "Adaptación de sitios web y aplicaciones para mercados específicos, optimizando la UX y el SEO local.",
+                service3_title: "Transcreación", service3_desc: "Traducción creativa para marketing y publicidad que resuena con el corazón de tu público objetivo.",
+                portfolio_main_title: "Portfolio de Proyectos",
+                p1_title: "Localización de App Tech", p1_desc: "Adaptación de UI/UX del inglés al italiano para una startup Fintech en Londres.",
+                p2_title: "Traducción Editorial", p2_desc: "Traducción completa de un ensayo académico sobre ciencias del lenguaje para Mondadori.",
+                p3_title: "Manuales Industriales", p3_desc: "Más de 50.000 palabras traducidas para manuales de maquinaria agrícola alemana.",
+                clients_label: "Han confiado en mí",
+                contact_title: "Iniciar un Proyecto", form_name: "Nombre", form_email: "Correo", form_msg: "Mensaje", form_btn: "Enviar Solicitud"
+            }
+        };
+
+        let currentLang = 'it';
+
+        function changeLanguage(lang) {
+            currentLang = lang;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang][key]) {
+                    el.innerHTML = translations[lang][key];
+                }
+            });
+            document.documentElement.lang = lang;
+            document.getElementById('langSwitcher').value = lang;
+        }
+
+        function detectUserLanguage() {
+            const browserLang = navigator.language || navigator.userLanguage;
+            const shortLang = browserLang.split('-')[0];
+            if (translations[shortLang]) {
+                changeLanguage(shortLang);
+            } else {
+                changeLanguage('it'); // Default
+            }
+        }
+
         // --- THREE.JS SETUP ---
         let scene, camera, renderer, globe, stars;
         const container = document.getElementById('canvas-container');
@@ -265,17 +455,20 @@
         // --- NAVIGATION & INTERACTION ---
         function update3DScene(sectionId) {
             if(sectionId === 'home') {
-                gsap.to(camera.position, { z: 12, x: 0, duration: 1.5, ease: "power2.inOut" });
-                gsap.to(globe.position, { x: 0, duration: 1.5 });
+                gsap.to(camera.position, { z: 12, x: 0, y: 0, duration: 1.5, ease: "power2.inOut" });
+                gsap.to(globe.position, { x: 0, y: 0, duration: 1.5 });
             } else if(sectionId === 'about') {
-                gsap.to(camera.position, { z: 8, x: -5, duration: 1.5, ease: "power2.inOut" });
-                gsap.to(globe.position, { x: 5, duration: 1.5 });
+                gsap.to(camera.position, { z: 8, x: -5, y: 2, duration: 1.5, ease: "power2.inOut" });
+                gsap.to(globe.position, { x: 5, y: -1, duration: 1.5 });
             } else if(sectionId === 'services') {
-                gsap.to(camera.position, { z: 15, x: 0, duration: 1.5, ease: "power2.inOut" });
-                gsap.to(globe.position, { x: 0, duration: 1.5 });
+                gsap.to(camera.position, { z: 15, x: 0, y: -5, duration: 1.5, ease: "power2.inOut" });
+                gsap.to(globe.position, { x: 0, y: 2, duration: 1.5 });
+            } else if(sectionId === 'portfolio') {
+                gsap.to(camera.position, { z: 10, x: 0, y: 8, duration: 1.5, ease: "power2.inOut" });
+                gsap.to(globe.position, { x: 0, y: -5, duration: 1.5 });
             } else if(sectionId === 'contact') {
-                gsap.to(camera.position, { z: 10, x: 6, duration: 1.5, ease: "power2.inOut" });
-                gsap.to(globe.position, { x: -6, duration: 1.5 });
+                gsap.to(camera.position, { z: 10, x: 6, y: 0, duration: 1.5, ease: "power2.inOut" });
+                gsap.to(globe.position, { x: -6, y: 0, duration: 1.5 });
             }
         }
 
@@ -287,10 +480,9 @@
         }
 
         // --- SCROLL OBSERVER ---
-        // Rileva la sezione corrente mentre l'utente scorrere
         function setupIntersectionObserver() {
             const options = {
-                threshold: 0.4 // La sezione è considerata attiva quando il 40% è visibile
+                threshold: 0.3 
             };
 
             const observer = new IntersectionObserver((entries) => {
@@ -298,17 +490,14 @@
                     if (entry.isIntersecting) {
                         const sectionId = entry.target.id;
                         
-                        // Aggiorna classi CSS per animazioni entrata
                         entry.target.classList.add('is-visible');
                         
-                        // Aggiorna menu attivo
                         document.querySelectorAll('.nav-link').forEach(link => {
                             link.classList.remove('active-link');
                         });
                         const activeNav = document.getElementById(`nav-${sectionId}`);
                         if (activeNav) activeNav.classList.add('active-link');
                         
-                        // Aggiorna la scena 3D
                         update3DScene(sectionId);
                     }
                 });
@@ -319,26 +508,24 @@
             });
         }
 
-        // Handle Resize
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        // Initialize on Load
         window.onload = () => {
             initThree();
+            detectUserLanguage(); // Auto-rilevamento lingua
             setupIntersectionObserver();
             
-            // Interaction with mouse
             window.addEventListener('mousemove', (e) => {
                 const mouseX = (e.clientX / window.innerWidth) - 0.5;
                 const mouseY = (e.clientY / window.innerHeight) - 0.5;
                 
                 gsap.to(globe.rotation, {
                     x: mouseY * 0.3,
-                    y: globe.rotation.y + (mouseX * 0.01),
+                    y: globe.rotation.y + (mouseX * 0.02),
                     duration: 1
                 });
             });
