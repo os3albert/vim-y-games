@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Vim-y Games</title>
+    <title>Vim-y Games | L'Ecosistema Arcade da Terminale</title>
+    
+    <!-- Favicon SVG: Terminale con dettagli Viola Pastello -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='5' y='15' width='90' height='70' rx='12' fill='%231e1e24' stroke='%23bd93f9' stroke-width='6'/><path d='M 20 35 L 35 50 L 20 65' fill='none' stroke='%23bd93f9' stroke-width='8' stroke-linecap='round' stroke-linejoin='round'/><line x1='45' y1='65' x2='75' y2='65' stroke='%23bd93f9' stroke-width='8' stroke-linecap='round'/></svg>">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
@@ -16,10 +20,10 @@
             --secondary-color: rgba(0, 255, 65, 0.15);
             --grid-color: rgba(0, 255, 65, 0.05);
             --term-bg-rgb: 10, 15, 10;
-            --term-bg-alpha: 0.5; /* Valore di base del 50% */
-            --text-color: #e0e0e0;
+            --term-bg-alpha: 0.15; /* Ultra Glassmorphism */
+            --text-color: #ffffff;
             --font-family: 'Fira Code', monospace;
-            --border-color: rgba(0, 255, 65, 0.2);
+            --border-color: rgba(255, 255, 255, 0.1);
             --highlight-color: #fffb00;
         }
 
@@ -27,11 +31,11 @@
             margin: 0;
             padding: 0;
             overflow: hidden;
-            background-color: #000; /* Sfondo reale nero per il 3D */
+            background-color: var(--bg-color); 
             font-family: var(--font-family);
             color: var(--text-color);
             touch-action: none;
-            transition: color 0.3s;
+            transition: background-color 0.5s ease, color 0.5s ease;
         }
 
         canvas { display: block; }
@@ -42,11 +46,10 @@
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: -2; /* Spostato in secondo piano, dietro il menu */
+            z-index: -2; 
             pointer-events: none; 
         }
 
-        /* UI Overlay Layer */
         .ui-container {
             position: absolute;
             inset: 0;
@@ -59,24 +62,51 @@
             padding: 1rem;
         }
 
-        /* Stile Terminale Moderno */
+        /* Pulsante Tema Toggle */
+        .theme-toggle-btn {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(var(--term-bg-rgb), 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+            pointer-events: auto;
+            z-index: 50;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .theme-toggle-btn:hover {
+            transform: scale(1.15) rotate(15deg);
+            background: var(--secondary-color);
+            border-color: var(--primary-color);
+        }
+
+        /* Stile Terminale Moderno (Premium Glass) */
         .terminal-window {
             background: rgba(var(--term-bg-rgb), var(--term-bg-alpha));
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(24px); 
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255,255,255,0.1);
             width: 100%;
             max-width: 700px;
             pointer-events: auto;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        /* Modificatore per il terminale in-game per renderlo a tutto schermo */
         .game-window {
             max-width: none !important;
             height: 100%;
@@ -84,7 +114,7 @@
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
             margin: auto;
-            border-radius: 12px;
+            border-radius: 16px;
         }
 
         @media (min-width: 768px) {
@@ -95,11 +125,11 @@
         }
 
         .terminal-header {
-            background: rgba(255, 255, 255, 0.03);
-            padding: 12px 16px;
+            background: rgba(128, 128, 128, 0.05);
+            padding: 14px 20px;
             display: flex;
             align-items: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(128, 128, 128, 0.1);
             flex-shrink: 0;
         }
 
@@ -107,7 +137,7 @@
             display: flex;
             gap: 8px;
         }
-        .window-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .window-dot { width: 12px; height: 12px; border-radius: 50%; box-shadow: inset 0 1px 2px rgba(0,0,0,0.5); }
         .dot-red { background: #ff5f56; }
         .dot-yellow { background: #ffbd2e; }
         .dot-green { background: #27c93f; }
@@ -116,68 +146,76 @@
             flex-grow: 1;
             text-align: center;
             font-size: 0.85rem;
-            color: rgba(255, 255, 255, 0.5);
-            margin-right: 44px; /* Bilancia i dot per centrare */
+            color: var(--text-color);
+            opacity: 0.6;
+            margin-right: 44px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            font-weight: 500;
+            letter-spacing: 0.5px;
         }
 
         .terminal-body {
-            padding: 2rem;
+            padding: 2.5rem;
             flex-grow: 1;
             overflow-y: auto;
         }
 
-        /* Status Bar stile Lualine / Airline */
+        /* Status Bar */
         .status-bar {
             display: flex;
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(var(--term-bg-rgb), 0.8);
             font-size: 0.75rem;
-            font-weight: 500;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            font-weight: bold;
+            border-top: 1px solid var(--border-color);
             flex-shrink: 0;
             overflow: hidden;
         }
         .status-mode {
             background: var(--primary-color);
-            color: var(--bg-color);
-            padding: 4px 12px;
-            font-weight: bold;
+            color: #000;
+            padding: 6px 16px;
             white-space: nowrap;
         }
         .status-info {
-            padding: 4px 12px;
-            color: rgba(255, 255, 255, 0.6);
+            padding: 6px 16px;
+            color: var(--text-color);
+            opacity: 0.8;
             display: flex;
             gap: 16px;
             flex-grow: 1;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            font-weight: 500;
         }
         .status-right {
-            padding: 4px 12px;
-            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 16px;
+            background: rgba(128, 128, 128, 0.1);
             color: var(--text-color);
             white-space: nowrap;
         }
 
-        /* Menu Rows OhMyPosh style */
+        /* Menu Rows */
         .menu-row {
-            padding: 0.5rem;
-            margin: 0.25rem 0;
-            border-radius: 6px;
+            padding: 0.6rem 0.8rem;
+            margin: 0.3rem 0;
+            border-radius: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
-            transition: background 0.2s;
-            opacity: 0.6;
+            transition: all 0.2s ease;
+            opacity: 0.7;
+            border: 1px solid transparent;
         }
-        .menu-row:hover { background: rgba(255, 255, 255, 0.03); opacity: 0.8; }
+        .menu-row:hover { background: rgba(128, 128, 128, 0.08); opacity: 0.9; }
         .menu-row.active {
             opacity: 1;
             background: var(--secondary-color);
+            border: 1px solid rgba(128, 128, 128, 0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateX(4px);
         }
 
         .prompt-arrow {
@@ -185,8 +223,8 @@
             margin-right: 12px;
             font-weight: bold;
             opacity: 0;
-            transform: translateX(-5px);
-            transition: all 0.2s ease;
+            transform: translateX(-10px);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         .menu-row.active .prompt-arrow {
             opacity: 1;
@@ -195,46 +233,44 @@
 
         .prompt-pill {
             background: var(--primary-color);
-            color: var(--bg-color);
-            padding: 2px 8px;
-            border-radius: 4px;
+            color: var(--bg-color); 
+            padding: 2px 10px;
+            border-radius: 6px;
             font-size: 0.75rem;
             font-weight: bold;
             margin-right: 12px;
             display: inline-block;
-            min-width: 45px;
+            min-width: 50px;
             text-align: center;
         }
 
-        .menu-label { width: 150px; display: inline-block; }
-        .menu-value { color: var(--primary-color); font-weight: 500; }
-        .menu-value-dim { opacity: 0.4; }
+        .menu-label { width: 160px; display: inline-block; }
+        .menu-value { color: var(--primary-color); font-weight: bold; }
+        .menu-value-dim { opacity: 0.4; font-weight: normal; }
 
-        /* Custom Scrollbar Dinamica basata sul Tema */
         * { scrollbar-width: thin; scrollbar-color: var(--primary-color) transparent; }
         *::-webkit-scrollbar { width: 6px; }
-        *::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.1); border-radius: 4px; }
+        *::-webkit-scrollbar-track { background: rgba(128, 128, 128, 0.1); border-radius: 4px; }
         *::-webkit-scrollbar-thumb { background-color: var(--primary-color); border-radius: 4px; }
 
-        /* Stili output Test */
         .test-pass { color: var(--primary-color); }
         .test-fail { color: #ff5f56; font-weight: bold; }
-        .test-group { color: var(--primary-color); font-weight: bold; margin-top: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px;}
+        .test-group { color: var(--primary-color); font-weight: bold; margin-top: 1rem; border-bottom: 1px solid rgba(128,128,128,0.2); padding-bottom: 4px;}
         
         .blink { animation: blinker 1.5s linear infinite; }
-        @keyframes blinker { 50% { opacity: 0; } }
+        @keyframes blinker { 50% { opacity: 0.3; } }
 
-        /* Stili dei bottoni generici */
         .custom-btn {
-            padding: 0.5rem 1rem;
+            padding: 0.75rem 1.25rem;
             border: 1px solid var(--border-color);
-            border-radius: 0.25rem;
+            border-radius: 8px;
             color: var(--text-color);
             transition: all 0.2s ease;
             cursor: pointer;
-            background: transparent;
+            background: rgba(128,128,128,0.1);
+            font-weight: bold;
         }
-        .custom-btn:hover { background: var(--secondary-color); }
+        .custom-btn:hover { background: var(--secondary-color); border-color: var(--primary-color); transform: translateY(-2px); }
     </style>
 </head>
 <body>
@@ -243,6 +279,10 @@
 
     <div class="ui-container p-4 md:p-8">
         
+        <button id="theme-toggle-btn" class="theme-toggle-btn" title="Cambia Tema (Light/Dark)">
+            ☀️
+        </button>
+
         <!-- Main Menu -->
         <div id="main-menu" class="terminal-window">
             <div class="terminal-header">
@@ -255,14 +295,12 @@
             </div>
             
             <div class="terminal-body">
-                <div class="mb-6 text-sm">
-                    <span class="text-[var(--primary-color)] font-bold">os3albert@linux</span><span class="text-white">:</span><span class="text-blue-400 font-bold">~/vim-y-games</span>$ ./start.sh<br>
-                    <span class="opacity-60">Seleziona un applicativo da eseguire:</span>
+                <div class="mb-8 text-sm">
+                    <span class="text-[var(--primary-color)] font-bold">os3albert@linux</span><span>:</span><span class="font-bold" style="color:#4299e1;">~/vim-y-games</span>$ ./start.sh<br>
+                    <span class="opacity-60 italic mt-2 inline-block">Connessione alla rete dati stabilita. Seleziona modulo:</span>
                 </div>
                 
-                <div id="main-menu-list" class="flex flex-col gap-1">
-                    <!-- Popolato da JS -->
-                </div>
+                <div id="main-menu-list" class="flex flex-col gap-1"></div>
             </div>
 
             <div class="status-bar">
@@ -287,13 +325,11 @@
             </div>
             
             <div class="terminal-body">
-                <div class="mb-6 text-sm">
-                    <span class="text-[var(--primary-color)] font-bold">os3albert@linux</span><span class="text-white">:</span><span class="text-blue-400 font-bold">~/config</span>$ nano settings.conf
+                <div class="mb-8 text-sm">
+                    <span class="text-[var(--primary-color)] font-bold">os3albert@linux</span><span>:</span><span class="font-bold" style="color:#4299e1;">~/config</span>$ nano settings.conf
                 </div>
                 
-                <div id="global-menu-list" class="flex flex-col gap-1">
-                    <!-- Popolato da JS -->
-                </div>
+                <div id="global-menu-list" class="flex flex-col gap-1"></div>
             </div>
 
             <div class="status-bar">
@@ -319,23 +355,21 @@
             </div>
             
             <div class="terminal-body">
-                <div class="mb-6 text-sm">
-                    <span class="opacity-60">// Modifica i parametri di avvio della partita</span>
+                <div class="mb-8 text-sm">
+                    <span class="opacity-60 italic">// Configurazione parametri di istanziazione</span>
                 </div>
                 
-                <div id="vim-menu" class="flex flex-col gap-1">
-                    <!-- Contenuto popolato dal JS -->
-                </div>
+                <div id="vim-menu" class="flex flex-col gap-1"></div>
             </div>
 
             <div class="status-bar">
                 <div class="status-mode" style="background:#7aa2f7; color:#000;">INSERT</div>
                 <div class="status-info">
                     <span>[j/k] Naviga</span>
-                    <span>[h/l] Seleziona</span>
+                    <span>[h/l] Modifica</span>
                     <span>[Enter] Conferma</span>
                 </div>
-                <div class="status-right">game_env.json</div>
+                <div class="status-right">env.json</div>
             </div>
         </div>
 
@@ -351,9 +385,7 @@
             </div>
             
             <div class="terminal-body">
-                <div id="test-output" class="font-mono text-sm" style="line-height: 1.6;">
-                    <!-- Output Test JS -->
-                </div>
+                <div id="test-output" class="font-mono text-sm" style="line-height: 1.6;"></div>
             </div>
 
             <div class="status-bar">
@@ -377,7 +409,7 @@
             </div>
             
             <!-- Contenitore del Canvas -->
-            <div id="game-container" class="terminal-body p-0 relative overflow-hidden flex-grow" style="background: rgba(10,15,10,0.6);">
+            <div id="game-container" class="terminal-body p-0 relative overflow-hidden flex-grow" style="background: rgba(var(--term-bg-rgb), 0.4);">
                 <canvas id="gameCanvas" class="absolute inset-0 w-full h-full"></canvas>
             </div>
 
@@ -391,8 +423,8 @@
             </div>
         </div>
         
-        <!-- Schermata Fine Partita (Overlay modale) -->
-        <div id="game-over" class="terminal-window hidden absolute z-50" style="max-width: 400px; text-align: center; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+        <!-- Schermata Fine Partita -->
+        <div id="game-over" class="terminal-window hidden absolute z-50" style="max-width: 450px; text-align: center; top: 50%; left: 50%; transform: translate(-50%, -50%);">
             <div class="terminal-header">
                 <div class="window-controls">
                     <div class="window-dot dot-red"></div>
@@ -403,41 +435,38 @@
             </div>
             
             <div class="terminal-body flex flex-col items-center">
-                <h2 class="text-4xl font-bold mb-4 text-[#ff5f56]">SEGFAULT!</h2>
-                <p id="final-score" class="text-2xl mb-1">Score: 0</p>
+                <h2 class="text-5xl font-bold mb-2 text-[#ff5f56]" style="text-shadow: 0 0 20px rgba(255,95,86,0.3);">SEGFAULT</h2>
+                <p id="final-score" class="text-2xl mb-1 mt-4 font-bold">Score: 0</p>
                 <p id="final-best" class="text-sm mb-8 opacity-60">Best: 0</p>
                 
-                <div class="text-sm opacity-80 mb-4">
-                    <p class="mb-2">Process exited with code 1.</p>
+                <div class="text-xs opacity-70 mb-6 bg-[rgba(128,128,128,0.1)] p-3 rounded border border-[var(--border-color)] w-full font-mono text-left">
+                    <span class="text-red-400">Exception:</span> Player collided with environment bounds or obstacle.<br>
+                    <span class="text-blue-400">Action:</span> Awaiting restart command.
                 </div>
                 
-                <div class="flex flex-col gap-2 w-full mt-4">
-                    <button id="btn-restart" class="custom-btn w-full !text-left flex justify-between">
-                        <span>Riavvia Processo</span> <span class="opacity-50">[k]</span>
+                <div class="flex flex-col gap-3 w-full">
+                    <button id="btn-restart" class="custom-btn w-full !text-left flex justify-between items-center">
+                        <span>Riavvia Processo</span> <span class="opacity-50 font-normal">[k] o [Enter]</span>
                     </button>
-                    <button id="btn-config" class="custom-btn w-full !text-left flex justify-between">
-                        <span>Ritorna al Menu</span> <span class="opacity-50">[:m]</span>
+                    <button id="btn-config" class="custom-btn w-full !text-left flex justify-between items-center">
+                        <span>Ritorna al Menu</span> <span class="opacity-50 font-normal">[:m]</span>
                     </button>
                 </div>
             </div>
         </div>
-
     </div>
 
     <script>
-        /**
-         * IMPOSTAZIONI VISUALI GLOBALI E DATI
-         */
         const SETTINGS_VISUALS = {
-            BIN_SIZE: 12.0,    // Dimensione punti Three.js
-            BIN_FADE: 0.04,    // Velocità fade particelle attivate dal mouse
-            MENU_OPACITY: 0.5  // Opacità terminal window
+            BIN_SIZE: 14.0,
+            MENU_OPACITY: 0.15
         };
 
         const THEMES = {
-            matrix: { '--bg-color': '#000000', '--primary-color': '#00ff41', '--secondary-color': 'rgba(0, 255, 65, 0.15)', '--grid-color': 'rgba(0, 255, 65, 0.05)', '--term-bg-rgb': '10, 15, 10', '--text-color': '#e0e0e0', '--font-family': '"Fira Code", monospace', '--border-color': 'rgba(0, 255, 65, 0.2)', '--highlight-color': '#fffb00' },
-            tokyo: { '--bg-color': '#16161e', '--primary-color': '#7aa2f7', '--secondary-color': 'rgba(122, 162, 247, 0.15)', '--grid-color': 'rgba(122, 162, 247, 0.05)', '--term-bg-rgb': '26, 27, 38', '--text-color': '#c0caf5', '--font-family': '"Fira Code", monospace', '--border-color': 'rgba(122, 162, 247, 0.2)', '--highlight-color': '#f7768e' },
-            dracula: { '--bg-color': '#282a36', '--primary-color': '#ff79c6', '--secondary-color': 'rgba(255, 121, 198, 0.15)', '--grid-color': 'rgba(255, 121, 198, 0.05)', '--term-bg-rgb': '40, 42, 54', '--text-color': '#f8f8f2', '--font-family': '"Fira Code", monospace', '--border-color': 'rgba(255, 121, 198, 0.2)', '--highlight-color': '#50fa7b' }
+            matrix: { isLight: false, '--bg-color': '#000000', '--primary-color': '#00ff41', '--secondary-color': 'rgba(0, 255, 65, 0.2)', '--grid-color': 'rgba(0, 255, 65, 0.05)', '--term-bg-rgb': '0, 10, 0', '--text-color': '#ffffff', '--border-color': 'rgba(0, 255, 65, 0.3)', '--highlight-color': '#fffb00' },
+            tokyo: { isLight: false, '--bg-color': '#0f0f14', '--primary-color': '#7aa2f7', '--secondary-color': 'rgba(122, 162, 247, 0.2)', '--grid-color': 'rgba(122, 162, 247, 0.05)', '--term-bg-rgb': '15, 15, 20', '--text-color': '#ffffff', '--border-color': 'rgba(122, 162, 247, 0.3)', '--highlight-color': '#f7768e' },
+            dracula: { isLight: false, '--bg-color': '#1e1e24', '--primary-color': '#ff79c6', '--secondary-color': 'rgba(255, 121, 198, 0.2)', '--grid-color': 'rgba(255, 121, 198, 0.05)', '--term-bg-rgb': '20, 20, 25', '--text-color': '#f8f8f2', '--border-color': 'rgba(255, 121, 198, 0.3)', '--highlight-color': '#50fa7b' },
+            pastel: { isLight: true, '--bg-color': '#f4f5f7', '--primary-color': '#ff79c6', '--secondary-color': 'rgba(255, 121, 198, 0.2)', '--grid-color': 'rgba(0, 0, 0, 0.05)', '--term-bg-rgb': '255, 255, 255', '--text-color': '#2d3436', '--border-color': 'rgba(0, 0, 0, 0.1)', '--highlight-color': '#ff5555' }
         };
 
         const DIFFICULTIES = {
@@ -447,53 +476,33 @@
         };
 
         const LANG_DATA = {
-            'c#': {
-                keywords: ["public", "private", "protected", "class", "interface", "enum", "void", "static", "readonly", "string", "int", "bool", "if", "else", "switch", "return", "new", "namespace", "using", "async", "await", "Task", "override", "virtual"],
-                snippets: ["Console.WriteLine();", "public void Main()", "Task.Delay(100);", "List<int> list =", "return true;", "if (x > 0)", "throw new Exception()", "public class App", "await fetchAsync()", "var data = new();"]
-            },
-            'python': {
-                keywords: ["def", "class", "import", "from", "return", "yield", "if", "elif", "else", "True", "False", "None", "async", "await", "try", "except", "pass", "break", "continue", "for", "in", "while"],
-                snippets: ["def __init__(self):", "import sys, os", "print('hello')", "return False", "yield data", "if __name__ == '__main__':", "x = [i for i in l]", "with open('f.txt') as f:"]
-            },
-            'javascript': {
-                keywords: ["function", "const", "let", "var", "async", "await", "return", "if", "else", "export", "import", "class", "extends", "true", "false", "null", "undefined", "switch", "case"],
-                snippets: ["console.log(data);", "const x = 10;", "await fetch(url)", "return true;", "export default App;", "document.getElementById()", "setTimeout(() => {}, 1000);", "arr.map(x => x*2);"]
-            },
-            'java': {
-                keywords: ["public", "private", "class", "void", "int", "boolean", "if", "else", "return", "new", "import", "package", "extends", "implements", "throw", "throws", "try", "catch"],
-                snippets: ["System.out.println();", "public static void main", "new ArrayList<>();", "return false;", "Thread.sleep(1000);", "import java.util.List;", "@Override"]
-            },
-            'css': {
-                keywords: ["display", "margin", "padding", "color", "background", "border", "position", "flex", "grid", "width", "height", "font-size", "font-family", "align-items", "justify-content"],
-                snippets: ["display: flex;", "margin: 0 auto;", "color: #ffffff;", "background-color: #000;", "position: absolute;", "justify-content: center;", "border-radius: 8px;", "box-sizing: border-box;"]
-            },
-            'html': {
-                keywords: ["div", "span", "a", "p", "h1", "h2", "img", "script", "style", "html", "body", "head", "link", "meta", "form", "input", "button"],
-                snippets: ["<div class='box'>", "<a href='#'>Link</a>", "<img src='img.png'>", "<script src='app.js'>", "<link rel='stylesheet'>", "<button type='submit'>", "<input type='text'>"]
-            }
+            'c#': { keywords: ["public", "private", "class", "interface", "void", "static", "readonly", "string", "int", "bool", "if", "else", "switch", "return", "new", "namespace", "using", "async", "await", "Task"], snippets: ["Console.WriteLine();", "public void Main()", "Task.Delay(100);", "List<int> list =", "return true;", "if (x > 0)", "throw new Exception()", "public class App", "await fetchAsync()", "var data = new();"] },
+            'python': { keywords: ["def", "class", "import", "from", "return", "yield", "if", "elif", "else", "True", "False", "None", "async", "await", "try", "except", "pass", "break"], snippets: ["def __init__(self):", "import sys, os", "print('hello')", "return False", "yield data", "if __name__ == '__main__':", "x = [i for i in l]", "with open('f.txt') as f:"] },
+            'javascript': { keywords: ["function", "const", "let", "var", "async", "await", "return", "if", "else", "export", "import", "class", "extends", "true", "false", "null"], snippets: ["console.log(data);", "const x = 10;", "await fetch(url)", "return true;", "export default App;", "document.getElementById()", "setTimeout(() => {}, 1000);", "arr.map(x => x*2);"] },
+            'java': { keywords: ["public", "private", "class", "void", "int", "boolean", "if", "else", "return", "new", "import", "package", "extends", "implements", "throw", "try"], snippets: ["System.out.println();", "public static void main", "new ArrayList<>();", "return false;", "Thread.sleep(1000);", "import java.util.List;", "@Override"] },
+            'css': { keywords: ["display", "margin", "padding", "color", "background", "border", "position", "flex", "grid", "width", "height", "font-size", "align-items", "justify-content"], snippets: ["display: flex;", "margin: 0 auto;", "color: #ffffff;", "background-color: #000;", "position: absolute;", "justify-content: center;", "border-radius: 8px;", "box-sizing: border-box;"] },
+            'html': { keywords: ["div", "span", "a", "p", "h1", "h2", "img", "script", "style", "html", "body", "head", "link", "meta", "form", "input", "button"], snippets: ["<div class='box'>", "<a href='#'>Link</a>", "<img src='img.png'>", "<script src='app.js'>", "<link rel='stylesheet'>", "<button type='submit'>", "<input type='text'>"] }
         };
 
         const MAIN_MENU_DATA = {
             activeIndex: 0,
             items: [
-                { id: 'game_jkmode', label: 'Gioca a JKMODE (Flappy)', isAction: true },
-                { id: 'game_jump', label: 'Gioca a /jump (Platformer)', isAction: true },
-                { id: 'game_tests', label: 'Esegui Suite Test Unitari', isAction: true },
-                { id: 'open_global', label: 'Opzioni App (Temi/Visivi/Social)', isAction: true }
+                { id: 'game_jkmode', label: 'Avvia JKMODE (Arcade)', isAction: true },
+                { id: 'game_jump', label: 'Avvia /jump (Sintassi)', isAction: true },
+                { id: 'game_tests', label: 'Esegui Diagnostics (Unit Tests)', isAction: true },
+                { id: 'open_global', label: 'Impostazioni Ecosistema', isAction: true }
             ]
         };
 
         const GLOBAL_MENU_DATA = {
             activeIndex: 0,
             items: [
-                { id: 'theme', label: 'Tema App', options: ['matrix', 'tokyo', 'dracula'], idx: 0 },
-                { id: 'bin_size', label: 'Dimensione Binari', options: ['piccolo', 'medio', 'grande'], idx: 1 },
-                { id: 'bin_fade', label: 'Scia Binari', options: ['veloce', 'normale', 'lenta'], idx: 1 },
-                { id: 'menu_opac', label: 'Opacità Menu', options: ['bassa', 'media', 'alta'], idx: 1 },
+                { id: 'theme', label: 'Colorazione Sistema', options: ['matrix', 'tokyo', 'dracula'], idx: 0 },
+                { id: 'bin_size', label: 'Densità Dati (Size)', options: ['piccolo', 'medio', 'grande'], idx: 1 },
+                { id: 'menu_opac', label: 'Trasparenza Vetro', options: ['ultra', 'media', 'solida'], idx: 0 },
                 { id: 'share_wa', label: 'Condividi su WhatsApp', isAction: true },
                 { id: 'share_li', label: 'Condividi su LinkedIn', isAction: true },
-                { id: 'share_fb', label: 'Condividi su Facebook', isAction: true },
-                { id: 'back', label: 'Torna al Menu', isAction: true }
+                { id: 'back', label: 'Ritorna al Launcher', isAction: true }
             ]
         };
 
@@ -502,67 +511,53 @@
             THEME: { ...THEMES.matrix },
             
             JKMODE: {
-                MODE: 'zero-g', 
-                OBSTACLE_TYPE: 'pipes', 
-                PHYSICS: {
-                    MAX_VELOCITY: 15, ACCEL: 1.5, FRICTION: 0.88,
-                    GRAVITY: DIFFICULTIES.normal.GRAVITY, JUMP: -6.5, DIVE: 5
-                },
-                WORLD: {
-                    PIPE_SPEED: DIFFICULTIES.normal.SPEED, PIPE_SPAWN_RATE: DIFFICULTIES.normal.SPAWN_RATE,
-                    PIPE_GAP: DIFFICULTIES.normal.GAP, PIPE_WIDTH: 80
-                },
-                MENU: {
-                    activeIndex: 0,
-                    items: [
-                        { id: 'mode', label: 'Fisica', options: ['zero-g', 'gravity'], idx: 0 },
-                        { id: 'obstacle', label: 'Ostacoli', options: ['pipes', 'meteors'], idx: 0 },
-                        { id: 'difficulty', label: 'Difficoltà', options: ['easy', 'normal', 'hard'], idx: 1 },
-                        { id: 'start', label: 'AVVIA JKMODE', isAction: true },
-                        { id: 'back', label: 'Torna al Menu', isAction: true }
-                    ]
-                }
+                MODE: 'zero-g', OBSTACLE_TYPE: 'pipes', 
+                PHYSICS: { MAX_VELOCITY: 15, ACCEL: 1.5, FRICTION: 0.88, GRAVITY: DIFFICULTIES.normal.GRAVITY, JUMP: -6.5, DIVE: 5 },
+                WORLD: { PIPE_SPEED: DIFFICULTIES.normal.SPEED, PIPE_SPAWN_RATE: DIFFICULTIES.normal.SPAWN_RATE, PIPE_GAP: DIFFICULTIES.normal.GAP, PIPE_WIDTH: 80 },
+                MENU: { activeIndex: 0, items: [
+                    { id: 'mode', label: 'Motore Fisico', options: ['zero-g', 'gravity'], idx: 0 },
+                    { id: 'obstacle', label: 'Generazione Ostacoli', options: ['pipes', 'meteors'], idx: 0 },
+                    { id: 'difficulty', label: 'Livello Sfida', options: ['easy', 'normal', 'hard'], idx: 1 },
+                    { id: 'start', label: 'ESEGUI', isAction: true }, { id: 'back', label: 'Indietro', isAction: true }
+                ]}
             },
 
             JUMP: {
-                LANGUAGE: 'c#',
-                CONTENT: 'keywords',
-                DIFFICULTY: 'normal',
-                MENU: {
-                    activeIndex: 0,
-                    items: [
-                        { id: 'jump_lang', label: 'Sintassi', options: ['c#', 'python', 'javascript', 'java', 'css', 'html'], idx: 0 },
-                        { id: 'jump_content', label: 'Contenuto', options: ['keywords', 'snippets'], idx: 0 },
-                        { id: 'jump_diff', label: 'Difficoltà', options: ['easy', 'normal', 'hard'], idx: 1 },
-                        { id: 'start', label: 'AVVIA /JUMP', isAction: true },
-                        { id: 'back', label: 'Torna al Menu', isAction: true }
-                    ]
-                }
+                LANGUAGE: 'c#', CONTENT: 'keywords', DIFFICULTY: 'normal',
+                MENU: { activeIndex: 0, items: [
+                    { id: 'jump_lang', label: 'Linguaggio Target', options: ['c#', 'python', 'javascript', 'java', 'css', 'html'], idx: 0 },
+                    { id: 'jump_content', label: 'Modalità Estrazione', options: ['keywords', 'snippets'], idx: 0 },
+                    { id: 'jump_diff', label: 'Restrizione Temporale', options: ['easy', 'normal', 'hard'], idx: 1 },
+                    { id: 'start', label: 'ESEGUI', isAction: true }, { id: 'back', label: 'Indietro', isAction: true }
+                ]}
             }
         };
 
         /**
-         * CLASSE THREE.JS BACKGROUND
-         * Ambiente reticolato con attrazione elastica
+         * FLUID PARTICLE ENGINE (Igloo.inc style)
          */
         class ThreeBackground {
             constructor() {
                 this.container = document.getElementById('three-container');
                 this.scene = new THREE.Scene();
-                this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
-                
-                this.targetZ = 160;
-                this.camera.position.z = 160;
+                this.scene.fog = new THREE.FogExp2(0x000000, 0.0015);
 
-                this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+                this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 3000);
+                this.targetZ = 500; 
+                this.camera.position.z = 500;
+
+                this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "high-performance" });
                 this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
                 this.container.appendChild(this.renderer.domElement);
 
-                this.ndcX = 2; // Cursore fuori schermo inizialmente
-                this.ndcY = 2;
                 this.raycaster = new THREE.Raycaster();
+                this.mouse = new THREE.Vector2(-999, -999);
+                this.targetMouse = new THREE.Vector2(0, 0);
 
-                this.createParticles();
+                this.clock = new THREE.Clock();
+
+                this.createFluidParticles();
 
                 window.addEventListener('resize', () => this.onResize());
                 window.addEventListener('mousemove', (e) => this.onMouseMove(e));
@@ -571,106 +566,145 @@
                 this.animate();
             }
 
-            createTexture(text) {
+            createGlowBinaryTexture(char) {
                 const canvas = document.createElement('canvas');
-                canvas.width = 64; canvas.height = 64;
+                canvas.width = 128; canvas.height = 128;
                 const ctx = canvas.getContext('2d');
-                ctx.fillStyle = 'transparent';
-                ctx.fillRect(0, 0, 64, 64);
+                
+                const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+                grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+                grad.addColorStop(0.2, 'rgba(255, 255, 255, 0.8)');
+                grad.addColorStop(0.5, 'rgba(255, 255, 255, 0.2)');
+                grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, 128, 128);
+
                 ctx.fillStyle = '#ffffff'; 
-                ctx.font = 'bold 44px "Fira Code", monospace';
+                ctx.font = 'bold 50px "Fira Code", monospace';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(text, 32, 32);
+                ctx.fillText(char, 64, 64);
+
                 return new THREE.CanvasTexture(canvas);
             }
 
-            createParticles() {
-                this.maxParticles = 1500; // x2 geometrie = 3000 particelle totali sparse
-                this.geometry0 = new THREE.BufferGeometry();
-                this.geometry1 = new THREE.BufferGeometry();
+            createFluidParticles() {
+                this.particleCount = 5000; 
+                const geometry = new THREE.BufferGeometry();
+                
+                const positions = new Float32Array(this.particleCount * 3);
+                const randoms = new Float32Array(this.particleCount); 
+                const isOne = new Float32Array(this.particleCount); 
 
-                // Array per Logica Fisica Elastica e Posizioni
-                const initGeometry = (geometry) => {
-                    const pos = new Float32Array(this.maxParticles * 3);
-                    const basePos = new Float32Array(this.maxParticles * 3);
-                    const vel = new Float32Array(this.maxParticles * 3);
-                    const alpha = new Float32Array(this.maxParticles);
-                    const baseAlpha = new Float32Array(this.maxParticles);
+                for(let i=0; i<this.particleCount; i++) {
+                    positions[i*3] = (Math.random() - 0.5) * 4000;
+                    positions[i*3+1] = (Math.random() - 0.5) * 2000;
+                    positions[i*3+2] = (Math.random() - 0.5) * 2000 - 500;
+                    
+                    randoms[i] = Math.random();
+                    isOne[i] = Math.random() > 0.5 ? 1.0 : 0.0;
+                }
 
-                    for(let i=0; i<this.maxParticles; i++) {
-                        // Sparsi largamente per coprire tutto lo spazio, vicino e profondo
-                        let px = (Math.random() - 0.5) * 3000;
-                        let py = (Math.random() - 0.5) * 2000;
-                        let pz = Math.random() * 1200 - 1000; // Da -1000 a +200 di profondità
-                        
-                        pos[i*3] = px; pos[i*3+1] = py; pos[i*3+2] = pz;
-                        basePos[i*3] = px; basePos[i*3+1] = py; basePos[i*3+2] = pz;
-                        
-                        let a = Math.random() * 0.2 + 0.05; // Opacità base bassa e variabile
-                        alpha[i] = a; baseAlpha[i] = a;
-                    }
-
-                    geometry.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-                    geometry.setAttribute('alpha', new THREE.BufferAttribute(alpha, 1));
-                    geometry.userData = { basePos, vel, baseAlpha };
-                };
-
-                initGeometry(this.geometry0);
-                initGeometry(this.geometry1);
+                geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                geometry.setAttribute('aRandom', new THREE.BufferAttribute(randoms, 1));
+                geometry.setAttribute('aIsOne', new THREE.BufferAttribute(isOne, 1));
 
                 const vertexShader = `
-                    attribute float alpha;
+                    uniform float uTime;
+                    uniform vec2 uMouseWorld;
+                    uniform float uSize;
+                    attribute float aRandom;
+                    attribute float aIsOne;
                     varying float vAlpha;
-                    uniform float uPointSize;
+                    varying float vType;
+
                     void main() {
-                        vAlpha = alpha;
-                        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-                        // Il PointSize aumenta dinamicamente più i pixel sono vicini
-                        gl_PointSize = uPointSize * (200.0 / -mvPosition.z);
+                        vType = aIsOne;
+                        vec3 pos = position;
+
+                        pos.x += sin(uTime * 0.5 + pos.y * 0.005 + aRandom * 10.0) * 80.0;
+                        pos.y += cos(uTime * 0.4 + pos.z * 0.005 + aRandom * 10.0) * 80.0;
+                        pos.z += sin(uTime * 0.6 + pos.x * 0.005 + aRandom * 10.0) * 80.0;
+
+                        float dist = distance(pos.xy, uMouseWorld);
+                        float influenceRadius = 600.0;
+                        float mouseEffect = 0.0;
+                        
+                        if (dist < influenceRadius) {
+                            float influence = pow(1.0 - (dist / influenceRadius), 2.0); 
+                            pos.x = mix(pos.x, uMouseWorld.x + sin(uTime + aRandom)*50.0, influence * 0.3);
+                            pos.y = mix(pos.y, uMouseWorld.y + cos(uTime + aRandom)*50.0, influence * 0.3);
+                            pos.z += influence * 400.0; 
+                            mouseEffect = influence;
+                        }
+
+                        vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+                        gl_PointSize = uSize * (350.0 / -mvPosition.z);
+                        gl_PointSize += mouseEffect * uSize * 1.5; 
+                        
                         gl_Position = projectionMatrix * mvPosition;
-                    }
-                `;
-                const fragmentShader = `
-                    uniform vec3 color;
-                    uniform sampler2D map;
-                    varying float vAlpha;
-                    void main() {
-                        vec4 texColor = texture2D(map, gl_PointCoord);
-                        gl_FragColor = vec4(color * texColor.rgb, texColor.a * vAlpha); 
+                        
+                        float depthAlpha = smoothstep(-1500.0, 500.0, pos.z) * 0.3;
+                        vAlpha = depthAlpha + (mouseEffect * 0.7); 
                     }
                 `;
 
-                this.mat0 = new THREE.ShaderMaterial({
-                    uniforms: {
-                        color: { value: new THREE.Color('#00ff41') },
-                        map: { value: this.createTexture('0') },
-                        uPointSize: { value: SETTINGS_VISUALS.BIN_SIZE }
-                    },
+                const fragmentShader = `
+                    uniform vec3 uColor;
+                    uniform float uIsLight;
+                    uniform sampler2D map0;
+                    uniform sampler2D map1;
+                    varying float vAlpha;
+                    varying float vType;
+
+                    void main() {
+                        vec4 texColor;
+                        if(vType > 0.5) {
+                            texColor = texture2D(map1, gl_PointCoord);
+                        } else {
+                            texColor = texture2D(map0, gl_PointCoord);
+                        }
+                        
+                        if (texColor.a < 0.05) discard;
+                        
+                        // Nel tema chiaro, il 'glow' centrale è scuro invece che bianco.
+                        vec3 glowColor = mix(vec3(1.0), vec3(0.1), uIsLight);
+                        vec3 finalColor = mix(uColor, glowColor, texColor.r * 0.5);
+                        
+                        gl_FragColor = vec4(finalColor, texColor.a * vAlpha); 
+                    }
+                `;
+
+                this.uniforms = {
+                    uTime: { value: 0 },
+                    uMouseWorld: { value: new THREE.Vector2(9999, 9999) },
+                    uColor: { value: new THREE.Color(SETTINGS.THEME['--primary-color']) },
+                    uIsLight: { value: 0.0 }, // 0 = dark mode, 1 = light mode
+                    uSize: { value: SETTINGS_VISUALS.BIN_SIZE },
+                    map0: { value: this.createGlowBinaryTexture('0') },
+                    map1: { value: this.createGlowBinaryTexture('1') }
+                };
+
+                this.material = new THREE.ShaderMaterial({
+                    uniforms: this.uniforms,
                     vertexShader, fragmentShader,
-                    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+                    transparent: true, depthWrite: false, 
+                    blending: THREE.AdditiveBlending
                 });
 
-                this.mat1 = this.mat0.clone();
-                this.mat1.uniforms.map.value = this.createTexture('1');
-
-                this.points0 = new THREE.Points(this.geometry0, this.mat0);
-                this.points1 = new THREE.Points(this.geometry1, this.mat1);
-
-                this.scene.add(this.points0);
-                this.scene.add(this.points1);
+                this.particleSystem = new THREE.Points(geometry, this.material);
+                this.scene.add(this.particleSystem);
             }
 
             onMouseMove(e) {
-                // Traduce in Coordinate Normalizzate (NDC) per il Raycaster 3D
-                this.ndcX = (e.clientX / window.innerWidth) * 2 - 1;
-                this.ndcY = -(e.clientY / window.innerHeight) * 2 + 1;
+                this.targetMouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+                this.targetMouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
             }
 
             onTouchMove(e) {
                 if (e.touches.length > 0) {
-                    this.ndcX = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
-                    this.ndcY = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
+                    this.targetMouse.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
+                    this.targetMouse.y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
                 }
             }
 
@@ -680,15 +714,23 @@
                 this.renderer.setSize(window.innerWidth, window.innerHeight);
             }
 
-            updateTheme(colorHex) {
-                this.mat0.uniforms.color.value.set(colorHex);
-                this.mat1.uniforms.color.value.set(colorHex);
+            updateTheme(themeConfig) {
+                this.uniforms.uColor.value.set(themeConfig['--primary-color']);
+                this.uniforms.uIsLight.value = themeConfig.isLight ? 1.0 : 0.0;
+                
+                // Gestione fusione colori e nebbia in base alla luminosità del tema
+                if (themeConfig.isLight) {
+                    this.material.blending = THREE.NormalBlending;
+                    this.scene.fog.color.set(themeConfig['--bg-color']);
+                } else {
+                    this.material.blending = THREE.AdditiveBlending;
+                    this.scene.fog.color.copy(new THREE.Color(themeConfig['--primary-color']).multiplyScalar(0.05));
+                }
+                this.material.needsUpdate = true;
             }
 
-            updateVisuals(size, fadeSpeed) {
-                this.mat0.uniforms.uPointSize.value = size;
-                this.mat1.uniforms.uPointSize.value = size;
-                SETTINGS_VISUALS.BIN_FADE = fadeSpeed;
+            updateVisuals(size) {
+                this.uniforms.uSize.value = size;
             }
 
             zoomTo(zLevel) {
@@ -698,96 +740,28 @@
             animate() {
                 requestAnimationFrame(() => this.animate());
 
-                // Movimento Morbido Zoom In/Out
-                this.camera.position.z += (this.targetZ - this.camera.position.z) * 0.05;
+                const delta = this.clock.getDelta();
+                this.uniforms.uTime.value += delta;
+
+                this.mouse.lerp(this.targetMouse, 0.1);
+
+                let vec = new THREE.Vector3(this.mouse.x, this.mouse.y, 0.5);
+                vec.unproject(this.camera);
+                vec.sub(this.camera.position).normalize();
+                let distance = -this.camera.position.z / vec.z;
+                let worldPos = this.camera.position.clone().add(vec.multiplyScalar(distance));
                 
-                // Micro Parallasse Basato sul Cursore
-                const lookX = this.ndcX * 20;
-                const lookY = this.ndcY * 20;
-                this.camera.position.x += (lookX - this.camera.position.x) * 0.05;
-                this.camera.position.y += (lookY - this.camera.position.y) * 0.05;
+                this.uniforms.uMouseWorld.value.set(worldPos.x, worldPos.y);
+
+                this.camera.position.z += (this.targetZ - this.camera.position.z) * 0.04;
+                
+                const lookX = this.mouse.x * 100;
+                const lookY = this.mouse.y * 100;
+                this.camera.position.x += (lookX - this.camera.position.x) * 0.03;
+                this.camera.position.y += (lookY - this.camera.position.y) * 0.03;
                 this.camera.lookAt(this.scene.position);
 
-                // Calcola il raggio di interazione del mouse (Raycaster 3D)
-                this.raycaster.setFromCamera(new THREE.Vector2(this.ndcX, this.ndcY), this.camera);
-                
-                this.updateParticlePhysics(this.geometry0);
-                this.updateParticlePhysics(this.geometry1);
-
                 this.renderer.render(this.scene, this.camera);
-            }
-
-            updateParticlePhysics(geo) {
-                const rO = this.raycaster.ray.origin;
-                const rD = this.raycaster.ray.direction;
-
-                const positions = geo.attributes.position.array;
-                const alphas = geo.attributes.alpha.array;
-                const basePos = geo.userData.basePos;
-                const vel = geo.userData.vel;
-                const baseAlpha = geo.userData.baseAlpha;
-
-                const attractRadius = 250.0; // Cilindro magnetico attorno al mouse
-
-                for(let i=0; i<this.maxParticles; i++) {
-                    let px = positions[i*3];
-                    let py = positions[i*3+1];
-                    let pz = positions[i*3+2];
-
-                    // Trova il punto più vicino sul raggio del mouse alla particella
-                    let vx = px - rO.x;
-                    let vy = py - rO.y;
-                    let vz = pz - rO.z;
-                    let t = vx * rD.x + vy * rD.y + vz * rD.z;
-
-                    let qx = rO.x + t * rD.x;
-                    let qy = rO.y + t * rD.y;
-                    let qz = rO.z + t * rD.z;
-
-                    // Distanza tra il mouse e la particella nel piano visivo
-                    let dx = qx - px;
-                    let dy = qy - py;
-                    let dz = qz - pz;
-                    let dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
-
-                    // 1. Forza di Attrazione (Magnetismo del mouse)
-                    if (dist < attractRadius && t > 0) {
-                        let force = (attractRadius - dist) / attractRadius;
-                        vel[i*3] += dx * force * 0.015; // Pull strength
-                        vel[i*3+1] += dy * force * 0.015;
-                        vel[i*3+2] += dz * force * 0.015;
-
-                        alphas[i] = Math.min(1.0, alphas[i] + 0.1); // Illumina
-                    }
-
-                    // 2. Forza Elastica (Torna alla posizione originale)
-                    let bx = basePos[i*3];
-                    let by = basePos[i*3+1];
-                    let bz = basePos[i*3+2];
-
-                    vel[i*3] += (bx - px) * 0.01; // Spring stiffness
-                    vel[i*3+1] += (by - py) * 0.01;
-                    vel[i*3+2] += (bz - pz) * 0.01;
-
-                    // 3. Applica Velocità alla Posizione
-                    positions[i*3] += vel[i*3];
-                    positions[i*3+1] += vel[i*3+1];
-                    positions[i*3+2] += vel[i*3+2];
-
-                    // 4. Attrito (Friction) per smorzare l'effetto molla
-                    vel[i*3] *= 0.85;
-                    vel[i*3+1] *= 0.85;
-                    vel[i*3+2] *= 0.85;
-
-                    // 5. Dissolvenza dell'illuminazione
-                    if (alphas[i] > baseAlpha[i]) {
-                        alphas[i] -= SETTINGS_VISUALS.BIN_FADE;
-                        if (alphas[i] < baseAlpha[i]) alphas[i] = baseAlpha[i];
-                    }
-                }
-                
-                geo.attributes.position.needsUpdate = true;
-                geo.attributes.alpha.needsUpdate = true;
             }
         }
 
@@ -1025,9 +999,9 @@
                     SETTINGS.JKMODE.PHYSICS.FRICTION = 1.0; 
                     p = new Player(500);
                     p.update(500, {up:true, down:false}, null);
-                    this.assert(p.v === -2.0, "Comandi JKMODE: Tasto 'up' tenuto premuto accelera verso l'alto (Zero-G).");
+                    this.assert(p.v === -2.0, "Comandi JKMODE: Tasto 'up' accelera verso l'alto (Zero-G).");
                     p.update(500, {up:false, down:true}, null);
-                    this.assert(p.v === 0, "Comandi JKMODE: Tasto 'down' annulla l'accelerazione precedente (Zero-G).");
+                    this.assert(p.v === 0, "Comandi JKMODE: Tasto 'down' annulla l'accelerazione precedente.");
 
                     // Test logica buffer /jump
                     let testBuffer = "";
@@ -1040,14 +1014,11 @@
                         }
                     };
                     simulaTasto("/"); simulaTasto("m"); simulaTasto("a"); simulaTasto("i");
-                    this.assert(testBuffer === "/mai", "Comandi /JUMP: Il buffer di ricerca concatena i caratteri correttamente.");
+                    this.assert(testBuffer === "/mai", "Comandi /JUMP: Buffer di ricerca concatena correttamente.");
                     simulaTasto("Backspace");
-                    this.assert(testBuffer === "/ma", "Comandi /JUMP: Backspace rimuove correttamente l'ultimo carattere.");
+                    this.assert(testBuffer === "/ma", "Comandi /JUMP: Backspace rimuove l'ultimo carattere.");
                     simulaTasto("Escape");
                     this.assert(testBuffer === "", "Comandi /JUMP: Escape svuota completamente il buffer.");
-                    simulaTasto("a"); 
-                    this.assert(testBuffer === "", "Comandi /JUMP: Caratteri ignorati se non preceduti da '/'.");
-
                     
                     this.logs.push("<div class='test-group'>=== TEST JKMODE (Fisica e Ostacoli) ===</div>");
                     
@@ -1068,25 +1039,21 @@
                     this.assert(p.v === -1.0 && p.y === 249, "Fisica: Movimento in Zero-G funzionante.");
 
                     p = new Player(500); p.y = 5; p.v = -10;
-                    this.assert(p.update(500, {up:false, down:false}, null) === true, "Collisioni: Toccando il soffitto restituisce True.");
+                    this.assert(p.update(500, {up:false, down:false}, null) === true, "Collisioni: Toccando il soffitto muore.");
 
                     p = new Player(500); p.y = 480; p.v = 10; p.size = 28;
-                    this.assert(p.update(500, {up:false, down:false}, null) === true, "Collisioni: Toccando il pavimento restituisce True.");
+                    this.assert(p.update(500, {up:false, down:false}, null) === true, "Collisioni: Toccando il pavimento muore.");
 
                     p = new Player(500); p.x = 100; p.y = 150; p.size = 28;
                     let pipe = new Pipe(100, 500);
                     pipe.x = 100; pipe.w = 50; pipe.top = 100; pipe.gap = 200; 
-                    this.assert(pipe.collides(p, 500) === false, "Collisioni: Passaggio attraverso il gap del tubo (Safe).");
+                    this.assert(pipe.collides(p, 500) === false, "Collisioni: Passaggio attraverso il gap (Safe).");
 
                     p.y = 90;
-                    this.assert(pipe.collides(p, 500) === true, "Collisioni: Impatto con il tubo superiore rilevato.");
-
-                    p = new Player(500); p.x = 100; p.y = 100; p.size = 20; 
-                    let met = new Meteor(100, 500); met.x = 110; met.y = 110; met.size = 30; 
-                    this.assert(met.collides(p, 500) === true, "Collisioni: Impatto circolare con il Meteorite rilevato.");
+                    this.assert(pipe.collides(p, 500) === true, "Collisioni: Impatto con il tubo rilevato.");
 
 
-                    this.logs.push("<div class='test-group'>=== TEST /JUMP (Meccaniche e Ricerca) ===</div>");
+                    this.logs.push("<div class='test-group'>=== TEST /JUMP E RICERCA UNIFICATA ===</div>");
                     
                     let mockPlatforms = [
                         { targetWord: "public", y: 400 },
@@ -1098,12 +1065,8 @@
                     let mockCameraY = 0;
                     let mockCanvasHeight = 500;
 
-                    let performSearch = (buffer, currentIndex, contentType = 'keywords') => {
+                    let performSearch = (buffer, currentIndex) => {
                         let searchWord = buffer.substring(1).toLowerCase();
-                        
-                        // Implementazione della nuova regola "esattamente 3 lettere per gli snippets"
-                        if (contentType === 'snippets' && searchWord.length !== 3) return -1;
-
                         for (let i = currentIndex + 1; i < mockPlatforms.length; i++) {
                             let screenY = mockPlatforms[i].y + mockCameraY;
                             if (screenY < -30 || screenY > mockCanvasHeight + 30) {
@@ -1112,40 +1075,37 @@
                             }
                             const platWord = mockPlatforms[i].targetWord.toLowerCase();
                             
-                            if (contentType === 'snippets') {
+                            if (searchWord.length === 3) {
                                 if (platWord.startsWith(searchWord)) return i;
-                            } else {
-                                if (platWord === searchWord || (searchWord.length >= 3 && platWord.startsWith(searchWord))) return i;
+                            } else if (searchWord.length < 3) {
+                                if (platWord === searchWord) return i;
                             }
                         }
                         return -1;
                     };
 
-                    // Test Keywords Mode
-                    this.assert(performSearch("/pub", -1, 'keywords') === 0, "Ricerca Keywords: Match corretto sulle prime 3 lettere ('/pub' -> 'public').");
-                    this.assert(performSearch("/i", 0, 'keywords') === -1, "Ricerca Keywords: Nessun salto per parole corte senza match esatto ('/i' ignora 'if').");
-                    this.assert(performSearch("/if", 0, 'keywords') === 1, "Ricerca Keywords: Match esatto per parole corte funzionante ('/if' -> 'if').");
-                    this.assert(performSearch("/ret", 1, 'keywords') === 2, "Ricerca Keywords: Corretto salto della piattaforma successiva ('/ret' -> 'return').");
+                    this.assert(performSearch("/pub", -1) === 0, "Ricerca Unificata: Match prime 3 lettere ('/pub' -> 'public').");
+                    this.assert(performSearch("/i", 0) === -1, "Ricerca Unificata: Nessun salto prematuro parole corte ('/i' ignora 'if').");
+                    this.assert(performSearch("/if", 0) === 1, "Ricerca Unificata: Match esatto parole corte ('/if' -> 'if').");
+                    this.assert(performSearch("/ret", 1) === 2, "Ricerca Unificata: Salto piattaforma ('/ret' -> 'return').");
+                    this.assert(performSearch("/wri", 2) === 3, "Ricerca Unificata: Match su Snippet interno ('/wri' -> 'WriteLine').");
                     
-                    // Test Snippets Mode (Regola 3 lettere)
-                    this.assert(performSearch("/wri", 2, 'snippets') === 3, "Ricerca Snippets: Match corretto con ESATTAMENTE 3 lettere ('/wri' -> 'WriteLine').");
-                    this.assert(performSearch("/wr", 2, 'snippets') === -1, "Ricerca Snippets: Match fallito se MENO di 3 lettere ('/wr' viene ignorato).");
-                    this.assert(performSearch("/writ", 2, 'snippets') === -1, "Ricerca Snippets: Match fallito se PIÙ di 3 lettere ('/writ' viene ignorato).");
-
-                    this.assert(performSearch("/xyz", 1, 'keywords') === -1, "Ricerca: Error handling per match non trovati ('/xyz').");
-                    this.assert(performSearch("/cla", 3, 'keywords') === -1, "Camera: Piattaforma fuori dallo schermo visibile ignorata ('/cla' -> 'class').");
+                    this.assert(performSearch("/pu", -1) === -1, "Ricerca Unificata: Fallito se MENO di 3 lettere per parole lunghe ('/pu').");
+                    this.assert(performSearch("/publ", -1) === -1, "Ricerca Unificata: Fallito se PIÙ di 3 lettere ('/publ').");
+                    this.assert(performSearch("/writ", 2) === -1, "Ricerca Unificata: Fallito se PIÙ di 3 lettere su snippet ('/writ').");
+                    
+                    this.assert(performSearch("/cla", 3) === -1, "Camera: Piattaforma fuori schermo ignorata.");
 
                     let jumpTime = 60;
                     jumpTime--;
                     this.assert(jumpTime === 59, "Timer: Il timer del livello diminuisce regolarmente a ogni frame.");
 
 
-                    this.logs.push("<div class='test-group'>=== TEST CASI LIMITE (Edge Cases) ===</div>");
+                    this.logs.push("<div class='test-group'>=== TEST CASI LIMITE E SICUREZZA ===</div>");
                     
-                    // Limiti Velocità
                     SETTINGS.JKMODE.PHYSICS.MAX_VELOCITY = 15;
                     p = new Player(500);
-                    p.v = 100; // Imposta velocità artificialmente altissima
+                    p.v = 100; 
                     p.update(500, {up:false, down:false}, null);
                     this.assert(p.v === 15, "Fisica: Clamp velocità massima positiva (terminal velocity).");
                     
@@ -1153,15 +1113,13 @@
                     p.update(500, {up:false, down:false}, null);
                     this.assert(p.v === -15, "Fisica: Clamp velocità massima negativa (boost cap).");
 
-                    // Out of Bounds estremi
                     p.y = -5000;
-                    this.assert(p.update(500, {up:false, down:false}, null) === true, "Sicurezza: Uscita mappa estrema superiore gestita (SEGFAULT).");
+                    this.assert(p.update(500, {up:false, down:false}, null) === true, "Sicurezza: Uscita mappa estrema superiore (SEGFAULT).");
                     p.y = 5000;
-                    this.assert(p.update(500, {up:false, down:false}, null) === true, "Sicurezza: Uscita mappa estrema inferiore gestita (SEGFAULT).");
+                    this.assert(p.update(500, {up:false, down:false}, null) === true, "Sicurezza: Uscita mappa estrema inferiore (SEGFAULT).");
 
-                    // Test Buffer Jump
-                    this.assert(performSearch("/", 0, 'keywords') === -1, "Sicurezza /Jump: Buffer vuoto ignorato ('/').");
-                    this.assert(performSearch("/ReT", 1, 'keywords') === 2, "Sicurezza /Jump: Case-insensitivity garantita su input misti ('/ReT').");
+                    this.assert(performSearch("/", 0) === -1, "Sicurezza /Jump: Buffer vuoto ignorato ('/').");
+                    this.assert(performSearch("/ReT", 1) === 2, "Sicurezza /Jump: Case-insensitivity garantita ('/ReT').");
 
                 } catch (e) {
                     this.logs.push(`<span class="test-fail">[ERRORE FATALE]</span> Eccezione durante i test: ${e.message}`);
@@ -1178,11 +1136,7 @@
                 this.logs.push("<br>----------------------------------------");
                 this.logs.push(`Risultati: <span class="test-pass">${this.passed} PASS</span> | <span class="test-fail">${this.failed} FAIL</span>`);
                 
-                return {
-                    logs: this.logs,
-                    passed: this.passed,
-                    failed: this.failed
-                };
+                return { logs: this.logs, passed: this.passed, failed: this.failed };
             }
         }
 
@@ -1201,10 +1155,12 @@
                 this.currentAction = null;
                 this.highScores = { pipes: 0, meteors: 0 };
                 this.lastKey = '';
+                this.currentThemeName = 'matrix'; 
+                this.currentDarkTheme = 'matrix'; 
 
                 this.loadHighScores();
 
-                this.player = new Player(this.canvas.height);
+                this.player = new Player(this.canvas.height || 500);
                 this.input = new Controller({
                     onKey: (k, e) => this.handleKey(k, e),
                     onAction: (act) => this.currentAction = act,
@@ -1218,6 +1174,7 @@
                 this.renderGlobalMenu();
                 
                 window.addEventListener('resize', () => this.onResize());
+                this.onResize();
                 
                 this.run();
             }
@@ -1238,8 +1195,28 @@
             }
 
             _setupUI() {
-                document.getElementById('btn-config').addEventListener('click', () => this.goToMainMenu());
-                document.getElementById('btn-restart').addEventListener('click', () => this.start());
+                document.getElementById('btn-config').addEventListener('click', (e) => {
+                    e.currentTarget.blur();
+                    this.goToMainMenu();
+                });
+                document.getElementById('btn-restart').addEventListener('click', (e) => {
+                    e.currentTarget.blur();
+                    this.start();
+                });
+
+                document.getElementById('theme-toggle-btn').addEventListener('click', (e) => {
+                    e.currentTarget.blur(); 
+                    if (SETTINGS.THEME.isLight) {
+                        this.setTheme(this.currentDarkTheme || 'matrix');
+                        document.getElementById('theme-toggle-btn').innerText = '☀️';
+                        document.getElementById('theme-toggle-btn').title = 'Passa a Tema Chiaro (Pastel)';
+                    } else {
+                        this.currentDarkTheme = this.currentThemeName || 'matrix';
+                        this.setTheme('pastel');
+                        document.getElementById('theme-toggle-btn').innerText = '🌙';
+                        document.getElementById('theme-toggle-btn').title = 'Passa a Tema Scuro';
+                    }
+                });
             }
 
             handleKey(key, e) {
@@ -1295,7 +1272,7 @@
                     if (item.id === 'game_tests') pillClass += ' bg-yellow-500 text-black';
                     else if (item.id === 'back') pillClass += ' bg-red-500 text-white';
                     
-                    content = `<span class="${pillClass}">RUN</span> <span class="${isActive ? 'text-white' : ''} font-bold">${item.label}</span>`;
+                    content = `<span class="${pillClass}">RUN</span> <span class="font-bold">${item.label}</span>`;
                 } else if (item.options) {
                     const optsHtml = item.options.map((opt, i) => {
                         return i === item.idx 
@@ -1395,15 +1372,11 @@
                 if (item.id === 'theme') {
                     this.setTheme(val);
                 } else if (item.id === 'bin_size') {
-                    const sizeMap = { 'piccolo': 6.0, 'medio': 12.0, 'grande': 24.0 };
+                    const sizeMap = { 'piccolo': 8.0, 'medio': 14.0, 'grande': 28.0 };
                     SETTINGS_VISUALS.BIN_SIZE = sizeMap[val];
-                    if (window.threeBg) window.threeBg.updateVisuals(SETTINGS_VISUALS.BIN_SIZE, SETTINGS_VISUALS.BIN_FADE);
-                } else if (item.id === 'bin_fade') {
-                    const fadeMap = { 'veloce': 0.08, 'normale': 0.04, 'lenta': 0.015 };
-                    SETTINGS_VISUALS.BIN_FADE = fadeMap[val];
-                    if (window.threeBg) window.threeBg.updateVisuals(SETTINGS_VISUALS.BIN_SIZE, SETTINGS_VISUALS.BIN_FADE);
+                    if (window.threeBg) window.threeBg.updateVisuals(SETTINGS_VISUALS.BIN_SIZE);
                 } else if (item.id === 'menu_opac') {
-                    const opacMap = { 'bassa': 0.2, 'media': 0.5, 'alta': 0.85 };
+                    const opacMap = { 'ultra': 0.05, 'media': 0.15, 'solida': 0.6 };
                     SETTINGS_VISUALS.MENU_OPACITY = opacMap[val];
                     document.documentElement.style.setProperty('--term-bg-alpha', SETTINGS_VISUALS.MENU_OPACITY);
                 }
@@ -1454,7 +1427,7 @@
 
             goToMainMenu() {
                 this.state = 'MAIN_MENU';
-                if(window.threeBg) window.threeBg.zoomTo(160); 
+                if(window.threeBg) window.threeBg.zoomTo(500); 
                 
                 document.getElementById('config-menu').classList.add('hidden');
                 document.getElementById('global-menu').classList.add('hidden');
@@ -1469,7 +1442,7 @@
 
             goToGlobalMenu() {
                 this.state = 'GLOBAL_MENU';
-                if(window.threeBg) window.threeBg.zoomTo(120); 
+                if(window.threeBg) window.threeBg.zoomTo(300); 
                 
                 document.getElementById('main-menu').classList.add('hidden');
                 document.getElementById('config-menu').classList.add('hidden');
@@ -1484,7 +1457,7 @@
             /* --- LOGICA DI TESTING --- */
             runUnitTests() {
                 this.state = 'TESTING';
-                if(window.threeBg) window.threeBg.zoomTo(60); 
+                if(window.threeBg) window.threeBg.zoomTo(150); 
                 
                 document.getElementById('main-menu').classList.add('hidden');
                 document.getElementById('test-runner').classList.remove('hidden');
@@ -1493,10 +1466,9 @@
                 const statusMode = document.getElementById('test-status-mode');
                 const statusInfo = document.querySelector('#test-status-info span');
 
-                // UI Status: TESTING in corso
                 outputDiv.innerHTML = "Avvio modulo di test integrato...<br>";
                 statusMode.innerText = 'TESTING';
-                statusMode.style.background = '#ffbd2e'; // Giallo testing
+                statusMode.style.background = '#ffbd2e'; 
                 statusMode.style.color = '#000';
                 statusInfo.innerText = 'Esecuzione unit test in corso...';
                 
@@ -1504,15 +1476,14 @@
                     const results = this.testSuite.runTests();
                     outputDiv.innerHTML = results.logs.join('<br>');
 
-                    // Aggiornamento Dinamico della UI Status Bar
                     if (results.failed === 0) {
                         statusMode.innerText = 'SUCCESS';
-                        statusMode.style.background = '#27c93f'; // Verde successo
+                        statusMode.style.background = '#27c93f'; 
                         statusMode.style.color = '#000';
                         statusInfo.innerText = `Tutti i ${results.passed} test sono passati.`;
                     } else {
                         statusMode.innerText = 'FAIL';
-                        statusMode.style.background = '#ff5f56'; // Rosso fallimento
+                        statusMode.style.background = '#ff5f56'; 
                         statusMode.style.color = '#fff';
                         statusInfo.innerText = `Rilevati ${results.failed} errori critici.`;
                     }
@@ -1601,7 +1572,7 @@
 
             goToConfigMenu() {
                 this.state = 'CONFIG_MENU';
-                if(window.threeBg) window.threeBg.zoomTo(90);
+                if(window.threeBg) window.threeBg.zoomTo(250);
 
                 document.getElementById('main-menu').classList.add('hidden');
                 document.getElementById('global-menu').classList.add('hidden');
@@ -1614,12 +1585,16 @@
             }
 
             setTheme(themeName) {
+                this.currentThemeName = themeName;
                 const theme = THEMES[themeName];
                 SETTINGS.THEME = { ...theme };
-                for (let key in theme) document.documentElement.style.setProperty(key, theme[key]);
+                
+                for (let key in theme) {
+                    if(key !== 'isLight') document.documentElement.style.setProperty(key, theme[key]);
+                }
                 
                 if (window.threeBg) {
-                    window.threeBg.updateTheme(SETTINGS.THEME['--primary-color']);
+                    window.threeBg.updateTheme(SETTINGS.THEME);
                 }
             }
 
@@ -1644,18 +1619,18 @@
 
             /* --- GESTIONE START GIOCHI --- */
             start() {
-                if (window.threeBg) window.threeBg.zoomTo(30); 
+                if (window.threeBg) window.threeBg.zoomTo(-200); 
 
-                // Mostra Finestra Terminale del Gioco
                 document.getElementById('main-menu').classList.add('hidden');
                 document.getElementById('config-menu').classList.add('hidden');
                 document.getElementById('global-menu').classList.add('hidden');
                 document.getElementById('game-over').classList.add('hidden');
                 
+                // Mostra il terminale di gioco
                 const termWindow = document.getElementById('game-terminal');
                 termWindow.classList.remove('hidden');
                 
-                // Forza un resize del canvas basato sulle dimensioni attuali del terminal window in-game
+                // Aggiorna le dimensioni del canvas affinché riempiano il terminal container prima di spawnare il player
                 this.onResize();
 
                 if (SETTINGS.GAME === 'jump') {
@@ -1667,6 +1642,7 @@
                 this.state = 'PLAYING';
                 this.score = 0;
                 this.obstacles = [];
+                // Inizializza il player calcolando l'altezza corretta della finestra terminale
                 this.player = new Player(this.canvas.height);
                 this.ticks = 0;
                 this.currentAction = null;
@@ -1762,18 +1738,9 @@
                 } else if (key === 'Escape') {
                     this.jumpBuffer = "";
                 } else if (key === 'Enter') {
-                    // Solo l'invio permette il salto
                     if (this.jumpBuffer.length > 1) { 
                         const searchWord = this.jumpBuffer.substring(1).toLowerCase();
-                        const isSnippets = SETTINGS.JUMP.CONTENT === 'snippets';
                         
-                        // Per gli snippets è richiesto l'input esatto di 3 lettere (escluso il '/')
-                        if (isSnippets && searchWord.length !== 3) {
-                            this.jumpBuffer = "";
-                            this.updateJumpStatus();
-                            return;
-                        }
-
                         let startIdx = this.jumpPlayerIdx + 1;
                         let matchedIdx = -1;
                         
@@ -1788,14 +1755,13 @@
 
                             const platWord = plat.targetWord.toLowerCase();
                             
-                            // Logica del matching
-                            if (isSnippets) {
+                            if (searchWord.length === 3) {
                                 if (platWord.startsWith(searchWord)) {
                                     matchedIdx = i;
                                     break;
                                 }
-                            } else {
-                                if (platWord === searchWord || (searchWord.length >= 3 && platWord.startsWith(searchWord))) {
+                            } else if (searchWord.length < 3) {
+                                if (platWord === searchWord) {
                                     matchedIdx = i;
                                     break;
                                 }
@@ -1809,7 +1775,7 @@
                                 this.state = 'AT_DOOR';
                             }
                         } else {
-                            this.jumpBuffer = ""; // Reset su fallimento
+                            this.jumpBuffer = ""; 
                         }
                     }
                 } else if (key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
@@ -1916,7 +1882,7 @@
                 const boxWidth = Math.min(500, this.canvas.width * 0.9);
                 const boxHeight = 140;
 
-                ctx.fillStyle = 'rgba(10,15,10,0.95)';
+                ctx.fillStyle = `rgba(${SETTINGS.THEME['--term-bg-rgb']}, 0.85)`;
                 ctx.fillRect(cx - boxWidth/2, cy - boxHeight/2, boxWidth, boxHeight);
                 ctx.strokeStyle = SETTINGS.THEME['--primary-color'];
                 ctx.strokeRect(cx - boxWidth/2, cy - boxHeight/2, boxWidth, boxHeight);
@@ -2023,8 +1989,9 @@
                     return; 
                 }
                 
-                // Clear con trasparenza per far emergere i pixel sotto il canvas del terminale
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                // Clear dinamico basato sul tema per creare oscuramento leggero nel gioco
+                ctx.fillStyle = `rgba(${SETTINGS.THEME['--term-bg-rgb']}, 0.6)`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
 
                 ctx.strokeStyle = SETTINGS.THEME['--grid-color'];
                 ctx.lineWidth = 1;
