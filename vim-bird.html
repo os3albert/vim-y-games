@@ -11,13 +11,15 @@
         @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&display=swap');
         
         :root {
-            --bg-color: #0d0d0d;
+            --bg-color: #000000;
             --primary-color: #00ff41;
-            --secondary-color: rgba(0, 255, 65, 0.1);
+            --secondary-color: rgba(0, 255, 65, 0.15);
             --grid-color: rgba(0, 255, 65, 0.05);
-            --term-bg: rgba(13, 13, 13, 0.65);
+            --term-bg-rgb: 10, 15, 10;
+            --term-bg-alpha: 0.5; /* Valore di base del 50% */
             --text-color: #e0e0e0;
             --font-family: 'Fira Code', monospace;
+            --border-color: rgba(0, 255, 65, 0.2);
             --highlight-color: #fffb00;
         }
 
@@ -40,8 +42,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: -2;
-            pointer-events: none;
+            z-index: 9999; /* Spostato in primo piano, sopra il menu e il gioco */
+            pointer-events: none; /* Mantiene la possibilità di cliccare gli elementi sottostanti */
         }
 
         /* UI Overlay Layer */
@@ -59,7 +61,7 @@
 
         /* Stile Terminale Moderno */
         .terminal-window {
-            background: var(--term-bg);
+            background: rgba(var(--term-bg-rgb), var(--term-bg-alpha));
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -175,7 +177,7 @@
             text-align: center;
         }
 
-        .menu-label { width: 140px; display: inline-block; }
+        .menu-label { width: 150px; display: inline-block; }
         .menu-value { color: var(--primary-color); font-weight: 500; }
         .menu-value-dim { opacity: 0.4; }
 
@@ -192,6 +194,18 @@
         
         .blink { animation: blinker 1.5s linear infinite; }
         @keyframes blinker { 50% { opacity: 0; } }
+
+        /* Stili dei bottoni generici */
+        .custom-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.25rem;
+            color: var(--text-color);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            background: transparent;
+        }
+        .custom-btn:hover { background: var(--secondary-color); }
     </style>
 </head>
 <body>
@@ -355,7 +369,7 @@
 
         <!-- Score HUD in-game -->
         <div id="hud" class="absolute top-6 left-6 flex flex-col hidden tabular-nums drop-shadow-md z-10">
-            <div class="text-xl font-bold px-3 py-1 rounded bg-[var(--term-bg)] border border-[rgba(255,255,255,0.1)] backdrop-blur-md">
+            <div class="text-xl font-bold px-3 py-1 rounded border" style="background: rgba(var(--term-bg-rgb), var(--term-bg-alpha)); border-color: rgba(255,255,255,0.1); backdrop-filter: blur(12px);">
                 <span class="text-[var(--primary-color)]">SCORE</span> <span id="current-score">0</span>
             </div>
             <div class="text-xs opacity-80 mt-2 px-3">
@@ -368,241 +382,18 @@
 
     <script>
         /**
-         * CLASSE THREE.JS BACKGROUND
-         * Scia di pixel e zoom dinamico
+         * IMPOSTAZIONI VISUALI GLOBALI E DATI
          */
-        class ThreeBackground {
-            constructor() {
-                this.container = document.getElementById('three-container');
-                this.scene = new THREE.Scene();
-                this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-                
-                this.targetZ = 160;
-                this.camera.position.z = 160;
+        const SETTINGS_VISUALS = {
+            BIN_SIZE: 12.0,    // Dimensione punti Three.js
+            BIN_FADE: 0.04,    // Velocità fade particelle attivate dal mouse
+            MENU_OPACITY: 0.5  // Opacità terminal window
+        };
 
-                this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-                this.renderer.setSize(window.innerWidth, window.innerHeight);
-                this.container.appendChild(this.renderer.domElement);
-
-                this.mouseX = window.innerWidth / 2;
-                this.mouseY = window.innerHeight / 2;
-                this.targetMouseX = this.mouseX;
-                this.targetMouseY = this.mouseY;
-
-                this.createParticles();
-
-                window.addEventListener('resize', () => this.onResize());
-                window.addEventListener('mousemove', (e) => this.onMouseMove(e));
-                window.addEventListener('touchmove', (e) => this.onTouchMove(e), {passive: true});
-
-                this.animate();
-            }
-
-            createTexture(text) {
-                const canvas = document.createElement('canvas');
-                canvas.width = 64; canvas.height = 64;
-                const ctx = canvas.getContext('2d');
-                ctx.fillStyle = 'transparent';
-                ctx.fillRect(0, 0, 64, 64);
-                ctx.fillStyle = '#ffffff'; 
-                ctx.font = 'bold 44px "Fira Code", monospace';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(text, 32, 32);
-                return new THREE.CanvasTexture(canvas);
-            }
-
-            createParticles() {
-                this.maxParticles = 1200; // Aumentati i particellari
-                this.geometry0 = new THREE.BufferGeometry();
-                this.geometry1 = new THREE.BufferGeometry();
-
-                const pos0 = new Float32Array(this.maxParticles * 3);
-                const pos1 = new Float32Array(this.maxParticles * 3);
-                const alpha0 = new Float32Array(this.maxParticles);
-                const alpha1 = new Float32Array(this.maxParticles);
-
-                for(let i=0; i<this.maxParticles; i++) {
-                    pos0[i*3] = (Math.random() - 0.5) * 800;
-                    pos0[i*3+1] = (Math.random() - 0.5) * 500;
-                    pos0[i*3+2] = (Math.random() - 0.5) * 500 - 50;
-                    alpha0[i] = Math.random() * 0.1 + 0.02; // Opacità base molto bassa
-
-                    pos1[i*3] = (Math.random() - 0.5) * 800;
-                    pos1[i*3+1] = (Math.random() - 0.5) * 500;
-                    pos1[i*3+2] = (Math.random() - 0.5) * 500 - 50;
-                    alpha1[i] = Math.random() * 0.1 + 0.02;
-                }
-
-                this.geometry0.setAttribute('position', new THREE.BufferAttribute(pos0, 3));
-                this.geometry0.setAttribute('alpha', new THREE.BufferAttribute(alpha0, 1));
-                this.geometry1.setAttribute('position', new THREE.BufferAttribute(pos1, 3));
-                this.geometry1.setAttribute('alpha', new THREE.BufferAttribute(alpha1, 1));
-
-                const vertexShader = `
-                    attribute float alpha;
-                    varying float vAlpha;
-                    void main() {
-                        vAlpha = alpha;
-                        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-                        // Pixel più piccoli
-                        gl_PointSize = 12.0 * (150.0 / -mvPosition.z);
-                        gl_Position = projectionMatrix * mvPosition;
-                    }
-                `;
-                const fragmentShader = `
-                    uniform vec3 color;
-                    uniform sampler2D map;
-                    varying float vAlpha;
-                    void main() {
-                        vec4 texColor = texture2D(map, gl_PointCoord);
-                        gl_FragColor = vec4(color * texColor.rgb, texColor.a * vAlpha); 
-                    }
-                `;
-
-                this.mat0 = new THREE.ShaderMaterial({
-                    uniforms: {
-                        color: { value: new THREE.Color('#00ff41') },
-                        map: { value: this.createTexture('0') }
-                    },
-                    vertexShader, fragmentShader,
-                    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
-                });
-
-                this.mat1 = this.mat0.clone();
-                this.mat1.uniforms.map.value = this.createTexture('1');
-
-                this.points0 = new THREE.Points(this.geometry0, this.mat0);
-                this.points1 = new THREE.Points(this.geometry1, this.mat1);
-
-                this.scene.add(this.points0);
-                this.scene.add(this.points1);
-
-                this.idx0 = 0;
-                this.idx1 = 0;
-            }
-
-            spawnTrailParticle(clientX, clientY) {
-                const ndcX = (clientX / window.innerWidth) * 2 - 1;
-                const ndcY = -(clientY / window.innerHeight) * 2 + 1;
-                
-                const vec = new THREE.Vector3(ndcX, ndcY, 0.5);
-                vec.unproject(this.camera);
-                vec.sub(this.camera.position).normalize();
-                
-                const distance = 90; 
-                const pos = this.camera.position.clone().add(vec.multiplyScalar(distance));
-                
-                pos.x += (Math.random() - 0.5) * 12;
-                pos.y += (Math.random() - 0.5) * 12;
-
-                const isZero = Math.random() > 0.5;
-                if (isZero) {
-                    const positions = this.geometry0.attributes.position.array;
-                    const alphas = this.geometry0.attributes.alpha.array;
-                    positions[this.idx0 * 3] = pos.x;
-                    positions[this.idx0 * 3 + 1] = pos.y;
-                    positions[this.idx0 * 3 + 2] = pos.z;
-                    alphas[this.idx0] = 0.5; // Scia visibile ma non coprente
-                    this.geometry0.attributes.position.needsUpdate = true;
-                    this.geometry0.attributes.alpha.needsUpdate = true;
-                    this.idx0 = (this.idx0 + 1) % this.maxParticles;
-                } else {
-                    const positions = this.geometry1.attributes.position.array;
-                    const alphas = this.geometry1.attributes.alpha.array;
-                    positions[this.idx1 * 3] = pos.x;
-                    positions[this.idx1 * 3 + 1] = pos.y;
-                    positions[this.idx1 * 3 + 2] = pos.z;
-                    alphas[this.idx1] = 0.5;
-                    this.geometry1.attributes.position.needsUpdate = true;
-                    this.geometry1.attributes.alpha.needsUpdate = true;
-                    this.idx1 = (this.idx1 + 1) % this.maxParticles;
-                }
-            }
-
-            onMouseMove(e) {
-                this.targetMouseX = e.clientX;
-                this.targetMouseY = e.clientY;
-                for(let i=0; i<2; i++) this.spawnTrailParticle(e.clientX, e.clientY);
-            }
-
-            onTouchMove(e) {
-                if (e.touches.length > 0) {
-                    this.targetMouseX = e.touches[0].clientX;
-                    this.targetMouseY = e.touches[0].clientY;
-                    for(let i=0; i<2; i++) this.spawnTrailParticle(this.targetMouseX, this.targetMouseY);
-                }
-            }
-
-            onResize() {
-                this.camera.aspect = window.innerWidth / window.innerHeight;
-                this.camera.updateProjectionMatrix();
-                this.renderer.setSize(window.innerWidth, window.innerHeight);
-            }
-
-            updateTheme(colorHex) {
-                this.mat0.uniforms.color.value.set(colorHex);
-                this.mat1.uniforms.color.value.set(colorHex);
-            }
-
-            zoomTo(zLevel) {
-                this.targetZ = zLevel;
-            }
-
-            animate() {
-                requestAnimationFrame(() => this.animate());
-
-                // Zoom e Parallasse
-                this.camera.position.z += (this.targetZ - this.camera.position.z) * 0.05;
-                
-                const lookX = (this.targetMouseX - window.innerWidth / 2) * 0.03;
-                const lookY = -(this.targetMouseY - window.innerHeight / 2) * 0.03;
-                
-                this.camera.position.x += (lookX - this.camera.position.x) * 0.05;
-                this.camera.position.y += (lookY - this.camera.position.y) * 0.05;
-                this.camera.lookAt(this.scene.position);
-
-                this.updateParticleLogic(this.geometry0);
-                this.updateParticleLogic(this.geometry1);
-
-                this.renderer.render(this.scene, this.camera);
-            }
-
-            updateParticleLogic(geo) {
-                const positions = geo.attributes.position.array;
-                const alphas = geo.attributes.alpha.array;
-                let needsUpdate = false;
-
-                for(let i=0; i<this.maxParticles; i++) {
-                    if (alphas[i] > 0.1) {
-                        alphas[i] -= 0.005; // Dissolvenza più lenta
-                        needsUpdate = true;
-                    } else if (alphas[i] < 0.02) {
-                        alphas[i] = Math.random() * 0.05 + 0.02;
-                        needsUpdate = true;
-                    }
-
-                    positions[i*3 + 1] += 0.02; // Movimento fluttuante più lento
-                    if (positions[i*3 + 1] > 300) {
-                        positions[i*3 + 1] = -300; 
-                        needsUpdate = true;
-                    }
-                }
-                
-                if (needsUpdate) {
-                    geo.attributes.position.needsUpdate = true;
-                    geo.attributes.alpha.needsUpdate = true;
-                }
-            }
-        }
-
-        /**
-         * DIZIONARIO TEMI (Ammodernati)
-         */
         const THEMES = {
-            matrix: { '--bg-color': '#000000', '--primary-color': '#00ff41', '--secondary-color': 'rgba(0, 255, 65, 0.15)', '--grid-color': 'rgba(0, 255, 65, 0.05)', '--term-bg': 'rgba(10, 15, 10, 0.7)', '--text-color': '#e0e0e0', '--font-family': '"Fira Code", monospace', '--border-color': 'rgba(0, 255, 65, 0.2)', '--highlight-color': '#fffb00' },
-            tokyo: { '--bg-color': '#16161e', '--primary-color': '#7aa2f7', '--secondary-color': 'rgba(122, 162, 247, 0.15)', '--grid-color': 'rgba(122, 162, 247, 0.05)', '--term-bg': 'rgba(26, 27, 38, 0.75)', '--text-color': '#c0caf5', '--font-family': '"Fira Code", monospace', '--border-color': 'rgba(122, 162, 247, 0.2)', '--highlight-color': '#f7768e' },
-            dracula: { '--bg-color': '#282a36', '--primary-color': '#ff79c6', '--secondary-color': 'rgba(255, 121, 198, 0.15)', '--grid-color': 'rgba(255, 121, 198, 0.05)', '--term-bg': 'rgba(40, 42, 54, 0.75)', '--text-color': '#f8f8f2', '--font-family': '"Fira Code", monospace', '--border-color': 'rgba(255, 121, 198, 0.2)', '--highlight-color': '#50fa7b' }
+            matrix: { '--bg-color': '#000000', '--primary-color': '#00ff41', '--secondary-color': 'rgba(0, 255, 65, 0.15)', '--grid-color': 'rgba(0, 255, 65, 0.05)', '--term-bg-rgb': '10, 15, 10', '--text-color': '#e0e0e0', '--font-family': '"Fira Code", monospace', '--border-color': 'rgba(0, 255, 65, 0.2)', '--highlight-color': '#fffb00' },
+            tokyo: { '--bg-color': '#16161e', '--primary-color': '#7aa2f7', '--secondary-color': 'rgba(122, 162, 247, 0.15)', '--grid-color': 'rgba(122, 162, 247, 0.05)', '--term-bg-rgb': '26, 27, 38', '--text-color': '#c0caf5', '--font-family': '"Fira Code", monospace', '--border-color': 'rgba(122, 162, 247, 0.2)', '--highlight-color': '#f7768e' },
+            dracula: { '--bg-color': '#282a36', '--primary-color': '#ff79c6', '--secondary-color': 'rgba(255, 121, 198, 0.15)', '--grid-color': 'rgba(255, 121, 198, 0.05)', '--term-bg-rgb': '40, 42, 54', '--text-color': '#f8f8f2', '--font-family': '"Fira Code", monospace', '--border-color': 'rgba(255, 121, 198, 0.2)', '--highlight-color': '#50fa7b' }
         };
 
         const DIFFICULTIES = {
@@ -644,7 +435,7 @@
                 { id: 'game_jkmode', label: 'Gioca a JKMODE (Flappy)', isAction: true },
                 { id: 'game_jump', label: 'Gioca a /jump (Platformer)', isAction: true },
                 { id: 'game_tests', label: 'Esegui Suite Test Unitari', isAction: true },
-                { id: 'open_global', label: 'Opzioni App (Temi/Social)', isAction: true }
+                { id: 'open_global', label: 'Opzioni App (Temi/Visivi/Social)', isAction: true }
             ]
         };
 
@@ -652,6 +443,9 @@
             activeIndex: 0,
             items: [
                 { id: 'theme', label: 'Tema App', options: ['matrix', 'tokyo', 'dracula'], idx: 0 },
+                { id: 'bin_size', label: 'Dimensione Binari', options: ['piccolo', 'medio', 'grande'], idx: 1 },
+                { id: 'bin_fade', label: 'Scia Binari', options: ['veloce', 'normale', 'lenta'], idx: 1 },
+                { id: 'menu_opac', label: 'Opacità Menu', options: ['bassa', 'media', 'alta'], idx: 1 },
                 { id: 'share_wa', label: 'Condividi su WhatsApp', isAction: true },
                 { id: 'share_li', label: 'Condividi su LinkedIn', isAction: true },
                 { id: 'share_fb', label: 'Condividi su Facebook', isAction: true },
@@ -702,6 +496,243 @@
                 }
             }
         };
+
+        /**
+         * CLASSE THREE.JS BACKGROUND
+         * Scia di pixel e zoom dinamico
+         */
+        class ThreeBackground {
+            constructor() {
+                this.container = document.getElementById('three-container');
+                this.scene = new THREE.Scene();
+                this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+                
+                this.targetZ = 160;
+                this.camera.position.z = 160;
+
+                this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.container.appendChild(this.renderer.domElement);
+
+                this.mouseX = window.innerWidth / 2;
+                this.mouseY = window.innerHeight / 2;
+                this.targetMouseX = this.mouseX;
+                this.targetMouseY = this.mouseY;
+
+                this.createParticles();
+
+                window.addEventListener('resize', () => this.onResize());
+                window.addEventListener('mousemove', (e) => this.onMouseMove(e));
+                window.addEventListener('touchmove', (e) => this.onTouchMove(e), {passive: true});
+
+                this.animate();
+            }
+
+            createTexture(text) {
+                const canvas = document.createElement('canvas');
+                canvas.width = 64; canvas.height = 64;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = 'transparent';
+                ctx.fillRect(0, 0, 64, 64);
+                ctx.fillStyle = '#ffffff'; 
+                ctx.font = 'bold 44px "Fira Code", monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(text, 32, 32);
+                return new THREE.CanvasTexture(canvas);
+            }
+
+            createParticles() {
+                this.maxParticles = 1200; 
+                this.geometry0 = new THREE.BufferGeometry();
+                this.geometry1 = new THREE.BufferGeometry();
+
+                const pos0 = new Float32Array(this.maxParticles * 3);
+                const pos1 = new Float32Array(this.maxParticles * 3);
+                const alpha0 = new Float32Array(this.maxParticles);
+                const alpha1 = new Float32Array(this.maxParticles);
+
+                for(let i=0; i<this.maxParticles; i++) {
+                    pos0[i*3] = (Math.random() - 0.5) * 800;
+                    pos0[i*3+1] = (Math.random() - 0.5) * 500;
+                    pos0[i*3+2] = (Math.random() - 0.5) * 500 - 50;
+                    alpha0[i] = Math.random() * 0.02 + 0.005; // Opacità a riposo quasi invisibile
+
+                    pos1[i*3] = (Math.random() - 0.5) * 800;
+                    pos1[i*3+1] = (Math.random() - 0.5) * 500;
+                    pos1[i*3+2] = (Math.random() - 0.5) * 500 - 50;
+                    alpha1[i] = Math.random() * 0.02 + 0.005;
+                }
+
+                this.geometry0.setAttribute('position', new THREE.BufferAttribute(pos0, 3));
+                this.geometry0.setAttribute('alpha', new THREE.BufferAttribute(alpha0, 1));
+                this.geometry1.setAttribute('position', new THREE.BufferAttribute(pos1, 3));
+                this.geometry1.setAttribute('alpha', new THREE.BufferAttribute(alpha1, 1));
+
+                const vertexShader = `
+                    attribute float alpha;
+                    varying float vAlpha;
+                    uniform float uPointSize;
+                    void main() {
+                        vAlpha = alpha;
+                        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                        gl_PointSize = uPointSize * (150.0 / -mvPosition.z);
+                        gl_Position = projectionMatrix * mvPosition;
+                    }
+                `;
+                const fragmentShader = `
+                    uniform vec3 color;
+                    uniform sampler2D map;
+                    varying float vAlpha;
+                    void main() {
+                        vec4 texColor = texture2D(map, gl_PointCoord);
+                        gl_FragColor = vec4(color * texColor.rgb, texColor.a * vAlpha); 
+                    }
+                `;
+
+                this.mat0 = new THREE.ShaderMaterial({
+                    uniforms: {
+                        color: { value: new THREE.Color('#00ff41') },
+                        map: { value: this.createTexture('0') },
+                        uPointSize: { value: SETTINGS_VISUALS.BIN_SIZE }
+                    },
+                    vertexShader, fragmentShader,
+                    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+                });
+
+                this.mat1 = this.mat0.clone();
+                this.mat1.uniforms.map.value = this.createTexture('1');
+
+                this.points0 = new THREE.Points(this.geometry0, this.mat0);
+                this.points1 = new THREE.Points(this.geometry1, this.mat1);
+
+                this.scene.add(this.points0);
+                this.scene.add(this.points1);
+
+                this.idx0 = 0;
+                this.idx1 = 0;
+            }
+
+            spawnTrailParticle(clientX, clientY) {
+                const ndcX = (clientX / window.innerWidth) * 2 - 1;
+                const ndcY = -(clientY / window.innerHeight) * 2 + 1;
+                
+                const vec = new THREE.Vector3(ndcX, ndcY, 0.5);
+                vec.unproject(this.camera);
+                vec.sub(this.camera.position).normalize();
+                
+                const distance = 90; 
+                const pos = this.camera.position.clone().add(vec.multiplyScalar(distance));
+                
+                pos.x += (Math.random() - 0.5) * 12;
+                pos.y += (Math.random() - 0.5) * 12;
+
+                const isZero = Math.random() > 0.5;
+                if (isZero) {
+                    const positions = this.geometry0.attributes.position.array;
+                    const alphas = this.geometry0.attributes.alpha.array;
+                    positions[this.idx0 * 3] = pos.x;
+                    positions[this.idx0 * 3 + 1] = pos.y;
+                    positions[this.idx0 * 3 + 2] = pos.z;
+                    alphas[this.idx0] = 1.0; // Scia Brush molto accesa alla nascita
+                    this.geometry0.attributes.position.needsUpdate = true;
+                    this.geometry0.attributes.alpha.needsUpdate = true;
+                    this.idx0 = (this.idx0 + 1) % this.maxParticles;
+                } else {
+                    const positions = this.geometry1.attributes.position.array;
+                    const alphas = this.geometry1.attributes.alpha.array;
+                    positions[this.idx1 * 3] = pos.x;
+                    positions[this.idx1 * 3 + 1] = pos.y;
+                    positions[this.idx1 * 3 + 2] = pos.z;
+                    alphas[this.idx1] = 1.0;
+                    this.geometry1.attributes.position.needsUpdate = true;
+                    this.geometry1.attributes.alpha.needsUpdate = true;
+                    this.idx1 = (this.idx1 + 1) % this.maxParticles;
+                }
+            }
+
+            onMouseMove(e) {
+                this.targetMouseX = e.clientX;
+                this.targetMouseY = e.clientY;
+                for(let i=0; i<3; i++) this.spawnTrailParticle(e.clientX, e.clientY);
+            }
+
+            onTouchMove(e) {
+                if (e.touches.length > 0) {
+                    this.targetMouseX = e.touches[0].clientX;
+                    this.targetMouseY = e.touches[0].clientY;
+                    for(let i=0; i<3; i++) this.spawnTrailParticle(this.targetMouseX, this.targetMouseY);
+                }
+            }
+
+            onResize() {
+                this.camera.aspect = window.innerWidth / window.innerHeight;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+
+            updateTheme(colorHex) {
+                this.mat0.uniforms.color.value.set(colorHex);
+                this.mat1.uniforms.color.value.set(colorHex);
+            }
+
+            updateVisuals(size, fadeSpeed) {
+                this.mat0.uniforms.uPointSize.value = size;
+                this.mat1.uniforms.uPointSize.value = size;
+                SETTINGS_VISUALS.BIN_FADE = fadeSpeed;
+            }
+
+            zoomTo(zLevel) {
+                this.targetZ = zLevel;
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+
+                // Zoom e Parallasse
+                this.camera.position.z += (this.targetZ - this.camera.position.z) * 0.05;
+                
+                const lookX = (this.targetMouseX - window.innerWidth / 2) * 0.03;
+                const lookY = -(this.targetMouseY - window.innerHeight / 2) * 0.03;
+                
+                this.camera.position.x += (lookX - this.camera.position.x) * 0.05;
+                this.camera.position.y += (lookY - this.camera.position.y) * 0.05;
+                this.camera.lookAt(this.scene.position);
+
+                this.updateParticleLogic(this.geometry0);
+                this.updateParticleLogic(this.geometry1);
+
+                this.renderer.render(this.scene, this.camera);
+            }
+
+            updateParticleLogic(geo) {
+                const positions = geo.attributes.position.array;
+                const alphas = geo.attributes.alpha.array;
+                let needsUpdate = false;
+
+                for(let i=0; i<this.maxParticles; i++) {
+                    if (alphas[i] > 0.03) {
+                        alphas[i] -= SETTINGS_VISUALS.BIN_FADE; // Dissolvenza configurabile
+                        needsUpdate = true;
+                    } else if (alphas[i] < 0.01) {
+                        alphas[i] = Math.random() * 0.02 + 0.005; // Riposo
+                        needsUpdate = true;
+                    }
+
+                    positions[i*3 + 1] += 0.02; // Movimento fluttuante verso l'alto
+                    if (positions[i*3 + 1] > 300) {
+                        positions[i*3 + 1] = -300; 
+                        needsUpdate = true;
+                    }
+                }
+                
+                if (needsUpdate) {
+                    geo.attributes.position.needsUpdate = true;
+                    geo.attributes.alpha.needsUpdate = true;
+                }
+            }
+        }
+
 
         /**
          * GESTORE INPUT
@@ -1175,9 +1206,22 @@
             }
 
             applyGlobalMenuSetting(item) {
+                const val = item.options[item.idx];
+                
                 if (item.id === 'theme') {
-                    const val = item.options[item.idx];
                     this.setTheme(val);
+                } else if (item.id === 'bin_size') {
+                    const sizeMap = { 'piccolo': 6.0, 'medio': 12.0, 'grande': 24.0 };
+                    SETTINGS_VISUALS.BIN_SIZE = sizeMap[val];
+                    if (window.threeBg) window.threeBg.updateVisuals(SETTINGS_VISUALS.BIN_SIZE, SETTINGS_VISUALS.BIN_FADE);
+                } else if (item.id === 'bin_fade') {
+                    const fadeMap = { 'veloce': 0.08, 'normale': 0.04, 'lenta': 0.015 };
+                    SETTINGS_VISUALS.BIN_FADE = fadeMap[val];
+                    if (window.threeBg) window.threeBg.updateVisuals(SETTINGS_VISUALS.BIN_SIZE, SETTINGS_VISUALS.BIN_FADE);
+                } else if (item.id === 'menu_opac') {
+                    const opacMap = { 'bassa': 0.2, 'media': 0.5, 'alta': 0.85 };
+                    SETTINGS_VISUALS.MENU_OPACITY = opacMap[val];
+                    document.documentElement.style.setProperty('--term-bg-alpha', SETTINGS_VISUALS.MENU_OPACITY);
                 }
             }
 
