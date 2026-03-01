@@ -862,7 +862,7 @@
             draw(ctx) {
                 ctx.save();
                 ctx.fillStyle = SETTINGS.THEME['--primary-color'];
-                ctx.font = `bold ${this.size}px ${SETTINGS.THEME['--font-mono']}`; // Changed to font-mono
+                ctx.font = `bold ${this.size}px ${SETTINGS.THEME['--font-mono']}`;
                 
                 ctx.globalAlpha = 0.3;
                 ctx.fillText('>', this.x - Math.max(10, Math.abs(this.v)), this.y + this.size);
@@ -888,13 +888,19 @@
                 ctx.strokeStyle = SETTINGS.THEME['--primary-color'];
                 ctx.lineWidth = 2;
 
-                ctx.fillRect(this.x, 0, this.w, this.top);
-                ctx.strokeRect(this.x, 0, this.w, this.top);
+                // Top pipe con bordi arrotondati
+                ctx.beginPath();
+                ctx.roundRect(this.x, 0, this.w, this.top, 8);
+                ctx.fill();
+                ctx.stroke();
 
+                // Bottom pipe con bordi arrotondati
                 const bY = this.top + this.gap;
                 const bH = h - bY;
-                ctx.fillRect(this.x, bY, this.w, bH);
-                ctx.strokeRect(this.x, bY, this.w, bH);
+                ctx.beginPath();
+                ctx.roundRect(this.x, bY, this.w, bH, 8);
+                ctx.fill();
+                ctx.stroke();
 
                 ctx.fillStyle = SETTINGS.THEME['--text-color'];
                 ctx.font = `10px ${SETTINGS.THEME['--font-mono']}`;
@@ -935,7 +941,7 @@
                 ctx.stroke();
 
                 ctx.fillStyle = SETTINGS.THEME['--text-color'];
-                ctx.font = `bold ${this.size * 0.6}px ${SETTINGS.THEME['--font-mono']}`; // Changed to font-mono
+                ctx.font = `bold ${this.size * 0.6}px ${SETTINGS.THEME['--font-mono']}`; 
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 if (SETTINGS.THEME['--text-color'] !== '#212121') { 
@@ -972,7 +978,7 @@
                 }
             }
 
-            runTests(engine = null) { // Aggiunto parametro opzionale 'engine'
+            runTests(engine = null) { 
                 this.passed = 0;
                 this.failed = 0;
                 this.logs = [];
@@ -1873,8 +1879,12 @@
                     ctx.strokeStyle = SETTINGS.THEME['--primary-color'];
                     ctx.lineWidth = 2;
                     const platW = Math.max(120, plat.word.length * 10);
-                    ctx.fillRect(plat.x, plat.y, platW, 20);
-                    ctx.strokeRect(plat.x, plat.y, platW, 20);
+                    
+                    // Disegna la piattaforma con bordi arrotondati (raggio 8px)
+                    ctx.beginPath();
+                    ctx.roundRect(plat.x, plat.y, platW, 20, 8);
+                    ctx.fill();
+                    ctx.stroke();
                     
                     const fontSize = plat.word.length > 15 ? 12 : 14;
                     ctx.font = `${fontSize}px ${SETTINGS.THEME['--font-mono']}`;
@@ -1899,8 +1909,12 @@
                     }
                 });
 
+                // Disegna la porta con bordi arrotondati (raggio 12px)
                 ctx.fillStyle = this.state === 'DOOR_CLOSED' ? '#ff5f56' : SETTINGS.THEME['--primary-color'];
-                ctx.fillRect(this.jumpDoor.x, this.jumpDoor.y, 120, 100);
+                ctx.beginPath();
+                ctx.roundRect(this.jumpDoor.x, this.jumpDoor.y, 120, 100, 12);
+                ctx.fill();
+                
                 ctx.fillStyle = SETTINGS.THEME['--bg-color'];
                 ctx.font = `bold 24px ${SETTINGS.THEME['--font-family']}`;
                 ctx.fillText("DOOR", this.jumpDoor.x + 25, this.jumpDoor.y + 55);
