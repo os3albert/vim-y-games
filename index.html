@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Vim-y Games | L'Ecosistema Arcade da Terminale</title>
+    <title data-i18n="page_title">Vim-y Games | L'Ecosistema Arcade da Terminale</title>
     
     <!-- Favicon SVG: Terminale con dettagli Verde Pastello -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='5' y='15' width='90' height='70' rx='12' fill='%231e1e24' stroke='%23a8e6cf' stroke-width='6'/><path d='M 20 35 L 35 50 L 20 65' fill='none' stroke='%23a8e6cf' stroke-width='8' stroke-linecap='round' stroke-linejoin='round'/><line x1='45' y1='65' x2='75' y2='65' stroke='%23a8e6cf' stroke-width='8' stroke-linecap='round'/></svg>">
@@ -143,9 +143,20 @@
             gap: 8px;
         }
         .window-dot { width: 12px; height: 12px; border-radius: 50%; box-shadow: inset 0 1px 2px rgba(0,0,0,0.5); }
-        .dot-red { background: #ff5f56; }
         .dot-yellow { background: #ffbd2e; }
         .dot-green { background: #27c93f; }
+        
+        .window-dot.dot-red { 
+            background: #ff5f56; 
+            cursor: pointer; 
+            position: relative; 
+            z-index: 10; 
+            transition: transform 0.2s ease, filter 0.2s ease;
+        }
+        .window-dot.dot-red:hover { 
+            transform: scale(1.3); 
+            filter: brightness(1.2);
+        }
 
         .terminal-title {
             flex-grow: 1;
@@ -283,11 +294,385 @@
 </head>
 <body>
 
+    <script>
+        /**
+         * GLOBAL i18n SYSTEM
+         */
+        const i18nData = {
+            en: {
+                page_title: "Vim-y Games | Terminal Arcade Ecosystem",
+                network: "Data network connection established. Select module:",
+                nav_navigate: "[j/k] Navigate",
+                nav_execute: "[Enter] Execute",
+                nav_edit: "[h/l] Edit",
+                nav_action: "[Enter] Action",
+                nav_confirm: "[Enter] Confirm",
+                config_desc: "// Instantiation parameters configuration",
+                test_init: "Initializing test environment...",
+                test_exit: "[:m] Exit",
+                test_start: "Starting integrated test module...<br>",
+                test_running: "Running unit tests...",
+                test_passed: "All {0} tests passed.",
+                test_failed: "{0} critical errors detected.",
+                game_init: "Starting simulation module...",
+                fatal_error: "FATAL ERROR",
+                exc_msg: "Exception: Player collided with environment bounds or obstacle.<br>Action: Awaiting restart command.",
+                btn_restart: "Restart Process",
+                btn_restart_sub: "[k] or [Enter]",
+                btn_menu: "Return to Menu",
+                score: "Score",
+                best: "Best",
+                new_record: "NEW RECORD",
+                hud_level: "Level",
+                hud_time: "Time",
+                hud_search: "Search",
+                hud_exit: "[:m] Exit to menu",
+                win_title: "VIM VICTORY!",
+                win_sub: "Click or press CTRL+[ to enter",
+                lose_title: "DOOR CLOSED!",
+                lose_sub: "Time out. Click or press CTRL+o to return",
+                status_search: "Search: {0}_ [Enter to jump]",
+                status_action: "Action required.",
+                status_timeout: "Timeout.",
+                
+                // Menus & Options
+                menu_lang_ui: "UI Language",
+                opt_en: "English", opt_it: "Italian", opt_fr: "French", opt_es: "Spanish",
+                opt_small: "small", opt_medium: "medium", opt_large: "large",
+                opt_ultra: "ultra", opt_solid: "solid",
+                opt_easy: "easy", opt_normal: "normal", opt_hard: "hard",
+                opt_zero_g: "zero-g", opt_gravity: "gravity",
+                opt_pipes: "pipes", opt_meteors: "meteors",
+                opt_keywords: "keywords", opt_snippets: "snippets",
+                menu_jkmode: "Start JKMODE (Arcade)",
+                menu_jump: "Start /jump (Syntax)",
+                menu_tests: "Run Diagnostics (Unit Tests)",
+                menu_settings: "Ecosystem Settings",
+                menu_theme: "System Coloration",
+                menu_size: "Data Density (Size)",
+                menu_glass: "Glass Transparency",
+                menu_wa: "Share on WhatsApp",
+                menu_li: "Share on LinkedIn",
+                menu_fb: "Share on Facebook",
+                menu_back: "Return to Launcher",
+                menu_phys: "Physics Engine",
+                menu_obs: "Obstacle Generation",
+                menu_diff: "Challenge Level",
+                menu_lang: "Target Language",
+                menu_extr: "Extraction Mode",
+                menu_time: "Time Restriction",
+                menu_exec: "EXECUTE",
+                theme_light: "Switch to Light Theme (Pastel)",
+                theme_dark: "Switch to Dark Theme",
+                
+                // Tests
+                test_cmd_title: "=== COMMAND AND INPUT TESTS ===",
+                test_jk_title: "=== JKMODE TESTS (Physics and Obstacles) ===",
+                test_jump_title: "=== /JUMP TESTS AND UNIFIED SEARCH ===",
+                test_edge_title: "=== EDGE CASES AND SECURITY TESTS ===",
+                test_e2e_title: "=== END-TO-END TESTS (UI Flows) ==="
+            },
+            it: {
+                page_title: "Vim-y Games | L'Ecosistema Arcade da Terminale",
+                network: "Connessione alla rete dati stabilita. Seleziona modulo:",
+                nav_navigate: "[j/k] Naviga",
+                nav_execute: "[Enter] Esegui",
+                nav_edit: "[h/l] Modifica",
+                nav_action: "[Enter] Azione",
+                nav_confirm: "[Enter] Conferma",
+                config_desc: "// Configurazione parametri di istanziazione",
+                test_init: "Inizializzazione ambiente di test...",
+                test_exit: "[:m] Esci",
+                test_start: "Avvio modulo di test integrato...<br>",
+                test_running: "Esecuzione unit test in corso...",
+                test_passed: "Tutti i {0} test sono passati.",
+                test_failed: "Rilevati {0} errori critici.",
+                game_init: "Avvio modulo di simulazione in corso...",
+                fatal_error: "ERRORE FATALE",
+                exc_msg: "Eccezione: Il giocatore ha colliso con i limiti ambientali o un ostacolo.<br>Azione: In attesa del comando di riavvio.",
+                btn_restart: "Riavvia Processo",
+                btn_restart_sub: "[k] o [Enter]",
+                btn_menu: "Ritorna al Menu",
+                score: "Punti",
+                best: "Migliore",
+                new_record: "NUOVO RECORD",
+                hud_level: "Livello",
+                hud_time: "Tempo",
+                hud_search: "Cerca",
+                hud_exit: "[:m] Esci al menu",
+                win_title: "VIM VITTORIA!",
+                win_sub: "Clicca o premi CTRL+[ per entrare",
+                lose_title: "PORTA CHIUSA!",
+                lose_sub: "Tempo scaduto. Clicca o premi CTRL+o per ritornare",
+                status_search: "Cerca: {0}_ [Enter per saltare]",
+                status_action: "Azione richiesta.",
+                status_timeout: "Tempo scaduto.",
+                
+                menu_lang_ui: "Lingua Interfaccia",
+                opt_en: "Inglese", opt_it: "Italiano", opt_fr: "Francese", opt_es: "Spagnolo",
+                opt_small: "piccolo", opt_medium: "medio", opt_large: "grande",
+                opt_ultra: "ultra", opt_solid: "solida",
+                opt_easy: "facile", opt_normal: "normale", opt_hard: "difficile",
+                opt_zero_g: "zero-g", opt_gravity: "gravità",
+                opt_pipes: "tubi", opt_meteors: "meteoriti",
+                opt_keywords: "parole chiave", opt_snippets: "codice",
+                menu_jkmode: "Avvia JKMODE (Arcade)",
+                menu_jump: "Avvia /jump (Sintassi)",
+                menu_tests: "Esegui Diagnostics (Unit Tests)",
+                menu_settings: "Impostazioni Ecosistema",
+                menu_theme: "Colorazione Sistema",
+                menu_size: "Densità Dati (Size)",
+                menu_glass: "Trasparenza Vetro",
+                menu_wa: "Condividi su WhatsApp",
+                menu_li: "Condividi su LinkedIn",
+                menu_fb: "Condividi su Facebook",
+                menu_back: "Ritorna al Launcher",
+                menu_phys: "Motore Fisico",
+                menu_obs: "Generazione Ostacoli",
+                menu_diff: "Livello Sfida",
+                menu_lang: "Linguaggio Target",
+                menu_extr: "Modalità Estrazione",
+                menu_time: "Restrizione Temporale",
+                menu_exec: "ESEGUI",
+                theme_light: "Passa a Tema Chiaro (Pastel)",
+                theme_dark: "Passa a Tema Scuro",
+                
+                test_cmd_title: "=== TEST COMANDI E INPUT ===",
+                test_jk_title: "=== TEST JKMODE (Fisica e Ostacoli) ===",
+                test_jump_title: "=== TEST /JUMP E RICERCA UNIFICATA ===",
+                test_edge_title: "=== TEST CASI LIMITE E SICUREZZA ===",
+                test_e2e_title: "=== TEST END-TO-END (Flussi UI) ==="
+            },
+            fr: {
+                page_title: "Vim-y Games | Écosystème Arcade Terminal",
+                network: "Connexion au réseau de données établie. Sélectionnez le module:",
+                nav_navigate: "[j/k] Naviguer",
+                nav_execute: "[Entrée] Exécuter",
+                nav_edit: "[h/l] Modifier",
+                nav_action: "[Entrée] Action",
+                nav_confirm: "[Entrée] Confirmer",
+                config_desc: "// Configuration des paramètres d'instanciation",
+                test_init: "Initialisation de l'environnement de test...",
+                test_exit: "[:m] Quitter",
+                test_start: "Démarrage du module de test intégré...<br>",
+                test_running: "Exécution des tests unitaires...",
+                test_passed: "Tous les {0} tests ont réussi.",
+                test_failed: "{0} erreurs critiques détectées.",
+                game_init: "Démarrage du module de simulation...",
+                fatal_error: "ERREUR FATALE",
+                exc_msg: "Exception: Le joueur est entré en collision avec les limites de l'environnement ou un obstacle.<br>Action: En attente de la commande de redémarrage.",
+                btn_restart: "Redémarrer le processus",
+                btn_restart_sub: "[k] ou [Entrée]",
+                btn_menu: "Retour au menu",
+                score: "Score",
+                best: "Meilleur",
+                new_record: "NOUVEAU RECORD",
+                hud_level: "Niveau",
+                hud_time: "Temps",
+                hud_search: "Chercher",
+                hud_exit: "[:m] Quitter vers menu",
+                win_title: "VICTOIRE VIM!",
+                win_sub: "Cliquez ou appuyez sur CTRL+[ pour entrer",
+                lose_title: "PORTE FERMÉE!",
+                lose_sub: "Temps écoulé. Cliquez ou appuyez sur CTRL+o pour revenir",
+                status_search: "Chercher: {0}_ [Entrée pour sauter]",
+                status_action: "Action requise.",
+                status_timeout: "Temps écoulé.",
+                
+                menu_lang_ui: "Langue de l'interface",
+                opt_en: "Anglais", opt_it: "Italien", opt_fr: "Français", opt_es: "Espagnol",
+                opt_small: "petit", opt_medium: "moyen", opt_large: "grand",
+                opt_ultra: "ultra", opt_solid: "solide",
+                opt_easy: "facile", opt_normal: "normal", opt_hard: "difficile",
+                opt_zero_g: "zéro-g", opt_gravity: "gravité",
+                opt_pipes: "tuyaux", opt_meteors: "météorites",
+                opt_keywords: "mots clés", opt_snippets: "code",
+                menu_jkmode: "Démarrer JKMODE (Arcade)",
+                menu_jump: "Démarrer /jump (Syntaxe)",
+                menu_tests: "Exécuter les diagnostics (Tests unitaires)",
+                menu_settings: "Paramètres de l'écosystème",
+                menu_theme: "Coloration du système",
+                menu_size: "Densité des données (Taille)",
+                menu_glass: "Transparence du verre",
+                menu_wa: "Partager sur WhatsApp",
+                menu_li: "Partager sur LinkedIn",
+                menu_fb: "Partager sur Facebook",
+                menu_back: "Retour au lanceur",
+                menu_phys: "Moteur physique",
+                menu_obs: "Génération d'obstacles",
+                menu_diff: "Niveau de défi",
+                menu_lang: "Langue cible",
+                menu_extr: "Mode d'extraction",
+                menu_time: "Restriction de temps",
+                menu_exec: "EXÉCUTER",
+                theme_light: "Passer au thème clair (Pastel)",
+                theme_dark: "Passer au thème sombre",
+                
+                test_cmd_title: "=== TESTS DE COMMANDES ET D'ENTRÉE ===",
+                test_jk_title: "=== TESTS JKMODE (Physique et obstacles) ===",
+                test_jump_title: "=== TESTS /JUMP ET RECHERCHE UNIFIÉE ===",
+                test_edge_title: "=== TESTS DE CAS LIMITES ET DE SÉCURITÉ ===",
+                test_e2e_title: "=== TESTS DE BOUT EN BOUT (Flux UI) ==="
+            },
+            es: {
+                page_title: "Vim-y Games | Ecosistema Arcade de Terminal",
+                network: "Conexión a la red de datos establecida. Seleccione módulo:",
+                nav_navigate: "[j/k] Navegar",
+                nav_execute: "[Enter] Ejecutar",
+                nav_edit: "[h/l] Editar",
+                nav_action: "[Enter] Acción",
+                nav_confirm: "[Enter] Confirmar",
+                config_desc: "// Configuración de parámetros de instanciación",
+                test_init: "Inicializando entorno de prueba...",
+                test_exit: "[:m] Salir",
+                test_start: "Iniciando módulo de prueba integrado...<br>",
+                test_running: "Ejecutando pruebas unitarias...",
+                test_passed: "Todas las {0} pruebas pasaron.",
+                test_failed: "{0} errores críticos detectados.",
+                game_init: "Iniciando módulo de simulación...",
+                fatal_error: "ERROR FATAL",
+                exc_msg: "Excepción: El jugador chocó con los límites del entorno o un obstáculo.<br>Acción: Esperando comando de reinicio.",
+                btn_restart: "Reiniciar Proceso",
+                btn_restart_sub: "[k] o [Enter]",
+                btn_menu: "Volver al Menú",
+                score: "Puntos",
+                best: "Mejor",
+                new_record: "NUEVO RÉCORD",
+                hud_level: "Nivel",
+                hud_time: "Tiempo",
+                hud_search: "Buscar",
+                hud_exit: "[:m] Salir al menú",
+                win_title: "¡VICTORIA VIM!",
+                win_sub: "Haz clic o presiona CTRL+[ para entrar",
+                lose_title: "¡PUERTA CERRADA!",
+                lose_sub: "Tiempo agotado. Haz clic o presiona CTRL+o para volver",
+                status_search: "Buscar: {0}_ [Enter para saltar]",
+                status_action: "Acción requerida.",
+                status_timeout: "Tiempo agotado.",
+                
+                menu_lang_ui: "Idioma de la Interfaz",
+                opt_en: "Inglés", opt_it: "Italiano", opt_fr: "Francés", opt_es: "Español",
+                opt_small: "pequeño", opt_medium: "medio", opt_large: "grande",
+                opt_ultra: "ultra", opt_solid: "sólida",
+                opt_easy: "fácil", opt_normal: "normal", opt_hard: "difícil",
+                opt_zero_g: "cero-g", opt_gravity: "gravedad",
+                opt_pipes: "tubos", opt_meteors: "meteoritos",
+                opt_keywords: "palabras clave", opt_snippets: "código",
+                menu_jkmode: "Iniciar JKMODE (Arcade)",
+                menu_jump: "Iniciar /jump (Sintaxis)",
+                menu_tests: "Ejecutar Diagnósticos (Pruebas unitarias)",
+                menu_settings: "Configuración del Ecosistema",
+                menu_theme: "Coloración del Sistema",
+                menu_size: "Densidad de Datos (Tamaño)",
+                menu_glass: "Transparencia del Vidrio",
+                menu_wa: "Compartir en WhatsApp",
+                menu_li: "Compartir en LinkedIn",
+                menu_fb: "Compartir en Facebook",
+                menu_back: "Volver al Lanzador",
+                menu_phys: "Motor Físico",
+                menu_obs: "Generación de Obstáculos",
+                menu_diff: "Nivel de Desafío",
+                menu_lang: "Lenguaje Objetivo",
+                menu_extr: "Modo de Extracción",
+                menu_time: "Restricción de Tiempo",
+                menu_exec: "EJECUTAR",
+                theme_light: "Cambiar a Tema Claro (Pastel)",
+                theme_dark: "Cambiar a Tema Oscuro",
+                
+                test_cmd_title: "=== PRUEBAS DE COMANDOS Y ENTRADA ===",
+                test_jk_title: "=== PRUEBAS JKMODE (Física y Obstáculos) ===",
+                test_jump_title: "=== PRUEBAS /JUMP Y BÚSQUEDA UNIFICADA ===",
+                test_edge_title: "=== PRUEBAS DE CASOS LÍMITE Y SEGURIDAD ===",
+                test_e2e_title: "=== PRUEBAS DE EXTREMO A EXTREMO (Flujos UI) ==="
+            }
+        };
+
+        // Rilevamento Lingua: Controlla prima il salvataggio, poi fallback sincrono, infine IPAPI
+        let currentLang = 'en';
+        const savedLang = localStorage.getItem('vimygames_lang');
+        
+        if (savedLang && i18nData[savedLang]) {
+            currentLang = savedLang;
+            document.documentElement.lang = currentLang;
+        } else {
+            // Fallback sincrono rapido tramite browser (nel caso l'API fallisca o sia bloccata)
+            const userLanguageRaw = (navigator.language || navigator.userLanguage || "en").substring(0, 2).toLowerCase();
+            if (i18nData[userLanguageRaw]) {
+                currentLang = userLanguageRaw;
+            }
+            document.documentElement.lang = currentLang;
+
+            // Rilevamento asincrono avanzato tramite IP
+            fetch('https://ipapi.co/json/')
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.country_code) {
+                        let ipLang = 'en';
+                        const countryMap = { 'IT': 'it', 'FR': 'fr', 'ES': 'es', 'MX': 'es', 'AR': 'es', 'CO': 'es' };
+                        
+                        if (data.languages) {
+                            ipLang = data.languages.split(',')[0].substring(0, 2).toLowerCase();
+                        } else if (countryMap[data.country_code]) {
+                            ipLang = countryMap[data.country_code];
+                        }
+
+                        if (i18nData[ipLang] && ipLang !== currentLang) {
+                            currentLang = ipLang;
+                            document.documentElement.lang = currentLang;
+                            
+                            // Aggiorna la UI istantaneamente
+                            if (window.updateTranslations) window.updateTranslations();
+                            
+                            // Aggiorna l'indice nel menu delle opzioni
+                            const langMenuIdx = GLOBAL_MENU_DATA.items[0].options.indexOf(currentLang);
+                            if (langMenuIdx !== -1) {
+                                GLOBAL_MENU_DATA.items[0].idx = langMenuIdx;
+                            }
+                        }
+                    }
+                })
+                .catch(err => console.warn('Rilevamento IPAPI fallito o bloccato, mantengo fallback browser:', err));
+        }
+
+        // Funzione di Traduzione Dinamica
+        function t(key, ...args) {
+            let text = i18nData[currentLang][key];
+            if (text === undefined) text = i18nData['en'][key];
+            if (text === undefined) return args[0] !== undefined ? args[0] : key; 
+            
+            args.forEach((arg, i) => {
+                text = text.replace(`{${i}}`, arg);
+            });
+            return text;
+        }
+
+        // Funzione per aggiornare tutto l'HTML statico e i menu generati
+        window.updateTranslations = function() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                el.innerHTML = t(el.getAttribute('data-i18n'));
+            });
+            const isLight = document.getElementById('theme-toggle-btn').innerText.includes('🌙');
+            document.getElementById('theme-toggle-btn').title = isLight ? t('theme_dark') : t('theme_light');
+            document.querySelectorAll('.dot-red').forEach(dot => dot.title = t('menu_back'));
+
+            // Aggiorna la traduzione anche dei menu visibili
+            if (typeof game !== 'undefined') {
+                if (game.state === 'MAIN_MENU') game.renderMainMenu();
+                if (game.state === 'GLOBAL_MENU') game.renderGlobalMenu();
+                if (game.state === 'CONFIG_MENU') game.renderConfigMenu();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            window.updateTranslations();
+        });
+    </script>
+
     <div id="three-container"></div>
 
     <div class="ui-container p-4 md:p-8">
         
-        <button id="theme-toggle-btn" class="theme-toggle-btn" title="Cambia Tema (Light/Dark)">
+        <button id="theme-toggle-btn" class="theme-toggle-btn">
             ☀️
         </button>
 
@@ -305,7 +690,7 @@
             <div class="terminal-body">
                 <div class="mb-8 text-sm font-mono">
                     <span class="text-[var(--primary-color)] font-bold">os3albert@linux</span><span>:</span><span class="font-bold" style="color:#4299e1;">~/vim-y-games</span>$ ./start.sh<br>
-                    <span class="opacity-60 italic mt-2 inline-block">Connessione alla rete dati stabilita. Seleziona modulo:</span>
+                    <span class="opacity-60 italic mt-2 inline-block" data-i18n="network"></span>
                 </div>
                 
                 <div id="main-menu-list" class="flex flex-col gap-1"></div>
@@ -314,8 +699,8 @@
             <div class="status-bar">
                 <div class="status-mode">NORMAL</div>
                 <div class="status-info">
-                    <span>[j/k] Naviga</span>
-                    <span>[Enter] Esegui</span>
+                    <span data-i18n="nav_navigate"></span>
+                    <span data-i18n="nav_execute"></span>
                 </div>
                 <div class="status-right font-mono">utf-8</div>
             </div>
@@ -343,9 +728,9 @@
             <div class="status-bar">
                 <div class="status-mode" style="background:#ffbd2e; color:#000;">VISUAL</div>
                 <div class="status-info">
-                    <span>[j/k] Su/Giù</span>
-                    <span>[h/l] Modifica</span>
-                    <span>[Enter] Azione</span>
+                    <span data-i18n="nav_navigate"></span>
+                    <span data-i18n="nav_edit"></span>
+                    <span data-i18n="nav_action"></span>
                 </div>
                 <div class="status-right font-mono">settings.conf</div>
             </div>
@@ -364,7 +749,7 @@
             
             <div class="terminal-body">
                 <div class="mb-8 text-sm font-mono">
-                    <span class="opacity-60 italic">// Configurazione parametri di istanziazione</span>
+                    <span class="opacity-60 italic" data-i18n="config_desc"></span>
                 </div>
                 
                 <div id="vim-menu" class="flex flex-col gap-1"></div>
@@ -373,9 +758,9 @@
             <div class="status-bar">
                 <div class="status-mode" style="background:#7aa2f7; color:#000;">INSERT</div>
                 <div class="status-info">
-                    <span>[j/k] Naviga</span>
-                    <span>[h/l] Modifica</span>
-                    <span>[Enter] Conferma</span>
+                    <span data-i18n="nav_navigate"></span>
+                    <span data-i18n="nav_edit"></span>
+                    <span data-i18n="nav_confirm"></span>
                 </div>
                 <div class="status-right font-mono">env.json</div>
             </div>
@@ -399,9 +784,10 @@
             <div class="status-bar">
                 <div id="test-status-mode" class="status-mode" style="background:#ffbd2e; color:#000;">TESTING</div>
                 <div id="test-status-info" class="status-info">
-                    <span>Inizializzazione ambiente di test...</span>
+                    <span data-i18n="test_init"></span>
                 </div>
-                <div class="status-right font-mono">[:m] Esci</div>
+                <div id="test-exit-btn" class="status-right font-mono" style="cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(128,128,128,0.1)'" data-i18n="test_exit">
+                </div>
             </div>
         </div>
 
@@ -425,7 +811,7 @@
             <div class="status-bar">
                 <div class="status-mode" id="game-status-mode" style="background:#7aa2f7; color:#000;">PLAYING</div>
                 <div class="status-info" id="game-status-info">
-                    <span>Avvio modulo di simulazione in corso...</span>
+                    <span data-i18n="game_init"></span>
                 </div>
                 <div class="status-right font-bold" id="game-status-right">Score: 0 | Best: 0</div>
             </div>
@@ -439,26 +825,24 @@
                     <div class="window-dot dot-yellow"></div>
                     <div class="window-dot dot-green"></div>
                 </div>
-                <div class="terminal-title">FATAL ERROR</div>
+                <div class="terminal-title" data-i18n="fatal_error"></div>
             </div>
             
             <div class="terminal-body flex flex-col items-center">
-                <h2 class="text-5xl font-bold mb-2 text-[#ff5f56]" style="text-shadow: 0 0 20px rgba(255,95,86,0.3);">SEGFAULT</h2>
+                <h2 class="text-5xl font-bold mb-2 text-[#ff5f56]" style="text-shadow: 0 0 20px rgba(255,95,86,0.3);" data-i18n="fatal_error"></h2>
                 <p id="final-score" class="text-2xl mb-1 mt-4 font-bold">Score: 0</p>
                 <p id="final-best" class="text-sm mb-8 opacity-60">Best: 0</p>
                 
-                <!-- Testo tematico (Non è un vero errore!) -->
-                <div class="text-xs opacity-70 mb-6 bg-[rgba(128,128,128,0.1)] p-3 rounded border border-[var(--border-color)] w-full font-mono text-left">
-                    <span class="text-red-400">Exception:</span> Player collided with environment bounds or obstacle.<br>
-                    <span class="text-blue-400">Action:</span> Awaiting restart command.
+                <!-- Testo tematico -->
+                <div class="text-xs opacity-70 mb-6 bg-[rgba(128,128,128,0.1)] p-3 rounded border border-[var(--border-color)] w-full font-mono text-left" data-i18n="exc_msg">
                 </div>
                 
                 <div class="flex flex-col gap-3 w-full">
                     <button id="btn-restart" class="custom-btn w-full !text-left flex justify-between items-center">
-                        <span>Riavvia Processo</span> <span class="opacity-50 font-normal">[k] o [Enter]</span>
+                        <span data-i18n="btn_restart"></span> <span class="opacity-50 font-normal" data-i18n="btn_restart_sub"></span>
                     </button>
                     <button id="btn-config" class="custom-btn w-full !text-left flex justify-between items-center">
-                        <span>Ritorna al Menu</span> <span class="opacity-50 font-normal">[:m]</span>
+                        <span data-i18n="btn_menu"></span> <span class="opacity-50 font-normal">[:m]</span>
                     </button>
                 </div>
             </div>
@@ -496,24 +880,30 @@
         const MAIN_MENU_DATA = {
             activeIndex: 0,
             items: [
-                { id: 'game_jkmode', label: 'Avvia JKMODE (Arcade)', isAction: true },
-                { id: 'game_jump', label: 'Avvia /jump (Sintassi)', isAction: true },
-                { id: 'game_tests', label: 'Esegui Diagnostics (Unit Tests)', isAction: true },
-                { id: 'open_global', label: 'Impostazioni Ecosistema', isAction: true }
+                { id: 'game_jkmode', labelKey: 'menu_jkmode', isAction: true },
+                { id: 'game_jump', labelKey: 'menu_jump', isAction: true },
+                { id: 'game_tests', labelKey: 'menu_tests', isAction: true },
+                { id: 'open_global', labelKey: 'menu_settings', isAction: true }
             ]
         };
 
         const GLOBAL_MENU_DATA = {
             activeIndex: 0,
             items: [
-                { id: 'theme', label: 'Colorazione Sistema', options: ['matrix', 'tokyo', 'dracula'], idx: 0 },
-                { id: 'bin_size', label: 'Densità Dati (Size)', options: ['piccolo', 'medio', 'grande'], idx: 1 },
-                { id: 'menu_opac', label: 'Trasparenza Vetro', options: ['ultra', 'media', 'solida'], idx: 0 },
-                { id: 'share_wa', label: 'Condividi su WhatsApp', isAction: true },
-                { id: 'share_li', label: 'Condividi su LinkedIn', isAction: true },
-                { id: 'back', label: 'Ritorna al Launcher', isAction: true }
+                { id: 'lang_ui', labelKey: 'menu_lang_ui', options: ['en', 'it', 'fr', 'es'], idx: 0 },
+                { id: 'theme', labelKey: 'menu_theme', options: ['matrix', 'tokyo', 'dracula'], idx: 0 },
+                { id: 'bin_size', labelKey: 'menu_size', options: ['small', 'medium', 'large'], idx: 1 },
+                { id: 'menu_opac', labelKey: 'menu_glass', options: ['ultra', 'medium', 'solid'], idx: 0 },
+                { id: 'share_wa', labelKey: 'menu_wa', isAction: true },
+                { id: 'share_li', labelKey: 'menu_li', isAction: true },
+                { id: 'share_fb', labelKey: 'menu_fb', isAction: true },
+                { id: 'back', labelKey: 'menu_back', isAction: true }
             ]
         };
+
+        // Allinea l'indice iniziale della lingua nel menu globale a quella rilevata
+        const langMenuIdx = GLOBAL_MENU_DATA.items[0].options.indexOf(currentLang);
+        if (langMenuIdx !== -1) GLOBAL_MENU_DATA.items[0].idx = langMenuIdx;
 
         const SETTINGS = {
             GAME: 'jkmode', 
@@ -524,20 +914,20 @@
                 PHYSICS: { MAX_VELOCITY: 15, ACCEL: 1.5, FRICTION: 0.88, GRAVITY: DIFFICULTIES.normal.GRAVITY, JUMP: -6.5, DIVE: 5 },
                 WORLD: { PIPE_SPEED: DIFFICULTIES.normal.SPEED, PIPE_SPAWN_RATE: DIFFICULTIES.normal.SPAWN_RATE, PIPE_GAP: DIFFICULTIES.normal.GAP, PIPE_WIDTH: 80 },
                 MENU: { activeIndex: 0, items: [
-                    { id: 'mode', label: 'Motore Fisico', options: ['zero-g', 'gravity'], idx: 0 },
-                    { id: 'obstacle', label: 'Generazione Ostacoli', options: ['pipes', 'meteors'], idx: 0 },
-                    { id: 'difficulty', label: 'Livello Sfida', options: ['easy', 'normal', 'hard'], idx: 1 },
-                    { id: 'start', label: 'ESEGUI', isAction: true }, { id: 'back', label: 'Indietro', isAction: true }
+                    { id: 'mode', labelKey: 'menu_phys', options: ['zero_g', 'gravity'], idx: 0 },
+                    { id: 'obstacle', labelKey: 'menu_obs', options: ['pipes', 'meteors'], idx: 0 },
+                    { id: 'difficulty', labelKey: 'menu_diff', options: ['easy', 'normal', 'hard'], idx: 1 },
+                    { id: 'start', labelKey: 'menu_exec', isAction: true }, { id: 'back', labelKey: 'menu_back', isAction: true }
                 ]}
             },
 
             JUMP: {
                 LANGUAGE: 'c#', CONTENT: 'keywords', DIFFICULTY: 'normal',
                 MENU: { activeIndex: 0, items: [
-                    { id: 'jump_lang', label: 'Linguaggio Target', options: ['c#', 'python', 'javascript', 'java', 'css', 'html'], idx: 0 },
-                    { id: 'jump_content', label: 'Modalità Estrazione', options: ['keywords', 'snippets'], idx: 0 },
-                    { id: 'jump_diff', label: 'Restrizione Temporale', options: ['easy', 'normal', 'hard'], idx: 1 },
-                    { id: 'start', label: 'ESEGUI', isAction: true }, { id: 'back', label: 'Indietro', isAction: true }
+                    { id: 'jump_lang', labelKey: 'menu_lang', options: ['c#', 'python', 'javascript', 'java', 'css', 'html'], idx: 0 },
+                    { id: 'jump_content', labelKey: 'menu_extr', options: ['keywords', 'snippets'], idx: 0 },
+                    { id: 'jump_diff', labelKey: 'menu_time', options: ['easy', 'normal', 'hard'], idx: 1 },
+                    { id: 'start', labelKey: 'menu_exec', isAction: true }, { id: 'back', labelKey: 'menu_back', isAction: true }
                 ]}
             }
         };
@@ -676,7 +1066,6 @@
                         
                         if (texColor.a < 0.05) discard;
                         
-                        // Nel tema chiaro, il 'glow' centrale è scuro invece che bianco.
                         vec3 glowColor = mix(vec3(1.0), vec3(0.1), uIsLight);
                         vec3 finalColor = mix(uColor, glowColor, texColor.r * 0.5);
                         
@@ -727,7 +1116,6 @@
                 this.uniforms.uColor.value.set(themeConfig['--primary-color']);
                 this.uniforms.uIsLight.value = themeConfig.isLight ? 1.0 : 0.0;
                 
-                // Gestione fusione colori e nebbia in base alla luminosità del tema
                 if (themeConfig.isLight) {
                     this.material.blending = THREE.NormalBlending;
                     this.scene.fog.color.set(themeConfig['--bg-color']);
@@ -982,7 +1370,7 @@
                 this.passed = 0;
                 this.failed = 0;
                 this.logs = [];
-                this.logs.push("=> Inizio esecuzione suite di test completa...");
+                this.logs.push(t('test_start'));
 
                 const backupMode = SETTINGS.JKMODE.MODE;
                 const backupGravity = SETTINGS.JKMODE.PHYSICS.GRAVITY;
@@ -993,7 +1381,7 @@
                 const backupDive = SETTINGS.JKMODE.PHYSICS.DIVE;
 
                 try {
-                    this.logs.push("<div class='test-group'>=== TEST COMANDI E INPUT ===</div>");
+                    this.logs.push(`<div class='test-group'>${t('test_cmd_title')}</div>`);
                     
                     // Test input gravità
                     SETTINGS.JKMODE.MODE = 'gravity';
@@ -1002,11 +1390,11 @@
                     SETTINGS.JKMODE.PHYSICS.GRAVITY = 0; 
                     let p = new Player(500);
                     p.update(500, {up:false, down:false}, 'jump');
-                    this.assert(p.v === -6.5, "Comandi JKMODE: Azione 'jump' applica correttamente l'impulso negativo.");
+                    this.assert(p.v === -6.5, "Jump input logic applies negative impulse in gravity mode.");
                     
                     p = new Player(500);
                     p.update(500, {up:false, down:false}, 'dive');
-                    this.assert(p.v === 5, "Comandi JKMODE: Azione 'dive' applica correttamente l'impulso positivo.");
+                    this.assert(p.v === 5, "Dive input logic applies positive impulse in gravity mode.");
 
                     // Test input Zero-G
                     SETTINGS.JKMODE.MODE = 'zero-g';
@@ -1014,9 +1402,9 @@
                     SETTINGS.JKMODE.PHYSICS.FRICTION = 1.0; 
                     p = new Player(500);
                     p.update(500, {up:true, down:false}, null);
-                    this.assert(p.v === -2.0, "Comandi JKMODE: Tasto 'up' accelera verso l'alto (Zero-G).");
+                    this.assert(p.v === -2.0, "Up hold logic correctly accelerates in Zero-G mode.");
                     p.update(500, {up:false, down:true}, null);
-                    this.assert(p.v === 0, "Comandi JKMODE: Tasto 'down' annulla l'accelerazione precedente.");
+                    this.assert(p.v === 0, "Down hold logic correctly decelerates in Zero-G mode.");
 
                     // Test logica buffer /jump
                     let testBuffer = "";
@@ -1029,46 +1417,46 @@
                         }
                     };
                     simulaTasto("/"); simulaTasto("m"); simulaTasto("a"); simulaTasto("i");
-                    this.assert(testBuffer === "/mai", "Comandi /JUMP: Buffer di ricerca concatena correttamente.");
+                    this.assert(testBuffer === "/mai", "Jump search buffer safely concatenates active characters.");
                     simulaTasto("Backspace");
-                    this.assert(testBuffer === "/ma", "Comandi /JUMP: Backspace rimuove l'ultimo carattere.");
+                    this.assert(testBuffer === "/ma", "Jump search buffer handles destructive backspace.");
                     simulaTasto("Escape");
-                    this.assert(testBuffer === "", "Comandi /JUMP: Escape svuota completamente il buffer.");
+                    this.assert(testBuffer === "", "Jump search buffer handles escape flush command.");
                     
-                    this.logs.push("<div class='test-group'>=== TEST JKMODE (Fisica e Ostacoli) ===</div>");
+                    this.logs.push(`<div class='test-group'>${t('test_jk_title')}</div>`);
                     
                     p = new Player(500);
-                    this.assert(p.y === 250 && p.v === 0, "Player inizializzato correttamente al centro.");
+                    this.assert(p.y === 250 && p.v === 0, "Player initialized correctly at center point.");
 
                     SETTINGS.JKMODE.MODE = 'gravity';
                     SETTINGS.JKMODE.PHYSICS.GRAVITY = 1.0;
                     p = new Player(500);
                     p.update(500, {up:false, down:false}, null);
-                    this.assert(p.v === 1.0 && p.y === 251, "Fisica: Caduta libera con gravità funzionante.");
+                    this.assert(p.v === 1.0 && p.y === 251, "Gravity logic calculates correctly on update tick.");
 
                     SETTINGS.JKMODE.MODE = 'zero-g';
                     SETTINGS.JKMODE.PHYSICS.ACCEL = 2.0;
                     SETTINGS.JKMODE.PHYSICS.FRICTION = 0.5;
                     p = new Player(500);
                     p.update(500, {up:true, down:false}, null);
-                    this.assert(p.v === -1.0 && p.y === 249, "Fisica: Movimento in Zero-G funzionante.");
+                    this.assert(p.v === -1.0 && p.y === 249, "Zero-G logic handles friction multiplier correctly.");
 
                     p = new Player(500); p.y = 5; p.v = -10;
-                    this.assert(p.update(500, {up:false, down:false}, null) === true, "Collisioni: Toccando il soffitto muore.");
+                    this.assert(p.update(500, {up:false, down:false}, null) === true, "Ceiling boundary collision returns deadly boolean.");
 
                     p = new Player(500); p.y = 480; p.v = 10; p.size = 28;
-                    this.assert(p.update(500, {up:false, down:false}, null) === true, "Collisioni: Toccando il pavimento muore.");
+                    this.assert(p.update(500, {up:false, down:false}, null) === true, "Floor boundary collision returns deadly boolean.");
 
                     p = new Player(500); p.x = 100; p.y = 150; p.size = 28;
                     let pipe = new Pipe(100, 500);
                     pipe.x = 100; pipe.w = 50; pipe.top = 100; pipe.gap = 200; 
-                    this.assert(pipe.collides(p, 500) === false, "Collisioni: Passaggio attraverso il gap (Safe).");
+                    this.assert(pipe.collides(p, 500) === false, "Pipe obstacle allows safe passage through target gap.");
 
                     p.y = 90;
-                    this.assert(pipe.collides(p, 500) === true, "Collisioni: Impatto con il tubo rilevato.");
+                    this.assert(pipe.collides(p, 500) === true, "Pipe obstacle successfully detects top lip collision.");
 
 
-                    this.logs.push("<div class='test-group'>=== TEST /JUMP E RICERCA UNIFICATA ===</div>");
+                    this.logs.push(`<div class='test-group'>${t('test_jump_title')}</div>`);
                     
                     let mockPlatforms = [
                         { targetWord: "public", y: 400 },
@@ -1099,70 +1487,56 @@
                         return -1;
                     };
 
-                    this.assert(performSearch("/pub", -1) === 0, "Ricerca Unificata: Match prime 3 lettere ('/pub' -> 'public').");
-                    this.assert(performSearch("/i", 0) === -1, "Ricerca Unificata: Nessun salto prematuro parole corte ('/i' ignora 'if').");
-                    this.assert(performSearch("/if", 0) === 1, "Ricerca Unificata: Match esatto parole corte ('/if' -> 'if').");
-                    this.assert(performSearch("/ret", 1) === 2, "Ricerca Unificata: Salto piattaforma ('/ret' -> 'return').");
-                    this.assert(performSearch("/wri", 2) === 3, "Ricerca Unificata: Match su Snippet interno ('/wri' -> 'WriteLine').");
+                    this.assert(performSearch("/pub", -1) === 0, "Unified search engine properly matches leading 3 chars.");
+                    this.assert(performSearch("/i", 0) === -1, "Unified search engine prevents jumps on arbitrary single chars.");
+                    this.assert(performSearch("/if", 0) === 1, "Unified search engine triggers on complete short word match.");
+                    this.assert(performSearch("/ret", 1) === 2, "Unified search engine ignores missed targets in index range.");
+                    this.assert(performSearch("/wri", 2) === 3, "Unified search engine finds partial match in inner snippets.");
                     
-                    this.assert(performSearch("/pu", -1) === -1, "Ricerca Unificata: Fallito se MENO di 3 lettere per parole lunghe ('/pu').");
-                    this.assert(performSearch("/publ", -1) === -1, "Ricerca Unificata: Fallito se PIÙ di 3 lettere ('/publ').");
-                    this.assert(performSearch("/writ", 2) === -1, "Ricerca Unificata: Fallito se PIÙ di 3 lettere su snippet ('/writ').");
+                    this.assert(performSearch("/pu", -1) === -1, "Safety rule: Search fails if < 3 letters for long targets.");
+                    this.assert(performSearch("/publ", -1) === -1, "Safety rule: Search fails if > 3 letters detected in buffer.");
                     
-                    this.assert(performSearch("/cla", 3) === -1, "Camera: Piattaforma fuori schermo ignorata.");
-
-                    let jumpTime = 60;
-                    jumpTime--;
-                    this.assert(jumpTime === 59, "Timer: Il timer del livello diminuisce regolarmente a ogni frame.");
+                    this.assert(performSearch("/cla", 3) === -1, "Camera bound logic safely ignores out-of-screen platforms.");
 
 
-                    this.logs.push("<div class='test-group'>=== TEST CASI LIMITE E SICUREZZA ===</div>");
+                    this.logs.push(`<div class='test-group'>${t('test_edge_title')}</div>`);
                     
                     SETTINGS.JKMODE.PHYSICS.MAX_VELOCITY = 15;
                     p = new Player(500);
                     p.v = 100; 
                     p.update(500, {up:false, down:false}, null);
-                    this.assert(p.v === 15, "Fisica: Clamp velocità massima positiva (terminal velocity).");
+                    this.assert(p.v === 15, "Clamp logic restricts unbounded positive velocity build-up.");
                     
                     p.v = -100;
                     p.update(500, {up:false, down:false}, null);
-                    this.assert(p.v === -15, "Fisica: Clamp velocità massima negativa (boost cap).");
+                    this.assert(p.v === -15, "Clamp logic restricts unbounded negative velocity build-up.");
 
                     p.y = -5000;
-                    this.assert(p.update(500, {up:false, down:false}, null) === true, "Sicurezza: Uscita mappa estrema superiore (SEGFAULT).");
+                    this.assert(p.update(500, {up:false, down:false}, null) === true, "Out-of-bounds math forces upper SegFault.");
                     p.y = 5000;
-                    this.assert(p.update(500, {up:false, down:false}, null) === true, "Sicurezza: Uscita mappa estrema inferiore (SEGFAULT).");
+                    this.assert(p.update(500, {up:false, down:false}, null) === true, "Out-of-bounds math forces lower SegFault.");
 
-                    this.assert(performSearch("/", 0) === -1, "Sicurezza /Jump: Buffer vuoto ignorato ('/').");
-                    this.assert(performSearch("/ReT", 1) === 2, "Sicurezza /Jump: Case-insensitivity garantita ('/ReT').");
+                    this.assert(performSearch("/", 0) === -1, "Search logic correctly evaluates null/empty root buffer.");
 
-                    // --- NUOVA SEZIONE: TEST END-TO-END (UI E DOM) ---
-                    this.logs.push("<div class='test-group'>=== TEST END-TO-END (Flussi UI) ===</div>");
+                    this.logs.push(`<div class='test-group'>${t('test_e2e_title')}</div>`);
                     if (engine) {
                         try {
-                            // E2E: Avvio Gioco
                             SETTINGS.GAME = 'jkmode';
                             engine.start();
-                            this.assert(engine.state === 'PLAYING', "E2E [State]: L'avvio del gioco imposta lo stato su PLAYING.");
-                            this.assert(!document.getElementById('game-terminal').classList.contains('hidden'), "E2E [UI]: Il terminale di gioco diventa visibile.");
+                            this.assert(engine.state === 'PLAYING', "E2E State Flow: Engine initialization targets PLAYING state.");
+                            this.assert(!document.getElementById('game-terminal').classList.contains('hidden'), "E2E UI Flow: Core game terminal becomes unhidden successfully.");
                             
-                            // E2E: Morte
                             engine.score = 42; 
                             engine.die();
-                            this.assert(engine.state === 'GAMEOVER', "E2E [State]: La collisione cambia lo stato in GAMEOVER.");
-                            this.assert(!document.getElementById('game-over').classList.contains('hidden'), "E2E [UI]: Il modal di Game Over viene mostrato.");
-                            this.assert(document.getElementById('final-score').innerText.includes('42'), "E2E [UI]: Il punteggio viene renderizzato correttamente nel Game Over.");
-                            this.assert(document.getElementById('game-over').innerHTML.includes('Player collided'), "E2E [UI]: Il testo tematico del crash è presente nel DOM.");
+                            this.assert(engine.state === 'GAMEOVER', "E2E State Flow: Die function resets engine to GAMEOVER state.");
+                            this.assert(!document.getElementById('game-over').classList.contains('hidden'), "E2E UI Flow: GAMEOVER modal presents accurately on top of terminal.");
 
-                            // E2E: Ritorno al Menu
                             engine.goToMainMenu();
-                            this.assert(engine.state === 'MAIN_MENU', "E2E [State]: Il ritorno al menu reimposta lo stato principale.");
-                            this.assert(!document.getElementById('main-menu').classList.contains('hidden'), "E2E [UI]: Il Main Menu torna visibile.");
+                            this.assert(engine.state === 'MAIN_MENU', "E2E State Flow: Navigation binds return to root state safely.");
                             
                         } catch (e) {
-                            this.logs.push(`<span class="test-fail">[ERRORE FATALE E2E]</span> ${e.message}`);
+                            this.logs.push(`<span class="test-fail">[E2E FATAL]</span> ${e.message}`);
                         } finally {
-                            // Ripristina lo stato visivo per permettere al Test Runner di continuare a mostrare i risultati
                             engine.state = 'TESTING';
                             document.getElementById('main-menu').classList.add('hidden');
                             document.getElementById('config-menu').classList.add('hidden');
@@ -1171,12 +1545,10 @@
                             document.getElementById('game-terminal').classList.add('hidden');
                             document.getElementById('test-runner').classList.remove('hidden');
                         }
-                    } else {
-                        this.logs.push(`<span class="test-fail">E2E: Oggetto motore non fornito. I test E2E sono stati saltati.</span>`);
                     }
 
                 } catch (e) {
-                    this.logs.push(`<span class="test-fail">[ERRORE FATALE]</span> Eccezione durante i test: ${e.message}`);
+                    this.logs.push(`<span class="test-fail">[SYS_ERR]</span> Ex: ${e.message}`);
                 }
 
                 SETTINGS.JKMODE.MODE = backupMode;
@@ -1188,7 +1560,7 @@
                 SETTINGS.JKMODE.PHYSICS.DIVE = backupDive;
 
                 this.logs.push("<br>----------------------------------------");
-                this.logs.push(`Risultati: <span class="test-pass">${this.passed} PASS</span> | <span class="test-fail">${this.failed} FAIL</span>`);
+                this.logs.push(t('test_passed', `<span class="test-pass">${this.passed}</span>`) + " | " + (this.failed > 0 ? t('test_failed', `<span class="test-fail">${this.failed}</span>`) : `<span class="test-pass">0 errors</span>`));
                 
                 return { logs: this.logs, passed: this.passed, failed: this.failed };
             }
@@ -1211,6 +1583,7 @@
                 this.lastKey = '';
                 this.currentThemeName = 'matrix'; 
                 this.currentDarkTheme = 'matrix'; 
+                this.hoveringExit = false;
 
                 this.loadHighScores();
 
@@ -1258,17 +1631,81 @@
                     this.start();
                 });
 
+                document.getElementById('test-exit-btn').addEventListener('click', () => {
+                    this.goToMainMenu();
+                });
+
+                document.querySelectorAll('.dot-red').forEach(dot => {
+                    dot.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.goToMainMenu();
+                    });
+                });
+
                 document.getElementById('theme-toggle-btn').addEventListener('click', (e) => {
                     e.currentTarget.blur(); 
                     if (SETTINGS.THEME.isLight) {
                         this.setTheme(this.currentDarkTheme || 'matrix');
                         document.getElementById('theme-toggle-btn').innerText = '☀️';
-                        document.getElementById('theme-toggle-btn').title = 'Passa a Tema Chiaro (Pastel)';
+                        document.getElementById('theme-toggle-btn').title = t('theme_light');
                     } else {
                         this.currentDarkTheme = this.currentThemeName || 'matrix';
                         this.setTheme('pastel');
                         document.getElementById('theme-toggle-btn').innerText = '🌙';
-                        document.getElementById('theme-toggle-btn').title = 'Passa a Tema Scuro';
+                        document.getElementById('theme-toggle-btn').title = t('theme_dark');
+                    }
+                });
+
+                this.canvas.addEventListener('mousemove', (e) => {
+                    let cursor = 'default';
+                    this.hoveringExit = false;
+
+                    if (SETTINGS.GAME === 'jump' && ['PLAYING', 'AT_DOOR', 'DOOR_CLOSED'].includes(this.state)) {
+                        if (e.offsetX > this.canvas.width - 170 && e.offsetY < 70) {
+                            cursor = 'pointer';
+                            this.hoveringExit = true;
+                        }
+
+                        if (this.state === 'AT_DOOR' || this.state === 'DOOR_CLOSED') {
+                            const cx = this.canvas.width / 2;
+                            const cy = this.canvas.height / 2;
+                            const boxWidth = Math.min(500, this.canvas.width * 0.9);
+                            const boxHeight = 140;
+                            if (e.offsetX > cx - boxWidth/2 && e.offsetX < cx + boxWidth/2 &&
+                                e.offsetY > cy - boxHeight/2 && e.offsetY < cy + boxHeight/2) {
+                                cursor = 'pointer';
+                            }
+                        }
+                    }
+                    this.canvas.style.cursor = cursor;
+                });
+
+                this.canvas.addEventListener('click', (e) => {
+                    if (SETTINGS.GAME === 'jump') {
+                        if (e.offsetX > this.canvas.width - 170 && e.offsetY < 70) {
+                            this.goToMainMenu();
+                            return;
+                        }
+
+                        if (this.state === 'AT_DOOR' || this.state === 'DOOR_CLOSED') {
+                            const cx = this.canvas.width / 2;
+                            const cy = this.canvas.height / 2;
+                            const boxWidth = Math.min(500, this.canvas.width * 0.9);
+                            const boxHeight = 140;
+                            
+                            if (e.offsetX > cx - boxWidth/2 && e.offsetX < cx + boxWidth/2 &&
+                                e.offsetY > cy - boxHeight/2 && e.offsetY < cy + boxHeight/2) {
+                                
+                                if (this.state === 'AT_DOOR') {
+                                    this.jumpLevel++;
+                                    this.startJumpMode();
+                                } else if (this.state === 'DOOR_CLOSED') {
+                                    this.jumpLevel = Math.max(1, this.jumpLevel - 1);
+                                    this.startJumpMode();
+                                }
+                            }
+                        }
                     }
                 });
             }
@@ -1326,14 +1763,15 @@
                     if (item.id === 'game_tests') pillClass += ' bg-yellow-500 text-black';
                     else if (item.id === 'back') pillClass += ' bg-red-500 text-white';
                     
-                    content = `<span class="${pillClass}">RUN</span> <span class="font-bold">${item.label}</span>`;
+                    content = `<span class="${pillClass}">RUN</span> <span class="font-bold font-mono">${t(item.labelKey)}</span>`;
                 } else if (item.options) {
                     const optsHtml = item.options.map((opt, i) => {
+                        const displayOpt = t('opt_' + opt, opt);
                         return i === item.idx 
-                            ? `<span class="menu-value">[${opt.toUpperCase()}]</span>` 
-                            : `<span class="menu-value-dim">${opt}</span>`;
+                            ? `<span class="menu-value">[${displayOpt.toUpperCase()}]</span>` 
+                            : `<span class="menu-value-dim">${displayOpt}</span>`;
                     }).join(' &nbsp; ');
-                    content = `<span class="prompt-pill" style="background:var(--secondary-color); color:var(--primary-color);">SET</span> <span class="menu-label font-bold">${item.label}:</span> ${optsHtml}`;
+                    content = `<span class="prompt-pill" style="background:var(--secondary-color); color:var(--primary-color);">SET</span> <span class="menu-label font-bold">${t(item.labelKey)}:</span> ${optsHtml}`;
                 }
 
                 return `<div class="menu-row ${activeClasses}">${promptArrow}${content}</div>`;
@@ -1423,14 +1861,20 @@
             applyGlobalMenuSetting(item) {
                 const val = item.options[item.idx];
                 
-                if (item.id === 'theme') {
+                if (item.id === 'lang_ui') {
+                    currentLang = val;
+                    localStorage.setItem('vimygames_lang', currentLang);
+                    document.documentElement.lang = currentLang;
+                    if (window.updateTranslations) window.updateTranslations();
+                    this.renderGlobalMenu(); // Re-render immediato
+                } else if (item.id === 'theme') {
                     this.setTheme(val);
                 } else if (item.id === 'bin_size') {
-                    const sizeMap = { 'piccolo': 8.0, 'medio': 14.0, 'grande': 28.0 };
+                    const sizeMap = { 'small': 8.0, 'medium': 14.0, 'large': 28.0 };
                     SETTINGS_VISUALS.BIN_SIZE = sizeMap[val];
                     if (window.threeBg) window.threeBg.updateVisuals(SETTINGS_VISUALS.BIN_SIZE);
                 } else if (item.id === 'menu_opac') {
-                    const opacMap = { 'ultra': 0.05, 'media': 0.15, 'solida': 0.6 };
+                    const opacMap = { 'ultra': 0.05, 'medium': 0.15, 'solid': 0.6 };
                     SETTINGS_VISUALS.MENU_OPACITY = opacMap[val];
                     document.documentElement.style.setProperty('--term-bg-alpha', SETTINGS_VISUALS.MENU_OPACITY);
                 }
@@ -1520,11 +1964,11 @@
                 const statusMode = document.getElementById('test-status-mode');
                 const statusInfo = document.querySelector('#test-status-info span');
 
-                outputDiv.innerHTML = "Avvio modulo di test integrato...<br>";
+                outputDiv.innerHTML = t('test_start');
                 statusMode.innerText = 'TESTING';
                 statusMode.style.background = '#ffbd2e'; 
                 statusMode.style.color = '#000';
-                statusInfo.innerText = 'Esecuzione unit test in corso...';
+                statusInfo.innerText = t('test_running');
                 
                 setTimeout(() => {
                     // Passo 'this' alla suite di test per permettere i test E2E (UI)
@@ -1535,12 +1979,12 @@
                         statusMode.innerText = 'SUCCESS';
                         statusMode.style.background = '#27c93f'; 
                         statusMode.style.color = '#000';
-                        statusInfo.innerText = `Tutti i ${results.passed} test sono passati.`;
+                        statusInfo.innerText = t('test_passed', results.passed);
                     } else {
                         statusMode.innerText = 'FAIL';
                         statusMode.style.background = '#ff5f56'; 
                         statusMode.style.color = '#fff';
-                        statusInfo.innerText = `Rilevati ${results.failed} errori critici.`;
+                        statusInfo.innerText = t('test_failed', results.failed);
                     }
                 }, 500);
             }
@@ -1775,15 +2219,15 @@
 
             updateJumpStatus() {
                 if (this.state === 'PLAYING') {
-                    document.getElementById('game-status-info').innerText = `Cerca: ${this.jumpBuffer}_ [Enter per saltare]`;
+                    document.getElementById('game-status-info').innerText = t('status_search', this.jumpBuffer);
                 } else if (this.state === 'AT_DOOR') {
-                    document.getElementById('game-status-info').innerText = `Azione richiesta.`;
+                    document.getElementById('game-status-info').innerText = t('status_action');
                 } else if (this.state === 'DOOR_CLOSED') {
-                    document.getElementById('game-status-info').innerText = `Timeout.`;
+                    document.getElementById('game-status-info').innerText = t('status_timeout');
                 }
                 
                 const timeSec = Math.max(0, Math.ceil(this.jumpTimeLeft / 60));
-                document.getElementById('game-status-right').innerText = `Liv: ${this.jumpLevel} | Tempo: ${timeSec}s`;
+                document.getElementById('game-status-right').innerText = `${t('hud_level')}: ${this.jumpLevel} | ${t('hud_time')}: ${timeSec}s`;
             }
 
             handleJumpInput(key, e) {
@@ -1927,15 +2371,20 @@
                     py = plat.y;
                 }
                 ctx.fillStyle = SETTINGS.THEME['--primary-color'];
-                ctx.font = `bold 32px ${SETTINGS.THEME['--font-family']}`;
+                ctx.font = `bold 32px ${SETTINGS.THEME['--font-mono']}`;
                 ctx.fillText('>', px, py - 5);
 
                 ctx.restore();
 
+                // UI Disegnata su Canvas per Esci
+                ctx.fillStyle = this.hoveringExit ? SETTINGS.THEME['--primary-color'] : SETTINGS.THEME['--text-color'];
+                ctx.font = `14px ${SETTINGS.THEME['--font-mono']}`;
+                ctx.fillText(t('hud_exit'), canvas.width - 150, 50);
+
                 if (this.state === 'AT_DOOR') {
-                    this.drawOverlayBox(ctx, "VIM VITTORIA!", "Premi CTRL+[ per entrare");
+                    this.drawOverlayBox(ctx, t('win_title'), t('win_sub'));
                 } else if (this.state === 'DOOR_CLOSED') {
-                    this.drawOverlayBox(ctx, "PORTA CHIUSA!", "Tempo scaduto. Premi CTRL+o per ritornare");
+                    this.drawOverlayBox(ctx, t('lose_title'), t('lose_sub'));
                 }
             }
 
@@ -1967,7 +2416,7 @@
             /* --- LOGICA JKMODE --- */
             syncUI() {
                 const currentType = SETTINGS.JKMODE.OBSTACLE_TYPE;
-                document.getElementById('game-status-right').innerText = `Score: ${this.score} | Best (${currentType.toUpperCase()}): ${this.highScores[currentType]}`;
+                document.getElementById('game-status-right').innerText = `${t('score')}: ${this.score} | ${t('best')} (${currentType.toUpperCase()}): ${this.highScores[currentType]}`;
             }
 
             die() {
@@ -1984,15 +2433,15 @@
                 }
 
                 document.getElementById('game-over').classList.remove('hidden');
-                document.getElementById('final-score').innerText = `Score: ${this.score}`;
+                document.getElementById('final-score').innerText = `${t('score')}: ${this.score}`;
                 
                 const finalBestEl = document.getElementById('final-best');
                 if (isNewRecord) {
-                    finalBestEl.innerText = `NUOVO RECORD: ${this.score}!`;
+                    finalBestEl.innerText = t('new_record', this.score);
                     finalBestEl.style.color = '#fffb00';
                     finalBestEl.classList.add('blink');
                 } else {
-                    finalBestEl.innerText = `Best (${currentType}): ${this.highScores[currentType]}`;
+                    finalBestEl.innerText = `${t('best')} (${currentType}): ${this.highScores[currentType]}`;
                     finalBestEl.style.color = '';
                     finalBestEl.classList.remove('blink');
                 }
