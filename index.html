@@ -447,6 +447,7 @@
                 <p id="final-score" class="text-2xl mb-1 mt-4 font-bold">Score: 0</p>
                 <p id="final-best" class="text-sm mb-8 opacity-60">Best: 0</p>
                 
+                <!-- Testo tematico (Non è un vero errore!) -->
                 <div class="text-xs opacity-70 mb-6 bg-[rgba(128,128,128,0.1)] p-3 rounded border border-[var(--border-color)] w-full font-mono text-left">
                     <span class="text-red-400">Exception:</span> Player collided with environment bounds or obstacle.<br>
                     <span class="text-blue-400">Action:</span> Awaiting restart command.
@@ -861,7 +862,7 @@
             draw(ctx) {
                 ctx.save();
                 ctx.fillStyle = SETTINGS.THEME['--primary-color'];
-                ctx.font = `bold ${this.size}px ${SETTINGS.THEME['--font-family']}`;
+                ctx.font = `bold ${this.size}px ${SETTINGS.THEME['--font-mono']}`; // Changed to font-mono
                 
                 ctx.globalAlpha = 0.3;
                 ctx.fillText('>', this.x - Math.max(10, Math.abs(this.v)), this.y + this.size);
@@ -934,7 +935,7 @@
                 ctx.stroke();
 
                 ctx.fillStyle = SETTINGS.THEME['--text-color'];
-                ctx.font = `bold ${this.size * 0.6}px ${SETTINGS.THEME['--font-family']}`;
+                ctx.font = `bold ${this.size * 0.6}px ${SETTINGS.THEME['--font-mono']}`; // Changed to font-mono
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 if (SETTINGS.THEME['--text-color'] !== '#212121') { 
@@ -971,7 +972,7 @@
                 }
             }
 
-            runTests() {
+            runTests(engine = null) { // Aggiunto parametro opzionale 'engine'
                 this.passed = 0;
                 this.failed = 0;
                 this.logs = [];
@@ -1128,6 +1129,45 @@
 
                     this.assert(performSearch("/", 0) === -1, "Sicurezza /Jump: Buffer vuoto ignorato ('/').");
                     this.assert(performSearch("/ReT", 1) === 2, "Sicurezza /Jump: Case-insensitivity garantita ('/ReT').");
+
+                    // --- NUOVA SEZIONE: TEST END-TO-END (UI E DOM) ---
+                    this.logs.push("<div class='test-group'>=== TEST END-TO-END (Flussi UI) ===</div>");
+                    if (engine) {
+                        try {
+                            // E2E: Avvio Gioco
+                            SETTINGS.GAME = 'jkmode';
+                            engine.start();
+                            this.assert(engine.state === 'PLAYING', "E2E [State]: L'avvio del gioco imposta lo stato su PLAYING.");
+                            this.assert(!document.getElementById('game-terminal').classList.contains('hidden'), "E2E [UI]: Il terminale di gioco diventa visibile.");
+                            
+                            // E2E: Morte
+                            engine.score = 42; 
+                            engine.die();
+                            this.assert(engine.state === 'GAMEOVER', "E2E [State]: La collisione cambia lo stato in GAMEOVER.");
+                            this.assert(!document.getElementById('game-over').classList.contains('hidden'), "E2E [UI]: Il modal di Game Over viene mostrato.");
+                            this.assert(document.getElementById('final-score').innerText.includes('42'), "E2E [UI]: Il punteggio viene renderizzato correttamente nel Game Over.");
+                            this.assert(document.getElementById('game-over').innerHTML.includes('Player collided'), "E2E [UI]: Il testo tematico del crash è presente nel DOM.");
+
+                            // E2E: Ritorno al Menu
+                            engine.goToMainMenu();
+                            this.assert(engine.state === 'MAIN_MENU', "E2E [State]: Il ritorno al menu reimposta lo stato principale.");
+                            this.assert(!document.getElementById('main-menu').classList.contains('hidden'), "E2E [UI]: Il Main Menu torna visibile.");
+                            
+                        } catch (e) {
+                            this.logs.push(`<span class="test-fail">[ERRORE FATALE E2E]</span> ${e.message}`);
+                        } finally {
+                            // Ripristina lo stato visivo per permettere al Test Runner di continuare a mostrare i risultati
+                            engine.state = 'TESTING';
+                            document.getElementById('main-menu').classList.add('hidden');
+                            document.getElementById('config-menu').classList.add('hidden');
+                            document.getElementById('global-menu').classList.add('hidden');
+                            document.getElementById('game-over').classList.add('hidden');
+                            document.getElementById('game-terminal').classList.add('hidden');
+                            document.getElementById('test-runner').classList.remove('hidden');
+                        }
+                    } else {
+                        this.logs.push(`<span class="test-fail">E2E: Oggetto motore non fornito. I test E2E sono stati saltati.</span>`);
+                    }
 
                 } catch (e) {
                     this.logs.push(`<span class="test-fail">[ERRORE FATALE]</span> Eccezione durante i test: ${e.message}`);
@@ -1481,7 +1521,8 @@
                 statusInfo.innerText = 'Esecuzione unit test in corso...';
                 
                 setTimeout(() => {
-                    const results = this.testSuite.runTests();
+                    // Passo 'this' alla suite di test per permettere i test E2E (UI)
+                    const results = this.testSuite.runTests(this);
                     outputDiv.innerHTML = results.logs.join('<br>');
 
                     if (results.failed === 0) {
