@@ -1,0 +1,337 @@
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { initializeApp } from 'firebase/app';
+import { getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from 'firebase/auth';
+import { getFirestore, collection, doc, setDoc, onSnapshot, updateDoc, increment, getDoc, deleteDoc } from 'firebase/firestore';
+import { Search, Plus, BarChart2, ChevronDown, ChevronUp, Loader2, Languages, Trash2, Download, X, CheckCircle2, MinusCircle } from 'lucide-react';
+
+// --- CONFIGURAZIONE FIREBASE ---
+const firebaseConfig = JSON.parse(__firebase_config);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'spanish-vocab-smart-v2';
+
+// --- PWA SETUP ---
+const setupPWA = () => {
+  const meta = [
+    { name: 'apple-mobile-web-app-capable', content: 'yes' },
+    { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
+    { name: 'apple-mobile-web-app-title', content: 'VocabES' },
+    { name: 'mobile-web-app-capable', content: 'yes' },
+    { name: 'theme-color', content: '#4f46e5' }
+  ];
+
+  meta.forEach(({ name, content }) => {
+    let el = document.querySelector(`meta[name="${name}"]`);
+    if (!el) {
+      el = document.createElement('meta');
+      el.name = name;
+      document.head.appendChild(el);
+    }
+    el.content = content;
+  });
+
+  const manifest = {
+    name: 'Vocabolario Spagnolo Smart',
+    short_name: 'VocabES',
+    start_url: '.',
+    display: 'standalone',
+    background_color: '#f8fafc',
+    theme_color: '#4f46e5',
+    icons: [{
+      src: 'https://cdn-icons-png.flaticon.com/512/197/197593.png',
+      sizes: '512x512',
+      type: 'image/png',
+      purpose: 'any maskable'
+    }]
+  };
+
+  const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+  const manifestURL = URL.createObjectURL(blob);
+  let link = document.querySelector('link[rel="manifest"]');
+  if (!link) {
+    link = document.createElement('link');
+    link.rel = 'manifest';
+    document.head.appendChild(link);
+  }
+  link.href = manifestURL;
+};
+
+export default function App() {
+  const [user, setUser] = useState(null);
+  const [words, setWords] = useState([]);
+  const [inputPhrase, setInputPhrase] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showLowFreq, setShowLowFreq] = useState(false);
+  const [showInstallGuide, setShowInstallGuide] = useState(false);
+
+  useEffect(() => {
+    setupPWA();
+    const initAuth = async () => {
+      try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+      } catch (err) { console.error(err); }
+    };
+    initAuth();
+    const unsubscribe = onAuthStateChanged(auth, setUser);
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    const q = collection(db, 'artifacts', appId, 'users', user.uid, 'dictionary');
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setWords(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+    return () => unsubscribe();
+  }, [user]);
+
+  const translateWord = async (word) => {
+    try {
+      const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=es|it`);
+      const data = await response.json();
+      return data.responseData.translatedText || "Non trovato";
+    } catch { return "Errore API"; }
+  };
+
+  const handleAnalysis = async () => {
+    if (!inputPhrase.trim() || !user) return;
+    setIsAnalyzing(true);
+    const cleanedWords = inputPhrase.toLowerCase()
+      .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"']/g, "")
+      .split(/\s+/)
+      .filter(w => w.length >= 3);
+    const uniqueWords = [...new Set(cleanedWords)];
+
+    for (const word of uniqueWords) {
+      const wordRef = doc(db, 'artifacts', appId, 'users', user.uid, 'dictionary', word);
+      const docSnap = await getDoc(wordRef);
+      if (docSnap.exists()) {
+        await updateDoc(wordRef, { frequency: increment(1), lastUpdated: new Date().toISOString() });
+      } else {
+        const meaning = await translateWord(word);
+        await setDoc(wordRef, { term: word, meaning, frequency: 1, lastUpdated: new Date().toISOString() });
+      }
+    }
+    setInputPhrase("");
+    setIsAnalyzing(false);
+  };
+
+  const handleIncrement = async (id) => {
+    if (!user) return;
+    const wordRef = doc(db, 'artifacts', appId, 'users', user.uid, 'dictionary', id);
+    await updateDoc(wordRef, { frequency: increment(1), lastUpdated: new Date().toISOString() });
+  };
+
+  const handleDecrement = async (item) => {
+    if (!user) return;
+    const wordRef = doc(db, 'artifacts', appId, 'users', user.uid, 'dictionary', item.id);
+    
+    if (item.frequency > 1) {
+      await updateDoc(wordRef, { frequency: increment(-1), lastUpdated: new Date().toISOString() });
+    } else {
+      // Se la frequenza è 1 e riduciamo, eliminiamo la parola
+      await deleteDoc(wordRef);
+    }
+  };
+
+  const filteredList = useMemo(() => {
+    return words
+      .filter(w => w.term.toLowerCase().includes(searchQuery.toLowerCase()) || w.meaning.toLowerCase().includes(searchQuery.toLowerCase()))
+      .sort((a, b) => b.frequency - a.frequency);
+  }, [words, searchQuery]);
+
+  const highFreq = filteredList.filter(w => w.frequency >= 3);
+  const lowFreq = filteredList.filter(w => w.frequency < 3);
+
+  return (
+    <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900 pb-32 font-sans overflow-x-hidden">
+      {/* Header */}
+      <header className="bg-indigo-600 pt-10 pb-6 px-6 text-white shadow-lg sticky top-0 z-30 flex justify-between items-center">
+        <div>
+          <h1 className="text-xl font-bold flex items-center gap-2">
+            <Languages className="w-6 h-6" /> VocabES Pro
+          </h1>
+          <p className="text-indigo-100 text-[10px] uppercase tracking-widest font-semibold">Gesti Frequenza Intelligenti</p>
+        </div>
+        <button onClick={() => setShowInstallGuide(true)} className="p-2 bg-indigo-500 rounded-full active:scale-90 transition-all">
+          <Download size={20} />
+        </button>
+      </header>
+
+      <main className="p-4 flex-1 max-w-lg mx-auto w-full space-y-6">
+        {/* Input Frase */}
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200">
+          <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-2 block">Analizza Testo</label>
+          <textarea
+            placeholder="Scrivi una frase in spagnolo..."
+            className="w-full bg-slate-50 rounded-xl p-3 border-none focus:ring-2 focus:ring-indigo-500 transition-all h-24 text-lg resize-none outline-none"
+            value={inputPhrase}
+            onChange={(e) => setInputPhrase(e.target.value)}
+          />
+          <button
+            onClick={handleAnalysis}
+            disabled={isAnalyzing || !inputPhrase.trim()}
+            className="w-full mt-3 bg-indigo-600 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-all shadow-md shadow-indigo-100"
+          >
+            {isAnalyzing ? <Loader2 className="animate-spin" /> : <Plus />}
+            Salva Parole
+          </button>
+        </div>
+
+        {/* Elenco Parole */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 px-1 text-slate-400">
+            <BarChart2 size={16} />
+            <span className="text-xs font-bold uppercase">Parole Più Frequenti</span>
+          </div>
+          
+          <div className="space-y-2">
+            {highFreq.map(w => (
+              <SwipeableCard key={w.id} item={w} onDecrement={() => handleDecrement(w)} onIncrement={() => handleIncrement(w.id)} />
+            ))}
+          </div>
+
+          {lowFreq.length > 0 && (
+            <div className="pt-2">
+              <button onClick={() => setShowLowFreq(!showLowFreq)} className="flex items-center justify-between w-full p-3 bg-white border border-slate-200 rounded-xl text-slate-500 text-sm font-medium">
+                <span>Altre parole ({lowFreq.length})</span>
+                {showLowFreq ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </button>
+              {showLowFreq && (
+                <div className="mt-2 space-y-2">
+                  {lowFreq.map(w => (
+                    <SwipeableCard key={w.id} item={w} onDecrement={() => handleDecrement(w)} onIncrement={() => handleIncrement(w.id)} />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {words.length === 0 && !isAnalyzing && (
+            <div className="text-center py-20 text-slate-300">
+              <Languages size={48} className="mx-auto mb-2 opacity-20" />
+              <p className="text-sm">Il tuo dizionario è vuoto.<br/>Inizia scrivendo una frase sopra!</p>
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* Barra di Ricerca Bottom */}
+      <footer className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-slate-200 p-4 pb-8 z-40">
+        <div className="max-w-lg mx-auto relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          <input
+            type="text"
+            placeholder="Cerca parola o traduzione..."
+            className="w-full bg-slate-100 rounded-2xl py-3 pl-12 pr-4 border-none focus:ring-2 focus:ring-indigo-500 outline-none"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+      </footer>
+
+      {/* Guida Installazione PWA */}
+      {showInstallGuide && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-sm p-6 space-y-4 animate-in slide-in-from-bottom duration-300">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-bold">Installazione</h2>
+              <button onClick={() => setShowInstallGuide(false)} className="p-1"><X /></button>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl text-blue-700">
+                <div className="w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center text-xs font-bold shrink-0">iOS</div>
+                <p className="text-xs">Usa Safari: Condividi &rarr; <strong>Aggiungi a Home</strong></p>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-green-50 rounded-xl text-green-700">
+                <div className="w-8 h-8 bg-green-500 text-white rounded-lg flex items-center justify-center text-xs font-bold shrink-0">AND</div>
+                <p className="text-xs">Menu Chrome &rarr; <strong>Installa app</strong></p>
+              </div>
+            </div>
+            <button onClick={() => setShowInstallGuide(false)} className="w-full py-3 bg-slate-900 text-white rounded-xl font-bold">Chiudi</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SwipeableCard({ item, onDecrement, onIncrement }) {
+  const [offset, setOffset] = useState(0);
+  const startX = useRef(0);
+  const threshold = 80;
+
+  const handleTouchStart = (e) => {
+    startX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e) => {
+    const diff = e.touches[0].clientX - startX.current;
+    setOffset(diff);
+  };
+
+  const handleTouchEnd = () => {
+    if (offset < -threshold) {
+      // Swipe Left -> Decrement/Delete
+      if (item.frequency <= 1) {
+        setOffset(-window.innerWidth);
+        setTimeout(onDecrement, 200);
+      } else {
+        onDecrement();
+        setOffset(0);
+      }
+    } else if (offset > threshold) {
+      // Swipe Right -> Increment
+      onIncrement();
+      setOffset(0);
+    } else {
+      setOffset(0);
+    }
+  };
+
+  return (
+    <div className="relative overflow-hidden rounded-xl bg-slate-100">
+      {/* Background Destro (Sottrai / Elimina) */}
+      <div className={`absolute inset-y-0 right-0 w-full flex items-center justify-end px-6 text-white transition-colors ${item.frequency <= 1 ? 'bg-red-600' : 'bg-orange-500'}`}>
+        <div className="flex flex-col items-center">
+          {item.frequency <= 1 ? <Trash2 size={20} /> : <MinusCircle size={20} />}
+          <span className="text-[9px] font-bold uppercase mt-1">
+            {item.frequency <= 1 ? 'Elimina' : '-1 Freq'}
+          </span>
+        </div>
+      </div>
+
+      {/* Background Sinistro (Aggiungi) */}
+      <div className="absolute inset-y-0 left-0 w-full bg-emerald-500 flex items-center justify-start px-6 text-white">
+        <div className="flex flex-col items-center">
+          <CheckCircle2 size={20} />
+          <span className="text-[9px] font-bold uppercase mt-1">+1 Freq</span>
+        </div>
+      </div>
+
+      {/* Card Principale */}
+      <div 
+        className="relative bg-white border border-slate-200 p-4 flex justify-between items-center shadow-sm transition-transform duration-200 ease-out touch-pan-y"
+        style={{ transform: `translateX(${offset}px)` }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        <div className="select-none flex-1">
+          <h3 className="font-bold text-slate-800 text-lg capitalize leading-tight">{item.term}</h3>
+          <p className="text-slate-500 text-sm italic">{item.meaning}</p>
+        </div>
+        <div className="bg-indigo-50 text-indigo-700 w-10 h-10 rounded-full flex items-center justify-center text-xs font-black border border-indigo-100 shrink-0 shadow-inner">
+          {item.frequency}
+        </div>
+      </div>
+    </div>
+  );
+}
+
